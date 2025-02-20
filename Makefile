@@ -195,6 +195,19 @@ daemon/fast:
 .PHONY : daemon/fast
 
 #=============================================================================
+# Target rules for targets named demo
+
+# Build rule for target.
+demo: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 demo
+.PHONY : demo
+
+# fast build rule for target.
+demo/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo.dir/build.make CMakeFiles/demo.dir/build
+.PHONY : demo/fast
+
+#=============================================================================
 # Target rules for targets named graph
 
 # Build rule for target.
@@ -257,6 +270,30 @@ analyzer/drivers/daemon.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/daemon.dir/build.make CMakeFiles/daemon.dir/analyzer/drivers/daemon.cpp.s
 .PHONY : analyzer/drivers/daemon.cpp.s
 
+analyzer/drivers/demo.o: analyzer/drivers/demo.cpp.o
+.PHONY : analyzer/drivers/demo.o
+
+# target to build an object file
+analyzer/drivers/demo.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo.dir/build.make CMakeFiles/demo.dir/analyzer/drivers/demo.cpp.o
+.PHONY : analyzer/drivers/demo.cpp.o
+
+analyzer/drivers/demo.i: analyzer/drivers/demo.cpp.i
+.PHONY : analyzer/drivers/demo.i
+
+# target to preprocess a source file
+analyzer/drivers/demo.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo.dir/build.make CMakeFiles/demo.dir/analyzer/drivers/demo.cpp.i
+.PHONY : analyzer/drivers/demo.cpp.i
+
+analyzer/drivers/demo.s: analyzer/drivers/demo.cpp.s
+.PHONY : analyzer/drivers/demo.s
+
+# target to generate assembly for a file
+analyzer/drivers/demo.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo.dir/build.make CMakeFiles/demo.dir/analyzer/drivers/demo.cpp.s
+.PHONY : analyzer/drivers/demo.cpp.s
+
 analyzer/drivers/tests/graph.o: analyzer/drivers/tests/graph.cpp.o
 .PHONY : analyzer/drivers/tests/graph.o
 
@@ -281,6 +318,36 @@ analyzer/drivers/tests/graph.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/graph.dir/build.make CMakeFiles/graph.dir/analyzer/drivers/tests/graph.cpp.s
 .PHONY : analyzer/drivers/tests/graph.cpp.s
 
+analyzer/lib/Vector3D.o: analyzer/lib/Vector3D.cpp.o
+.PHONY : analyzer/lib/Vector3D.o
+
+# target to build an object file
+analyzer/lib/Vector3D.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/daemon.dir/build.make CMakeFiles/daemon.dir/analyzer/lib/Vector3D.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo.dir/build.make CMakeFiles/demo.dir/analyzer/lib/Vector3D.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/graph.dir/build.make CMakeFiles/graph.dir/analyzer/lib/Vector3D.cpp.o
+.PHONY : analyzer/lib/Vector3D.cpp.o
+
+analyzer/lib/Vector3D.i: analyzer/lib/Vector3D.cpp.i
+.PHONY : analyzer/lib/Vector3D.i
+
+# target to preprocess a source file
+analyzer/lib/Vector3D.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/daemon.dir/build.make CMakeFiles/daemon.dir/analyzer/lib/Vector3D.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo.dir/build.make CMakeFiles/demo.dir/analyzer/lib/Vector3D.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/graph.dir/build.make CMakeFiles/graph.dir/analyzer/lib/Vector3D.cpp.i
+.PHONY : analyzer/lib/Vector3D.cpp.i
+
+analyzer/lib/Vector3D.s: analyzer/lib/Vector3D.cpp.s
+.PHONY : analyzer/lib/Vector3D.s
+
+# target to generate assembly for a file
+analyzer/lib/Vector3D.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/daemon.dir/build.make CMakeFiles/daemon.dir/analyzer/lib/Vector3D.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo.dir/build.make CMakeFiles/demo.dir/analyzer/lib/Vector3D.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/graph.dir/build.make CMakeFiles/graph.dir/analyzer/lib/Vector3D.cpp.s
+.PHONY : analyzer/lib/Vector3D.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -298,13 +365,20 @@ help:
 	@echo "... Catch2"
 	@echo "... Catch2WithMain"
 	@echo "... daemon"
+	@echo "... demo"
 	@echo "... graph"
 	@echo "... analyzer/drivers/daemon.o"
 	@echo "... analyzer/drivers/daemon.i"
 	@echo "... analyzer/drivers/daemon.s"
+	@echo "... analyzer/drivers/demo.o"
+	@echo "... analyzer/drivers/demo.i"
+	@echo "... analyzer/drivers/demo.s"
 	@echo "... analyzer/drivers/tests/graph.o"
 	@echo "... analyzer/drivers/tests/graph.i"
 	@echo "... analyzer/drivers/tests/graph.s"
+	@echo "... analyzer/lib/Vector3D.o"
+	@echo "... analyzer/lib/Vector3D.i"
+	@echo "... analyzer/lib/Vector3D.s"
 .PHONY : help
 
 
