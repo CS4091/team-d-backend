@@ -39,3 +39,4 @@ bin/
 _deps/
 CMakeFiles/
 *.cmake
+.vscode/
