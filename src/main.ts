@@ -4,6 +4,7 @@ config();
 import { ValidationPipe } from '@nestjs/common';
 import { HttpAdapterHost, NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 import { svelte } from './client/template-engine';
@@ -16,6 +17,9 @@ async function bootstrap() {
 	app.engine('svelte', svelte);
 	app.setViewEngine('svelte');
 	app.setBaseViewsDir('src/client/routes');
+
+	const config = new DocumentBuilder().setTitle('TSP Backend').setDescription('Capstone II project backend').build();
+	SwaggerModule.setup('/docs', app, SwaggerModule.createDocument(app, config));
 
 	app.use(cookieParser())
 		.useGlobalPipes(new ValidationPipe({ transform: true, transformOptions: { enableImplicitConversion: true } }))

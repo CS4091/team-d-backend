@@ -86,6 +86,7 @@ public:
 	template <UniqueSerializable NewNodeData, __mapperfn<NodeData, NewNodeData> Mapper>
 	Graph<NewNodeData, LinkData> map(const Mapper& fn) const;
 
+	// [devalue](https://github.com/Rich-Harris/devalue)-inspired graph-to-json serialization
 	void jsonDumpToFile(const std::string& path) const;
 
 	~Graph();
