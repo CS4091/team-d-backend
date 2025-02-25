@@ -1,5 +1,34 @@
 #include "Graph.h"
 
+template <arro::UnniqueSerializable NodeData, typename LinkData>
+arro::Graph<NodeData, LinkData>::Graph(const Graph<NodeData, LinkData>& other) : _digraph(other._digraph) {
+
+  _nodes.reserve(other._nodes.size());
+  _edges.reserve(other._edges.size());
+  
+  for (auto node : other._nodes) _nodes.push_back(new GraphNode<NodeData, LinkData>(node->data()));
+  
+  for (auto edge : other._edges) {
+
+    GraphNode<NodeData, LinkData>*from = nullptr, *to = nullptr;
+
+    for (auto node : other._nodes) {
+      if (node->data().id == edge->_from->data().id) from = node;
+      if (node->data().id == edge->_to->data().id) to = node;
+    }
+    
+    if (!from || !to) throw std::invalid_argument("Graph link between nonexistent nodes");
+    
+    if (_digraph) {
+      _edges.push_back(new Link<LinkData, NodeData>(from, to, edge->data()));
+    } 
+    else {
+      _edges.push_back(new Link<LinkData, NodeData>(from, to, edge->data()));
+      _edges.push_back(new Link<LinkData, NodeData>(to, from, edge->data()));
+    }
+  }
+}
+
 template <arro::UniqueSerializable NodeData, typename LinkData>
 arro::GraphNode<NodeData, LinkData>* arro::Graph<NodeData, LinkData>::add(const NodeData& data) {
 	_nodes.push_back(new GraphNode(data));
@@ -38,6 +67,37 @@ arro::Link<LinkData, NodeData>* arro::Graph<NodeData, LinkData>::link(GraphNode<
 
 		return link;
 	}
+}
+
+template <arro::UniqueSerializable NodeData, typename LinkData>
+template <arro::UniqueSerializable NewNodeData, arro::__mapperfn<NodeData, NewNodeData> Mapper>
+arro::Graph<NewNodeData, LinkData> arro::Graph<NodeData, LinkData>::map(const Mapper& fn) const {
+  
+	using namespace std;
+
+	vector<GraphNode<NewNodeData, LinkData>*> nodes;
+	vector<Link<LinkData, NewNodeData>*> edges;
+
+	for (auto node : _nodes) nodes.push_back(new GraphNode<NewNodeData, LinkData>(fn(node->data())));
+
+	for (auto edge : _edges) {
+		GraphNode<NewNodeData, LinkData>*from = nullptr, *to = nullptr;
+		for (auto node : nodes) {
+			if (node->data().id == edge->_from->data().id) from = node;
+			if (node->data().id == edge->_to->data().id) to = node;
+		}
+
+		if (!from || !to) throw std::invalid_argument("Graph link between nonexistent nodes");
+
+		if (_digraph) {
+			edges.push_back(new Link<LinkData, NewNodeData>(from, to, edge->data()));
+		} else {
+			edges.push_back(new Link<LinkData, NewNodeData>(from, to, edge->data()));
+			edges.push_back(new Link<LinkData, NewNodeData>(to, from, edge->data()));
+		}
+	}
+
+	return Graph<NewNodeData, LinkData>(nodes, edges, _digraph);
 }
 
 template <arro::UniqueSerializable NodeData, typename LinkData>
