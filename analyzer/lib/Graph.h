@@ -78,7 +78,7 @@ public:
 
 	const std::vector<GraphNode<NodeData, LinkData>*>& nodes() const { return _nodes; }
 
-	GraphNode<NodeData, LinkData>* add(const NodeData& node);
+	GraphNode<NodeData, LinkData>* add(const NodeData& data);
 
 	Link<LinkData, NodeData>* link(const decltype(NodeData::id)& from, const decltype(NodeData::id)& to, const LinkData& data);
 	Link<LinkData, NodeData>* link(GraphNode<NodeData, LinkData>* from, GraphNode<NodeData, LinkData>* to, const LinkData& data);
@@ -101,5 +101,7 @@ private:
 	void _clear();
 };
 }  // namespace arro
+
+#include "Graph.hpp"
 
 #endif
