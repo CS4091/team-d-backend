@@ -1,32 +1,29 @@
 #include "Graph.h"
 
-template <arro::UnniqueSerializable NodeData, typename LinkData>
+template <arro::UniqueSerializable NodeData, typename LinkData>
 arro::Graph<NodeData, LinkData>::Graph(const Graph<NodeData, LinkData>& other) : _digraph(other._digraph) {
+	_nodes.reserve(other._nodes.size());
+	_edges.reserve(other._edges.size());
 
-  _nodes.reserve(other._nodes.size());
-  _edges.reserve(other._edges.size());
-  
-  for (auto node : other._nodes) _nodes.push_back(new GraphNode<NodeData, LinkData>(node->data()));
-  
-  for (auto edge : other._edges) {
+	for (auto node : other._nodes) _nodes.push_back(new GraphNode<NodeData, LinkData>(node->data()));
 
-    GraphNode<NodeData, LinkData>*from = nullptr, *to = nullptr;
+	for (auto edge : other._edges) {
+		GraphNode<NodeData, LinkData>*from = nullptr, *to = nullptr;
 
-    for (auto node : other._nodes) {
-      if (node->data().id == edge->_from->data().id) from = node;
-      if (node->data().id == edge->_to->data().id) to = node;
-    }
-    
-    if (!from || !to) throw std::invalid_argument("Graph link between nonexistent nodes");
-    
-    if (_digraph) {
-      _edges.push_back(new Link<LinkData, NodeData>(from, to, edge->data()));
-    } 
-    else {
-      _edges.push_back(new Link<LinkData, NodeData>(from, to, edge->data()));
-      _edges.push_back(new Link<LinkData, NodeData>(to, from, edge->data()));
-    }
-  }
+		for (auto node : other._nodes) {
+			if (node->data().id == edge->_from->data().id) from = node;
+			if (node->data().id == edge->_to->data().id) to = node;
+		}
+
+		if (!from || !to) throw std::invalid_argument("Graph link between nonexistent nodes");
+
+		if (_digraph) {
+			_edges.push_back(new Link<LinkData, NodeData>(from, to, edge->data()));
+		} else {
+			_edges.push_back(new Link<LinkData, NodeData>(from, to, edge->data()));
+			_edges.push_back(new Link<LinkData, NodeData>(to, from, edge->data()));
+		}
+	}
 }
 
 template <arro::UniqueSerializable NodeData, typename LinkData>
@@ -72,7 +69,6 @@ arro::Link<LinkData, NodeData>* arro::Graph<NodeData, LinkData>::link(GraphNode<
 template <arro::UniqueSerializable NodeData, typename LinkData>
 template <arro::UniqueSerializable NewNodeData, arro::__mapperfn<NodeData, NewNodeData> Mapper>
 arro::Graph<NewNodeData, LinkData> arro::Graph<NodeData, LinkData>::map(const Mapper& fn) const {
-  
 	using namespace std;
 
 	vector<GraphNode<NewNodeData, LinkData>*> nodes;
