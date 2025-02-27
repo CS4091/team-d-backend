@@ -1,4 +1,4 @@
-export {};
+import { User } from '@prisma/client';
 
 declare global {
 	namespace Express {
@@ -6,7 +6,7 @@ declare global {
 		// See for example method-override.d.ts (https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/method-override/index.d.ts)
 		interface Request {
 			// TODO: replace this type
-			user: any | null;
+			user: User | null;
 			token: string | null;
 		}
 	}
