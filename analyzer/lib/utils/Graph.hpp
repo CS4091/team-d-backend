@@ -5,10 +5,10 @@ arro::Graph<NodeData, LinkData>::Graph(const Graph<NodeData, LinkData>& other) :
 	_nodes.reserve(other._nodes.size());
 	_edges.reserve(other._edges.size());
 
-	for (auto node : other._nodes) _nodes.push_back(new GraphNode<NodeData, LinkData>(node->data()));
+	for (auto node : other._nodes) _nodes.push_back(new Node(node->data()));
 
 	for (auto edge : other._edges) {
-		GraphNode<NodeData, LinkData>*from = nullptr, *to = nullptr;
+		Node *from = nullptr, *to = nullptr;
 
 		for (auto node : other._nodes) {
 			if (node->data().id == edge->_from->data().id) from = node;
@@ -18,23 +18,23 @@ arro::Graph<NodeData, LinkData>::Graph(const Graph<NodeData, LinkData>& other) :
 		if (!from || !to) throw std::invalid_argument("Graph link between nonexistent nodes");
 
 		if (_digraph) {
-			_edges.push_back(new Link<LinkData, NodeData>(from, to, edge->data()));
+			_edges.push_back(new Link(from, to, edge->data()));
 		} else {
-			_edges.push_back(new Link<LinkData, NodeData>(from, to, edge->data()));
-			_edges.push_back(new Link<LinkData, NodeData>(to, from, edge->data()));
+			_edges.push_back(new Link(from, to, edge->data()));
+			_edges.push_back(new Link(to, from, edge->data()));
 		}
 	}
 }
 
 template <arro::UniqueSerializable NodeData, typename LinkData>
-arro::GraphNode<NodeData, LinkData>* arro::Graph<NodeData, LinkData>::add(const NodeData& data) {
-	_nodes.push_back(new GraphNode(data));
+arro::Graph<NodeData, LinkData>::Node* arro::Graph<NodeData, LinkData>::add(const NodeData& data) {
+	_nodes.push_back(new Node(data));
 }
 
 template <arro::UniqueSerializable NodeData, typename LinkData>
-arro::Link<LinkData, NodeData>* arro::Graph<NodeData, LinkData>::link(const decltype(NodeData::id)& from, const decltype(NodeData::id)& to,
-																	  const LinkData& data) {
-	GraphNode<NodeData, LinkData>*fromNode, *toNode;
+arro::Graph<NodeData, LinkData>::Link* arro::Graph<NodeData, LinkData>::link(const decltype(NodeData::id)& from, const decltype(NodeData::id)& to,
+																			 const LinkData& data) {
+	Node *fromNode, *toNode;
 
 	for (auto node : _nodes) {
 		if (node->data().id == from) fromNode = node;
@@ -45,17 +45,16 @@ arro::Link<LinkData, NodeData>* arro::Graph<NodeData, LinkData>::link(const decl
 }
 
 template <arro::UniqueSerializable NodeData, typename LinkData>
-arro::Link<LinkData, NodeData>* arro::Graph<NodeData, LinkData>::link(GraphNode<NodeData, LinkData>* from, GraphNode<NodeData, LinkData>* to,
-																	  const LinkData& data) {
+arro::Graph<NodeData, LinkData>::Link* arro::Graph<NodeData, LinkData>::link(Node* from, Node* to, const LinkData& data) {
 	if (_digraph) {
-		Link<LinkData, NodeData>* link = new Link(from, to, data);
+		Link* link = new Link(from, to, data);
 
 		_edges.push_back(link);
 		from->_neighbors.push_back(link);
 
 		return link;
 	} else {
-		Link<LinkData, NodeData>*link = new Link(from, to, data), *reverse = new Link(to, from, data);
+		Link *link = new Link(from, to, data), *reverse = new Link(to, from, data);
 
 		_edges.push_back(link);
 		_edges.push_back(reverse);
@@ -71,13 +70,16 @@ template <arro::UniqueSerializable NewNodeData, arro::__mapperfn<NodeData, NewNo
 arro::Graph<NewNodeData, LinkData> arro::Graph<NodeData, LinkData>::map(const Mapper& fn) const {
 	using namespace std;
 
-	vector<GraphNode<NewNodeData, LinkData>*> nodes;
-	vector<Link<LinkData, NewNodeData>*> edges;
+	using NewNode = Graph<NewNodeData, LinkData>::Node;
+	using NewLink = Graph<NewNodeData, LinkData>::Link;
 
-	for (auto node : _nodes) nodes.push_back(new GraphNode<NewNodeData, LinkData>(fn(node->data())));
+	vector<NewNode*> nodes;
+	vector<NewLink*> edges;
+
+	for (auto node : _nodes) nodes.push_back(new NewNode(fn(node->data())));
 
 	for (auto edge : _edges) {
-		GraphNode<NewNodeData, LinkData>*from = nullptr, *to = nullptr;
+		NewNode *from = nullptr, *to = nullptr;
 		for (auto node : nodes) {
 			if (node->data().id == edge->_from->data().id) from = node;
 			if (node->data().id == edge->_to->data().id) to = node;
@@ -86,10 +88,10 @@ arro::Graph<NewNodeData, LinkData> arro::Graph<NodeData, LinkData>::map(const Ma
 		if (!from || !to) throw std::invalid_argument("Graph link between nonexistent nodes");
 
 		if (_digraph) {
-			edges.push_back(new Link<LinkData, NewNodeData>(from, to, edge->data()));
+			edges.push_back(new NewLink(from, to, edge->data()));
 		} else {
-			edges.push_back(new Link<LinkData, NewNodeData>(from, to, edge->data()));
-			edges.push_back(new Link<LinkData, NewNodeData>(to, from, edge->data()));
+			edges.push_back(new NewLink(from, to, edge->data()));
+			edges.push_back(new NewLink(to, from, edge->data()));
 		}
 	}
 
@@ -144,8 +146,8 @@ arro::Graph<NodeData, LinkData> arro::Graph<NodeData, LinkData>::readFrom(std::i
 	using namespace std;
 
 	bool digraph;
-	vector<GraphNode<NodeData, LinkData>*> nodes;
-	vector<Link<LinkData, NodeData>*> edges;
+	vector<Node*> nodes;
+	vector<Link*> edges;
 
 	string type;
 	in >> type;
@@ -163,7 +165,7 @@ arro::Graph<NodeData, LinkData> arro::Graph<NodeData, LinkData>::readFrom(std::i
 			NodeData data;
 			in >> data;
 
-			nodes.push_back(new GraphNode<NodeData, LinkData>(data));
+			nodes.push_back(new Node(data));
 		} else if (type == "link") {
 			decltype(NodeData::id) fromId, toId;
 			in >> fromId >> toId;
@@ -171,7 +173,7 @@ arro::Graph<NodeData, LinkData> arro::Graph<NodeData, LinkData>::readFrom(std::i
 			LinkData data;
 			in >> data;
 
-			GraphNode<NodeData, LinkData>*from = nullptr, *to = nullptr;
+			Node *from = nullptr, *to = nullptr;
 			for (auto node : nodes) {
 				if (node->data().id == fromId) from = node;
 				if (node->data().id == toId) to = node;
@@ -180,10 +182,10 @@ arro::Graph<NodeData, LinkData> arro::Graph<NodeData, LinkData>::readFrom(std::i
 			if (!from || !to) throw invalid_argument("Graph link between nonexistent nodes");
 
 			if (digraph) {
-				edges.push_back(new Link<LinkData, NodeData>(from, to, data));
+				edges.push_back(new Link(from, to, data));
 			} else {
-				edges.push_back(new Link<LinkData, NodeData>(from, to, data));
-				edges.push_back(new Link<LinkData, NodeData>(to, from, data));
+				edges.push_back(new Link(from, to, data));
+				edges.push_back(new Link(to, from, data));
 			}
 		} else {
 			throw invalid_argument("Graph entry must be either 'node' or 'link'");

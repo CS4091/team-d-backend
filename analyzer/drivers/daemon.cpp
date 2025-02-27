@@ -1,6 +1,6 @@
-#include <iostream>
+#include <utils/Graph.h>
 
-#include "../lib/Graph.h"
+#include <iostream>
 
 using namespace std;
 

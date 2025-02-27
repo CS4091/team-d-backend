@@ -28,60 +28,53 @@ concept __mapperfn = std::copy_constructible<T> && requires(T fn, Arg arg) {
 	{ fn(arg) } -> std::convertible_to<Ret>;
 };
 
-template <UniqueSerializable NodeData, typename LinkData>
-class Graph;
-
-template <typename Data, UniqueSerializable NodeData>
-struct Link;
-
-template <UniqueSerializable Data, typename LinkData>
-struct GraphNode : public Node<Data> {
-public:
-	GraphNode(const Data& data) : Node<Data>(data) {}
-
-	friend class Graph<Data, LinkData>;
-
-private:
-	std::vector<Link<LinkData, Data>*> _neighbors;
-
-	~GraphNode() {}
-};
-
-template <typename Data, UniqueSerializable NodeData>
-struct Link {
-public:
-	Link(GraphNode<NodeData, Data>* from, GraphNode<NodeData, Data>* to, const Data& data) : _data(data), _from(from), _to(to) {}
-
-	const Data& data() const { return _data; }
-
-	friend class Graph<NodeData, Data>;
-
-private:
-	Data _data;
-	GraphNode<NodeData, Data>* _from;
-	GraphNode<NodeData, Data>* _to;
-
-	~Link() {}
-};
-
 // TODO: add template parameter for digraph property & template specialization (?)
 template <UniqueSerializable NodeData, typename LinkData>
 class Graph {
 public:
+	struct Link;
+
+	struct Node : public arro::Node<NodeData> {
+	public:
+		Node(const NodeData& data) : arro::Node<NodeData>(data) {}
+
+		friend class Graph<NodeData, LinkData>;
+
+	private:
+		std::vector<Link*> _neighbors;
+
+		~Node() {}
+	};
+
+	struct Link {
+	public:
+		Link(Node* from, Node* to, const LinkData& data) : _data(data), _from(from), _to(to) {}
+
+		const LinkData& data() const { return _data; }
+
+		friend class Graph<NodeData, LinkData>;
+
+	private:
+		LinkData _data;
+		Node* _from;
+		Node* _to;
+
+		~Link() {}
+	};
+
 	// these should be sets, but that would be ptr equality (which i dont like)
 	Graph(bool digraph = true) : _digraph(digraph) {}
-	Graph(const std::vector<GraphNode<NodeData, LinkData>*>& nodes, bool digraph = false) : _digraph(digraph), _nodes(nodes) {}
-	Graph(const std::vector<GraphNode<NodeData, LinkData>*>& nodes, const std::vector<Link<LinkData, NodeData>*>& edges, bool digraph = false)
-		: _digraph(digraph), _nodes(nodes), _edges(edges) {}
+	Graph(const std::vector<Node*>& nodes, bool digraph = false) : _digraph(digraph), _nodes(nodes) {}
+	Graph(const std::vector<Node*>& nodes, const std::vector<Link*>& edges, bool digraph = false) : _digraph(digraph), _nodes(nodes), _edges(edges) {}
 
 	Graph(const Graph<NodeData, LinkData>& other);
 
-	const std::vector<GraphNode<NodeData, LinkData>*>& nodes() const { return _nodes; }
+	const std::vector<Node*>& nodes() const { return _nodes; }
 
-	GraphNode<NodeData, LinkData>* add(const NodeData& data);
+	Node* add(const NodeData& data);
 
-	Link<LinkData, NodeData>* link(const decltype(NodeData::id)& from, const decltype(NodeData::id)& to, const LinkData& data);
-	Link<LinkData, NodeData>* link(GraphNode<NodeData, LinkData>* from, GraphNode<NodeData, LinkData>* to, const LinkData& data);
+	Link* link(const decltype(NodeData::id)& from, const decltype(NodeData::id)& to, const LinkData& data);
+	Link* link(Node* from, Node* to, const LinkData& data);
 
 	template <UniqueSerializable NewNodeData, __mapperfn<NodeData, NewNodeData> Mapper>
 	Graph<NewNodeData, LinkData> map(const Mapper& fn) const;
@@ -96,8 +89,8 @@ public:
 
 private:
 	bool _digraph;
-	std::vector<GraphNode<NodeData, LinkData>*> _nodes;
-	std::vector<Link<LinkData, NodeData>*> _edges;
+	std::vector<Node*> _nodes;
+	std::vector<Link*> _edges;
 
 	void _clear();
 };

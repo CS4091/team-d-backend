@@ -1,5 +1,5 @@
 #define CATCH_CONFIG_MAIN
-#include "../../lib/Graph.h"
+#include <utils/Graph.h>
 
 #include <catch2/catch_test_macros.hpp>
 #include <string>
