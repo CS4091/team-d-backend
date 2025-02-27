@@ -1,5 +1,5 @@
-#include <Graph.h>
 #include <math/Vector3D.h>
+#include <utils/Graph.h>
 
 #include <cmath>
 #include <fstream>
