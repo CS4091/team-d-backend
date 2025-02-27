@@ -49,8 +49,12 @@ public:
 
 	Vector3D operator()() const;
 
+	double operator[](int idx) const;
+
 	// scalar projection of *this onto other
 	double operator[](const Vector3D& other) const;
+
+	static Vector3D midpoint(const Vector3D& a, const Vector3D& b);
 
 private:
 	double _x, _y, _z;

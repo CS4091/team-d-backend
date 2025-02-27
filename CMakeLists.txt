@@ -21,18 +21,27 @@ FetchContent_MakeAvailable(json)
 
 project(analyzer)
 
+link_libraries(nlohmann_json::nlohmann_json)
+include_directories(analyzer/lib)
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY bin)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY bin/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY bin/lib)
+
+set(LIB "analyzer/lib")
+
+add_library(
+	math STATIC
+	"${LIB}/math/Vector3D.cpp"
+	"${LIB}/math/aviation.cpp"
+)
+
 add_executable(daemon analyzer/drivers/daemon.cpp)
-set_target_properties(daemon PROPERTIES RUNTIME_OUTPUT_DIRECTORY bin)
-target_link_libraries(daemon PRIVATE nlohmann_json::nlohmann_json)
-target_sources(daemon PRIVATE analyzer/lib/Vector3D.cpp)
+target_link_libraries(daemon math)
 
 add_executable(demo analyzer/drivers/demo.cpp)
-set_target_properties(demo PROPERTIES RUNTIME_OUTPUT_DIRECTORY bin)
-target_link_libraries(demo PRIVATE nlohmann_json::nlohmann_json)
-target_sources(demo PRIVATE analyzer/lib/Vector3D.cpp)
+target_link_libraries(demo math)
 
 add_executable(graph analyzer/drivers/tests/graph.cpp)
-set_target_properties(graph PROPERTIES RUNTIME_OUTPUT_DIRECTORY bin/tests)
-target_link_libraries(graph PRIVATE Catch2::Catch2WithMain)
-target_link_libraries(graph PRIVATE nlohmann_json::nlohmann_json)
-target_sources(graph PRIVATE analyzer/lib/Vector3D.cpp)
+target_link_libraries(graph PRIVATE Catch2::Catch2WithMain math)
+set_target_properties(demo PROPERTIES CMAKE_RUNTIME_OUTPUT_DIRECTORY bin/tests)

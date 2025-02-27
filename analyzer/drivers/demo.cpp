@@ -1,12 +1,12 @@
+#include <Graph.h>
+#include <math/Vector3D.h>
+
 #include <cmath>
 #include <fstream>
 #include <iostream>
 #include <numbers>
 #include <string>
 #include <vector>
-
-#include "../lib/Graph.h"
-#include "../lib/Vector3D.h"
 
 using namespace std;
 using namespace numbers;

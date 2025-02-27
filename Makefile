@@ -182,6 +182,19 @@ depend:
 .PHONY : depend
 
 #=============================================================================
+# Target rules for targets named math
+
+# Build rule for target.
+math: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 math
+.PHONY : math
+
+# fast build rule for target.
+math/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/math.dir/build.make CMakeFiles/math.dir/build
+.PHONY : math/fast
+
+#=============================================================================
 # Target rules for targets named daemon
 
 # Build rule for target.
@@ -318,35 +331,53 @@ analyzer/drivers/tests/graph.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/graph.dir/build.make CMakeFiles/graph.dir/analyzer/drivers/tests/graph.cpp.s
 .PHONY : analyzer/drivers/tests/graph.cpp.s
 
-analyzer/lib/Vector3D.o: analyzer/lib/Vector3D.cpp.o
-.PHONY : analyzer/lib/Vector3D.o
+analyzer/lib/math/Vector3D.o: analyzer/lib/math/Vector3D.cpp.o
+.PHONY : analyzer/lib/math/Vector3D.o
 
 # target to build an object file
-analyzer/lib/Vector3D.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/daemon.dir/build.make CMakeFiles/daemon.dir/analyzer/lib/Vector3D.cpp.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo.dir/build.make CMakeFiles/demo.dir/analyzer/lib/Vector3D.cpp.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/graph.dir/build.make CMakeFiles/graph.dir/analyzer/lib/Vector3D.cpp.o
-.PHONY : analyzer/lib/Vector3D.cpp.o
+analyzer/lib/math/Vector3D.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/math.dir/build.make CMakeFiles/math.dir/analyzer/lib/math/Vector3D.cpp.o
+.PHONY : analyzer/lib/math/Vector3D.cpp.o
 
-analyzer/lib/Vector3D.i: analyzer/lib/Vector3D.cpp.i
-.PHONY : analyzer/lib/Vector3D.i
+analyzer/lib/math/Vector3D.i: analyzer/lib/math/Vector3D.cpp.i
+.PHONY : analyzer/lib/math/Vector3D.i
 
 # target to preprocess a source file
-analyzer/lib/Vector3D.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/daemon.dir/build.make CMakeFiles/daemon.dir/analyzer/lib/Vector3D.cpp.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo.dir/build.make CMakeFiles/demo.dir/analyzer/lib/Vector3D.cpp.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/graph.dir/build.make CMakeFiles/graph.dir/analyzer/lib/Vector3D.cpp.i
-.PHONY : analyzer/lib/Vector3D.cpp.i
+analyzer/lib/math/Vector3D.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/math.dir/build.make CMakeFiles/math.dir/analyzer/lib/math/Vector3D.cpp.i
+.PHONY : analyzer/lib/math/Vector3D.cpp.i
 
-analyzer/lib/Vector3D.s: analyzer/lib/Vector3D.cpp.s
-.PHONY : analyzer/lib/Vector3D.s
+analyzer/lib/math/Vector3D.s: analyzer/lib/math/Vector3D.cpp.s
+.PHONY : analyzer/lib/math/Vector3D.s
 
 # target to generate assembly for a file
-analyzer/lib/Vector3D.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/daemon.dir/build.make CMakeFiles/daemon.dir/analyzer/lib/Vector3D.cpp.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/demo.dir/build.make CMakeFiles/demo.dir/analyzer/lib/Vector3D.cpp.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/graph.dir/build.make CMakeFiles/graph.dir/analyzer/lib/Vector3D.cpp.s
-.PHONY : analyzer/lib/Vector3D.cpp.s
+analyzer/lib/math/Vector3D.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/math.dir/build.make CMakeFiles/math.dir/analyzer/lib/math/Vector3D.cpp.s
+.PHONY : analyzer/lib/math/Vector3D.cpp.s
+
+analyzer/lib/math/aviation.o: analyzer/lib/math/aviation.cpp.o
+.PHONY : analyzer/lib/math/aviation.o
+
+# target to build an object file
+analyzer/lib/math/aviation.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/math.dir/build.make CMakeFiles/math.dir/analyzer/lib/math/aviation.cpp.o
+.PHONY : analyzer/lib/math/aviation.cpp.o
+
+analyzer/lib/math/aviation.i: analyzer/lib/math/aviation.cpp.i
+.PHONY : analyzer/lib/math/aviation.i
+
+# target to preprocess a source file
+analyzer/lib/math/aviation.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/math.dir/build.make CMakeFiles/math.dir/analyzer/lib/math/aviation.cpp.i
+.PHONY : analyzer/lib/math/aviation.cpp.i
+
+analyzer/lib/math/aviation.s: analyzer/lib/math/aviation.cpp.s
+.PHONY : analyzer/lib/math/aviation.s
+
+# target to generate assembly for a file
+analyzer/lib/math/aviation.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/math.dir/build.make CMakeFiles/math.dir/analyzer/lib/math/aviation.cpp.s
+.PHONY : analyzer/lib/math/aviation.cpp.s
 
 # Help Target
 help:
@@ -367,6 +398,7 @@ help:
 	@echo "... daemon"
 	@echo "... demo"
 	@echo "... graph"
+	@echo "... math"
 	@echo "... analyzer/drivers/daemon.o"
 	@echo "... analyzer/drivers/daemon.i"
 	@echo "... analyzer/drivers/daemon.s"
@@ -376,9 +408,12 @@ help:
 	@echo "... analyzer/drivers/tests/graph.o"
 	@echo "... analyzer/drivers/tests/graph.i"
 	@echo "... analyzer/drivers/tests/graph.s"
-	@echo "... analyzer/lib/Vector3D.o"
-	@echo "... analyzer/lib/Vector3D.i"
-	@echo "... analyzer/lib/Vector3D.s"
+	@echo "... analyzer/lib/math/Vector3D.o"
+	@echo "... analyzer/lib/math/Vector3D.i"
+	@echo "... analyzer/lib/math/Vector3D.s"
+	@echo "... analyzer/lib/math/aviation.o"
+	@echo "... analyzer/lib/math/aviation.i"
+	@echo "... analyzer/lib/math/aviation.s"
 .PHONY : help
 
 

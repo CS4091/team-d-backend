@@ -1,6 +1,10 @@
 #include "Vector3D.h"
 
+#include <stdexcept>
+#include <utility>
+
 using namespace arro;
+using namespace std;
 
 Vector3D& Vector3D::operator=(const Vector3D& other) {
 	_x = other._x;
@@ -74,6 +78,25 @@ Vector3D Vector3D::operator()() const {
 	return *this / magnitude();
 }
 
+double Vector3D::operator[](int idx) const {
+	if (idx > 2) throw out_of_range("Vector element access out of range");
+
+	switch (idx) {
+		case 0:
+			return _x;
+		case 1:
+			return _y;
+		case 2:
+			return _z;
+		default:
+			unreachable();
+	}
+}
+
 double Vector3D::operator[](const Vector3D& other) const {
 	return (*this * other) / other.magnitude();
+}
+
+Vector3D Vector3D::midpoint(const Vector3D& a, const Vector3D& b) {
+	return (a + b) / 2;
 }
