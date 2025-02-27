@@ -71,12 +71,12 @@ arro::Graph<NewNodeData, LinkData> arro::Graph<NodeData, LinkData>::map(const Ma
 	using namespace std;
 
 	using NewNode = Graph<NewNodeData, LinkData>::Node;
-	using NewLink = Graph<NewNodeData, LinkData>::Link;
 
 	vector<NewNode*> nodes;
-	vector<NewLink*> edges;
 
 	for (auto node : _nodes) nodes.push_back(new NewNode(fn(node->data())));
+
+	Graph<NewNodeData, LinkData> newGraph(nodes, _digraph);
 
 	for (auto edge : _edges) {
 		NewNode *from = nullptr, *to = nullptr;
@@ -87,15 +87,10 @@ arro::Graph<NewNodeData, LinkData> arro::Graph<NodeData, LinkData>::map(const Ma
 
 		if (!from || !to) throw std::invalid_argument("Graph link between nonexistent nodes");
 
-		if (_digraph) {
-			edges.push_back(new NewLink(from, to, edge->data()));
-		} else {
-			edges.push_back(new NewLink(from, to, edge->data()));
-			edges.push_back(new NewLink(to, from, edge->data()));
-		}
+		newGraph.link(from, to, edge->data());
 	}
 
-	return Graph<NewNodeData, LinkData>(nodes, edges, _digraph);
+	return newGraph;
 }
 
 template <arro::UniqueSerializable NodeData, typename LinkData>
