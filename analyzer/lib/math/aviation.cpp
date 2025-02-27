@@ -49,8 +49,6 @@ double aviation::descentDistance(const Vector3D& from, const Vector3D& to) {
 double aviation::cruiseDistance(const Vector3D& from, const Vector3D& to) {
 	double lateralDistance = (to - from).magnitude();
 
-	double lateralDistance = (to - from).magnitude();
-
 	if (lateralDistance < FULL_CLIMB_LATERAL) {
 		return 0;
 	} else {
