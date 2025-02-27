@@ -18,10 +18,13 @@ concept IDAble = requires(T elem) {
 };
 
 template <typename T>
-concept UniqueSerializable = std::copy_constructible<T> && IDAble<T> && requires(T elem, std::string str) {
+concept Serializable = std::copy_constructible<T> && requires(T elem, std::string str) {
 	{ T::stringify(elem) } -> std::convertible_to<nlohmann::json>;
 	{ T::parse(str) } -> std::convertible_to<T>;
 };
+
+template <typename T>
+concept UniqueSerializable = Serializable<T> && IDAble<T>;
 
 template <typename T, typename Arg, typename Ret>
 concept __mapperfn = std::copy_constructible<T> && requires(T fn, Arg arg) {
@@ -29,7 +32,7 @@ concept __mapperfn = std::copy_constructible<T> && requires(T fn, Arg arg) {
 };
 
 // TODO: add template parameter for digraph property & template specialization (?)
-template <UniqueSerializable NodeData, typename LinkData>
+template <UniqueSerializable NodeData, Serializable LinkData>
 class Graph {
 public:
 	struct Link;
@@ -37,6 +40,8 @@ public:
 	struct Node : public arro::Node<NodeData> {
 	public:
 		Node(const NodeData& data) : arro::Node<NodeData>(data) {}
+
+		const std::vector<Link*>& neighbors() const { return _neighbors; }
 
 		friend class Graph<NodeData, LinkData>;
 
@@ -52,6 +57,9 @@ public:
 
 		const LinkData& data() const { return _data; }
 
+		const Node* from() const { return _from; }
+		const Node* to() const { return _to; }
+
 		friend class Graph<NodeData, LinkData>;
 
 	private:
@@ -60,6 +68,11 @@ public:
 		Node* _to;
 
 		~Link() {}
+	};
+
+	struct LinkLookup {
+		Node* from;
+		Node* to;
 	};
 
 	// these should be sets, but that would be ptr equality (which i dont like)
@@ -71,10 +84,15 @@ public:
 
 	const std::vector<Node*>& nodes() const { return _nodes; }
 
+	std::size_t size() const { return _nodes.size(); }
+
 	Node* add(const NodeData& data);
 
 	Link* link(const decltype(NodeData::id)& from, const decltype(NodeData::id)& to, const LinkData& data);
 	Link* link(Node* from, Node* to, const LinkData& data);
+
+	const Node* operator[](const decltype(NodeData::id)& id) const;
+	const Link* operator[](const LinkLookup& lookup) const;
 
 	template <UniqueSerializable NewNodeData, __mapperfn<NodeData, NewNodeData> Mapper>
 	Graph<NewNodeData, LinkData> map(const Mapper& fn) const;

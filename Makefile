@@ -379,6 +379,30 @@ analyzer/lib/math/aviation.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/math.dir/build.make CMakeFiles/math.dir/analyzer/lib/math/aviation.cpp.s
 .PHONY : analyzer/lib/math/aviation.cpp.s
 
+analyzer/lib/math/geospatial.o: analyzer/lib/math/geospatial.cpp.o
+.PHONY : analyzer/lib/math/geospatial.o
+
+# target to build an object file
+analyzer/lib/math/geospatial.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/math.dir/build.make CMakeFiles/math.dir/analyzer/lib/math/geospatial.cpp.o
+.PHONY : analyzer/lib/math/geospatial.cpp.o
+
+analyzer/lib/math/geospatial.i: analyzer/lib/math/geospatial.cpp.i
+.PHONY : analyzer/lib/math/geospatial.i
+
+# target to preprocess a source file
+analyzer/lib/math/geospatial.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/math.dir/build.make CMakeFiles/math.dir/analyzer/lib/math/geospatial.cpp.i
+.PHONY : analyzer/lib/math/geospatial.cpp.i
+
+analyzer/lib/math/geospatial.s: analyzer/lib/math/geospatial.cpp.s
+.PHONY : analyzer/lib/math/geospatial.s
+
+# target to generate assembly for a file
+analyzer/lib/math/geospatial.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/math.dir/build.make CMakeFiles/math.dir/analyzer/lib/math/geospatial.cpp.s
+.PHONY : analyzer/lib/math/geospatial.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -414,6 +438,9 @@ help:
 	@echo "... analyzer/lib/math/aviation.o"
 	@echo "... analyzer/lib/math/aviation.i"
 	@echo "... analyzer/lib/math/aviation.s"
+	@echo "... analyzer/lib/math/geospatial.o"
+	@echo "... analyzer/lib/math/geospatial.i"
+	@echo "... analyzer/lib/math/geospatial.s"
 .PHONY : help
 
 

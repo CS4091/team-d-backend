@@ -1,6 +1,6 @@
 #include "Graph.h"
 
-template <arro::UniqueSerializable NodeData, typename LinkData>
+template <arro::UniqueSerializable NodeData, arro::Serializable LinkData>
 arro::Graph<NodeData, LinkData>::Graph(const Graph<NodeData, LinkData>& other) : _digraph(other._digraph) {
 	_nodes.reserve(other._nodes.size());
 	_edges.reserve(other._edges.size());
@@ -26,12 +26,16 @@ arro::Graph<NodeData, LinkData>::Graph(const Graph<NodeData, LinkData>& other) :
 	}
 }
 
-template <arro::UniqueSerializable NodeData, typename LinkData>
+template <arro::UniqueSerializable NodeData, arro::Serializable LinkData>
 arro::Graph<NodeData, LinkData>::Node* arro::Graph<NodeData, LinkData>::add(const NodeData& data) {
-	_nodes.push_back(new Node(data));
+	Node* node = new Node(data);
+
+	_nodes.push_back(node);
+
+	return node;
 }
 
-template <arro::UniqueSerializable NodeData, typename LinkData>
+template <arro::UniqueSerializable NodeData, arro::Serializable LinkData>
 arro::Graph<NodeData, LinkData>::Link* arro::Graph<NodeData, LinkData>::link(const decltype(NodeData::id)& from, const decltype(NodeData::id)& to,
 																			 const LinkData& data) {
 	Node *fromNode, *toNode;
@@ -44,7 +48,7 @@ arro::Graph<NodeData, LinkData>::Link* arro::Graph<NodeData, LinkData>::link(con
 	return link(fromNode, toNode, data);
 }
 
-template <arro::UniqueSerializable NodeData, typename LinkData>
+template <arro::UniqueSerializable NodeData, arro::Serializable LinkData>
 arro::Graph<NodeData, LinkData>::Link* arro::Graph<NodeData, LinkData>::link(Node* from, Node* to, const LinkData& data) {
 	if (_digraph) {
 		Link* link = new Link(from, to, data);
@@ -65,7 +69,29 @@ arro::Graph<NodeData, LinkData>::Link* arro::Graph<NodeData, LinkData>::link(Nod
 	}
 }
 
-template <arro::UniqueSerializable NodeData, typename LinkData>
+template <arro::UniqueSerializable NodeData, arro::Serializable LinkData>
+const arro::Graph<NodeData, LinkData>::Node* arro::Graph<NodeData, LinkData>::operator[](const decltype(NodeData::id)& id) const {
+	for (auto node : _nodes) {
+		if (node->id == id) {
+			return node;
+		}
+	}
+
+	return nullptr;
+}
+
+template <arro::UniqueSerializable NodeData, arro::Serializable LinkData>
+const arro::Graph<NodeData, LinkData>::Link* arro::Graph<NodeData, LinkData>::operator[](const LinkLookup& lookup) const {
+	for (auto edge : _edges) {
+		if (edge->_from == lookup.from && edge->_to == lookup.to) {
+			return edge;
+		}
+	}
+
+	return nullptr;
+}
+
+template <arro::UniqueSerializable NodeData, arro::Serializable LinkData>
 template <arro::UniqueSerializable NewNodeData, arro::__mapperfn<NodeData, NewNodeData> Mapper>
 arro::Graph<NewNodeData, LinkData> arro::Graph<NodeData, LinkData>::map(const Mapper& fn) const {
 	using namespace std;
@@ -93,7 +119,7 @@ arro::Graph<NewNodeData, LinkData> arro::Graph<NodeData, LinkData>::map(const Ma
 	return newGraph;
 }
 
-template <arro::UniqueSerializable NodeData, typename LinkData>
+template <arro::UniqueSerializable NodeData, arro::Serializable LinkData>
 void arro::Graph<NodeData, LinkData>::jsonDumpToFile(const std::string& path) const {
 	using namespace std;
 	using json = nlohmann::json;
@@ -117,7 +143,7 @@ void arro::Graph<NodeData, LinkData>::jsonDumpToFile(const std::string& path) co
 
 		if (fromIdx == (size_t)-1 || toIdx == (size_t)-1) throw domain_error("Graph state inconsistent");
 
-		edges.push_back({{"from", fromIdx}, {"to", toIdx}, {"data", edge->data()}});
+		edges.push_back({{"from", fromIdx}, {"to", toIdx}, {"data", LinkData::stringify(edge->data())}});
 	}
 
 	out << std::setw(4) << json{{"nodes", nodes}, {"edges", edges}};
@@ -125,18 +151,18 @@ void arro::Graph<NodeData, LinkData>::jsonDumpToFile(const std::string& path) co
 	out.close();
 }
 
-template <arro::UniqueSerializable NodeData, typename LinkData>
+template <arro::UniqueSerializable NodeData, arro::Serializable LinkData>
 arro::Graph<NodeData, LinkData>::~Graph() {
 	_clear();
 }
 
-template <arro::UniqueSerializable NodeData, typename LinkData>
+template <arro::UniqueSerializable NodeData, arro::Serializable LinkData>
 void arro::Graph<NodeData, LinkData>::_clear() {
 	for (auto node : _nodes) delete node;
 	for (auto edge : _edges) delete edge;
 }
 
-template <arro::UniqueSerializable NodeData, typename LinkData>
+template <arro::UniqueSerializable NodeData, arro::Serializable LinkData>
 arro::Graph<NodeData, LinkData> arro::Graph<NodeData, LinkData>::readFrom(std::istream& in) {
 	using namespace std;
 
@@ -190,7 +216,7 @@ arro::Graph<NodeData, LinkData> arro::Graph<NodeData, LinkData>::readFrom(std::i
 	return Graph(nodes, edges, digraph);
 }
 
-template <arro::UniqueSerializable NodeData, typename LinkData>
+template <arro::UniqueSerializable NodeData, arro::Serializable LinkData>
 arro::Graph<NodeData, LinkData> arro::Graph<NodeData, LinkData>::readFromFile(const std::string& path) {
 	std::ifstream in(path);
 

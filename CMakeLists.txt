@@ -34,6 +34,7 @@ add_library(
 	math STATIC
 	"${LIB}/math/Vector3D.cpp"
 	"${LIB}/math/aviation.cpp"
+	"${LIB}/math/geospatial.cpp"
 )
 
 add_executable(daemon analyzer/drivers/daemon.cpp)
