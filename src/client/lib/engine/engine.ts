@@ -18,6 +18,27 @@ export enum MouseButton {
 	FORWARD
 }
 
+interface GraphNode {
+	id: string;
+	x: number;
+	y: number;
+}
+
+interface ConnectionEdge {
+	from: number;
+	to: number;
+	data: {
+		distance: number;
+		duration: number;
+	};
+}
+
+interface DemandEdge {
+	from: number;
+	to: number;
+	data: number;
+}
+
 export class Engine {
 	private readonly context: CanvasRenderingContext2D;
 	private readonly layers: Entity[][] = [[], []];
@@ -167,7 +188,7 @@ export class Engine {
 		);
 	}
 
-	public load(graph: { nodes: { id: string; x: number; y: number }[]; edges: { from: number; to: number; data: number }[] }): void {
+	public loadConnectivity(graph: { nodes: GraphNode[]; edges: ConnectionEdge[] }): void {
 		this.layers.splice(0);
 
 		const bboxBL = new Point(0, 0),
@@ -192,7 +213,25 @@ export class Engine {
 
 		nodes.forEach((node) => (node.position = node.position.subtract(bboxCenter).scale(900 / bboxDims.x, 600 / bboxDims.y)));
 
-		graph.edges.forEach(({ from, to, data }) => this.add(new Edge(nodes[from], nodes[to], data), 0));
+		graph.edges.forEach(({ from, to, data }) => this.add(new Edge(nodes[from], nodes[to], data.duration, 'black'), 0));
+	}
+
+	public loadDemand(graph: { nodes: GraphNode[]; edges: DemandEdge[] }): void {
+		const nodes = graph.nodes.map(({ id }) => {
+			let node: Node;
+
+			this.layers.forEach((layer) =>
+				layer.forEach((n) => {
+					if (n instanceof Node && n.label === id) {
+						node = n;
+					}
+				})
+			);
+
+			return node;
+		});
+
+		graph.edges.forEach(({ from, to, data }) => this.add(new Edge(nodes[from], nodes[to], data, 'red'), 0));
 	}
 
 	private _tick(): void {

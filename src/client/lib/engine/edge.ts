@@ -23,7 +23,7 @@ interface ArcData {
 }
 
 export class Edge extends Entity {
-	constructor(public from: Node, public to: Node, public data: number, public cycleState: CycleSide | null = null) {
+	constructor(public from: Node, public to: Node, public data: number, public color: string, public cycleState: CycleSide | null = null) {
 		super();
 
 		this.position = from.position.add(to.position).divide(2);
@@ -41,7 +41,7 @@ export class Edge extends Entity {
 			if (this.from === this.to) {
 				const center = this.from.position.add(new Point(0, 55));
 
-				const [end, start] = calculateIntersection(this.from.position, center, 37.5, 25);
+				const [end, start] = calculateIntersection(this.from.position, center, 20, 25);
 				const radVec = end.subtract(center);
 				const endTangent = new Point(radVec.y, -radVec.x).scaleTo(1);
 				const endNormal = new Point(endTangent.y, -endTangent.x).scaleTo(1);
@@ -57,7 +57,7 @@ export class Edge extends Entity {
 					renderEngine.arc(start, center, r, angle, 'rgba(200, 200, 255, 0.5)', 6);
 				}
 
-				renderEngine.arc(start, center, r, angle);
+				renderEngine.arc(start, center, r, angle, this.color);
 
 				renderEngine.fillShape(
 					[
@@ -67,23 +67,23 @@ export class Edge extends Entity {
 						end.add(endTangent.invert().scaleTo(7.5)).add(endNormal.scaleTo(-4)),
 						end
 					],
-					'black'
+					this.color
 				);
 
 				const conditionBasepoint = arcCenter.add(normal.scaleTo(5));
 
-				renderEngine.text(conditionBasepoint, `${this.data}`, { direction: tangent });
+				renderEngine.text(conditionBasepoint, `${this.data.toFixed(2)}`, { direction: tangent });
 			} else {
 				const dir = toPos.subtract(fromPos),
 					perpRight = new Point(dir.y, -dir.x);
-				const arrowTip = toPos.subtract(dir.scaleTo(37.5)),
+				const arrowTip = toPos.subtract(dir.scaleTo(20)),
 					midpoint = fromPos.add(toPos).times(0.5);
 
 				if (metadata.selected) {
 					renderEngine.line(fromPos, toPos, 6, 'rgba(200, 200, 255, 0.5)');
 				}
 
-				renderEngine.line(fromPos, toPos);
+				renderEngine.line(fromPos, toPos, 1, this.color);
 				renderEngine.fillShape(
 					[
 						arrowTip,
@@ -92,12 +92,12 @@ export class Edge extends Entity {
 						arrowTip.add(dir.invert().scaleTo(7.5)).add(perpRight.scaleTo(-4)),
 						arrowTip
 					],
-					'black'
+					this.color
 				);
 
 				const conditionBasepoint = midpoint.add(perpRight.scaleTo(-5));
 
-				renderEngine.text(conditionBasepoint, `${this.data}`, { direction: dir });
+				renderEngine.text(conditionBasepoint, `${this.data.toFixed(2)}`, { direction: dir });
 			}
 		} else {
 			const { start, center, angle, r, end: arrowTip, endTangent, normal, arcCenter, tangent, endNormal } = this._calculateArcData();
@@ -106,7 +106,7 @@ export class Edge extends Entity {
 				renderEngine.arc(start, center, r, angle, 'rgba(200, 200, 255, 0.5)', 6);
 			}
 
-			renderEngine.arc(start, center, r, angle);
+			renderEngine.arc(start, center, r, angle, this.color);
 
 			renderEngine.fillShape(
 				[
@@ -116,12 +116,12 @@ export class Edge extends Entity {
 					arrowTip.add(endTangent.invert().scaleTo(7.5)).add(endNormal.scaleTo(-4)),
 					arrowTip
 				],
-				'black'
+				this.color
 			);
 
 			const conditionBasepoint = arcCenter.add(normal.scaleTo(tangent.x < 0 ? -15 : -5));
 
-			renderEngine.text(conditionBasepoint, `${this.data}`, { direction: tangent.x < 0 ? tangent.invert() : tangent });
+			renderEngine.text(conditionBasepoint, `${this.data.toFixed(2)}`, { direction: tangent.x < 0 ? tangent.invert() : tangent });
 		}
 	}
 
@@ -134,7 +134,7 @@ export class Edge extends Entity {
 				const ctx = renderEngine.context;
 				const center = this.from.position.add(new Point(0, 55));
 
-				const [end, start] = calculateIntersection(this.from.position, center, 37.5, 25);
+				const [end, start] = calculateIntersection(this.from.position, center, 20, 25);
 				const radVec = end.subtract(center);
 				const r = 25;
 				const sRad = start.subtract(center);
@@ -205,10 +205,10 @@ export class Edge extends Entity {
 
 		const center = midpoint.add(perpRight.scaleTo(r - 25));
 
-		const end = calculateLHIntersection(center, toPos, r, 37.5);
+		const end = calculateLHIntersection(center, toPos, r, 20);
 		const radVec = end.subtract(center);
 		const endTangent = new Point(radVec.y, -radVec.x).scaleTo(1);
-		const start = calculateRHIntersection(center, fromPos, r, 37.5);
+		const start = calculateRHIntersection(center, fromPos, r, 20);
 		const endNormal = new Point(endTangent.y, -endTangent.x).scaleTo(1);
 
 		const shortX = start.distanceTo(end) / 2;

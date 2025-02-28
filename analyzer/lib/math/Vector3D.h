@@ -56,6 +56,8 @@ public:
 
 	static Vector3D midpoint(const Vector3D& a, const Vector3D& b);
 
+	static Vector3D cross(const Vector3D& a, const Vector3D& b);
+
 private:
 	double _x, _y, _z;
 };

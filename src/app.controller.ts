@@ -1,8 +1,8 @@
-import { Controller, Get, Post, StreamableFile, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { Controller, Get, Header, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { spawn } from 'child_process';
 import { randomBytes } from 'crypto';
-import { createReadStream, readFileSync, rmSync, writeFileSync } from 'fs';
+import { readFileSync, rmSync, writeFileSync } from 'fs';
 import { AppService } from './app.service';
 import { Page } from './utils/decorators/page.decorator';
 
@@ -15,11 +15,15 @@ export class AppController {
 	public index() {}
 
 	@Get('/demo-graph')
-	public getDemoGraph(): StreamableFile {
-		return new StreamableFile(createReadStream('test.graph.json'));
+	public getDemoGraph(): any {
+		return {
+			connectivity: JSON.parse(readFileSync(`test.graph.c.json`).toString()),
+			demand: JSON.parse(readFileSync(`test.graph.d.json`).toString())
+		};
 	}
 
 	@Post('/regraph')
+	@Header('Content-Type', 'application/json')
 	@UseInterceptors(FileInterceptor('file'))
 	public async regraph(@UploadedFile() file: Express.Multer.File): Promise<any> {
 		const id = randomBytes(16).toString('hex');
@@ -37,7 +41,10 @@ export class AppController {
 
 			proc.on('exit', (status) => {
 				if (status === 0) {
-					resolve(readFileSync(`${id}.graph.json`).toString());
+					resolve({
+						connectivity: JSON.parse(readFileSync(`${id}.graph.c.json`).toString()),
+						demand: JSON.parse(readFileSync(`${id}.graph.d.json`).toString())
+					});
 				} else {
 					console.error('Error child', status);
 					console.error(stdout);
@@ -47,7 +54,8 @@ export class AppController {
 				}
 
 				rmSync(`${id}.graph`);
-				rmSync(`${id}.graph.json`);
+				rmSync(`${id}.graph.c.json`);
+				rmSync(`${id}.graph.d.json`);
 			});
 		});
 	}

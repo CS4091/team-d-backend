@@ -75,7 +75,7 @@ arro::Graph<GraphCity, T> flatten(const arro::Graph<GeoCity, T>& graph) {
 	arro::Vector3D avg(0, 0, 0);
 	for (auto node : graph.nodes()) avg += node->data().pos;
 
-	// avg is now the normal vector to the "average plane" of the city points
+	// avg is now the normal vector to the "average plane" of the city points (and also the center of the points)
 	avg /= graph.nodes().size();
 
 	arro::Vector3D north = arro::Vector3D(0, 0, 1), east = arro::Vector3D(1, 0, 0);

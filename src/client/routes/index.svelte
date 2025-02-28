@@ -16,7 +16,10 @@
 
 			fetch('/demo-graph')
 				.then((res) => res.json())
-				.then((data) => engine.load(data));
+				.then((data) => {
+					engine.loadConnectivity(data.connectivity);
+					engine.loadDemand(data.demand);
+				});
 		}
 	});
 
@@ -28,7 +31,8 @@
 			fetch('/regraph', { method: 'POST', body: fd })
 				.then((res) => res.json())
 				.then((data) => {
-					engine.load(data);
+					engine.loadConnectivity(data.connectivity);
+					engine.loadDemand(data.demand);
 					form.reset();
 				});
 		}
