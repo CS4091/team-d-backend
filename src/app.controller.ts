@@ -18,7 +18,8 @@ export class AppController {
 	public getDemoGraph(): any {
 		return {
 			connectivity: JSON.parse(readFileSync(`test.graph.c.json`).toString()),
-			demand: JSON.parse(readFileSync(`test.graph.d.json`).toString())
+			demand: JSON.parse(readFileSync(`test.graph.d.json`).toString()),
+			path: JSON.parse(readFileSync(`test.graph.p.json`).toString())
 		};
 	}
 
@@ -43,7 +44,8 @@ export class AppController {
 				if (status === 0) {
 					resolve({
 						connectivity: JSON.parse(readFileSync(`${id}.graph.c.json`).toString()),
-						demand: JSON.parse(readFileSync(`${id}.graph.d.json`).toString())
+						demand: JSON.parse(readFileSync(`${id}.graph.d.json`).toString()),
+						path: JSON.parse(readFileSync(`test.graph.p.json`).toString())
 					});
 				} else {
 					console.error('Error child', status);
@@ -56,6 +58,7 @@ export class AppController {
 				rmSync(`${id}.graph`);
 				rmSync(`${id}.graph.c.json`);
 				rmSync(`${id}.graph.d.json`);
+				rmSync(`${id}.graph.p.json`);
 			});
 		});
 	}

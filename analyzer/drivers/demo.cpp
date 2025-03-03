@@ -1,11 +1,14 @@
+#include <algo/dijkstra.h>
 #include <math/Vector3D.h>
 #include <math/aviation.h>
 #include <math/geospatial.h>
 #include <utils/Graph.h>
+#include <utils/rand.h>
 
 #include <cmath>
 #include <fstream>
 #include <iostream>
+#include <list>
 #include <numbers>
 #include <queue>
 #include <string>
@@ -28,8 +31,17 @@ struct RouteData {
 	double distance;
 	double duration;
 
+	double cost() const { return duration; }
+
 	static json stringify(const RouteData& city);
 	static RouteData parse(const string& str);
+};
+
+struct RouteOrder {
+	int order;
+
+	static json stringify(const RouteOrder& city);
+	static RouteOrder parse(const string& str);
 };
 
 struct City {
@@ -68,7 +80,7 @@ struct NeighborEntry {
 	double distance;
 };
 
-bool operator<(const NeighborEntry& a, const NeighborEntry& b);
+bool operator>(const NeighborEntry& a, const NeighborEntry& b);
 
 template <arro::Serializable T>
 arro::Graph<GraphCity, T> flatten(const arro::Graph<GeoCity, T>& graph) {
@@ -104,7 +116,7 @@ int main(int argc, char* argv[]) {
 
 	// perform knn
 	for (auto node : connectivityGraph.nodes()) {
-		priority_queue<NeighborEntry> queue;
+		priority_queue<NeighborEntry, std::vector<NeighborEntry>, std::greater<NeighborEntry>> queue;
 
 		for (auto other : connectivityGraph.nodes()) {
 			if (node != other) {
@@ -116,6 +128,7 @@ int main(int argc, char* argv[]) {
 
 		for (int i = 0; i < k; i++) {
 			auto entry = queue.top();
+			queue.pop();
 			auto fromCity = node->data(), toCity = entry.node->data();
 
 			double distance = arro::aviation::flightDistance(fromCity.pos, toCity.pos);
@@ -129,6 +142,54 @@ int main(int argc, char* argv[]) {
 	flatten(demandGraph.map<GeoCity>([](const MapCity& city) {
 		return GeoCity{city.id, arro::geospatial::llToRect(city.lat, city.lng)};
 	})).jsonDumpToFile(path + ".d.json");
+
+	const arro::Graph<GeoCity, RouteData>::Node* planeLoc = arro::rand::choice<arro::Graph<GeoCity, RouteData>::Node*>(connectivityGraph.nodes());
+	list<const arro::Graph<GeoCity, RouteData>::Node*> route;
+	route.push_back(planeLoc);
+
+	for (auto requestedRoute : demandGraph.edges()) {
+		const arro::Graph<GeoCity, RouteData>::Node *from = connectivityGraph[requestedRoute->from()->data().id],
+													*to = connectivityGraph[requestedRoute->to()->data().id];
+
+		list<const arro::Graph<GeoCity, RouteData>::Node*> path;
+
+		if (from != planeLoc) {
+			path = arro::algo::dijkstra<GeoCity, RouteData>(connectivityGraph, planeLoc, from);
+
+			for (auto it = ++path.begin(); it != path.end(); it++) {
+				route.push_back(*it);
+			}
+
+			planeLoc = from;
+		}
+
+		path = arro::algo::dijkstra<GeoCity, RouteData>(connectivityGraph, from, to);
+
+		for (auto it = ++path.begin(); it != path.end(); it++) {
+			route.push_back(*it);
+		}
+
+		planeLoc = to;
+	}
+
+	arro::Graph<GeoCity, RouteOrder> routeGraph;
+
+	for (auto node : connectivityGraph.nodes()) routeGraph.add(node->data());
+
+	int i = 1;
+	for (auto it = route.begin(); it != route.end();) {
+		const arro::Graph<GeoCity, RouteData>::Node* from = *it;
+
+		it++;
+
+		if (it != route.end()) {
+			const arro::Graph<GeoCity, RouteData>::Node* to = *it;
+
+			routeGraph.link(from->data().id, to->data().id, RouteOrder{i++});
+		}
+	}
+
+	flatten(routeGraph).jsonDumpToFile(path + ".p.json");
 
 	return 0;
 }
@@ -169,6 +230,18 @@ RouteData RouteData::parse(const string& str) {
 	return RouteData{parsed["distance"].get<double>(), parsed["duration"].get<double>()};
 }
 
+json RouteOrder::stringify(const RouteOrder& data) {
+	return data.order;
+}
+
+RouteOrder RouteOrder::parse(const string& str) {
+	json parsed = json::parse(str);
+
+	if (!parsed.is_number_integer()) throw invalid_argument("Invalid RouteOrder json");
+
+	return RouteOrder{parsed.get<int>()};
+}
+
 json MapCity::stringify(const MapCity& city) {
 	return {{"id", city.id}, {"lat", city.lat}, {"lng", city.lng}};
 }
@@ -206,6 +279,6 @@ GraphCity GraphCity::parse(const string& str) {
 	return GraphCity{parsed["id"].get<string>(), parsed["x"].get<double>(), parsed["y"].get<double>()};
 }
 
-bool operator<(const NeighborEntry& a, const NeighborEntry& b) {
-	return a.distance < b.distance;
+bool operator>(const NeighborEntry& a, const NeighborEntry& b) {
+	return a.distance > b.distance;
 }

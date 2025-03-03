@@ -19,6 +19,7 @@
 				.then((data) => {
 					engine.loadConnectivity(data.connectivity);
 					engine.loadDemand(data.demand);
+					engine.loadPath(data.path);
 				});
 		}
 	});

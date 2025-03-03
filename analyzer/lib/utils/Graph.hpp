@@ -72,7 +72,7 @@ arro::Graph<NodeData, LinkData>::Link* arro::Graph<NodeData, LinkData>::link(Nod
 template <arro::UniqueSerializable NodeData, arro::Serializable LinkData>
 const arro::Graph<NodeData, LinkData>::Node* arro::Graph<NodeData, LinkData>::operator[](const decltype(NodeData::id)& id) const {
 	for (auto node : _nodes) {
-		if (node->id == id) {
+		if (node->data().id == id) {
 			return node;
 		}
 	}

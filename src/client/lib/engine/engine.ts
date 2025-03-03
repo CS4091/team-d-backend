@@ -234,6 +234,24 @@ export class Engine {
 		graph.edges.forEach(({ from, to, data }) => this.add(new Edge(nodes[from], nodes[to], data, 'red'), 0));
 	}
 
+	public loadPath(graph: { nodes: GraphNode[]; edges: DemandEdge[] }): void {
+		const nodes = graph.nodes.map(({ id }) => {
+			let node: Node;
+
+			this.layers.forEach((layer) =>
+				layer.forEach((n) => {
+					if (n instanceof Node && n.label === id) {
+						node = n;
+					}
+				})
+			);
+
+			return node;
+		});
+
+		graph.edges.forEach(({ from, to, data }) => this.add(new Edge(nodes[from], nodes[to], data, 'blue'), 0));
+	}
+
 	private _tick(): void {
 		requestAnimationFrame(() => this._tick());
 

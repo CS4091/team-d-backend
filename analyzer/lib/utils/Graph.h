@@ -83,6 +83,7 @@ public:
 	Graph(const Graph<NodeData, LinkData>& other);
 
 	const std::vector<Node*>& nodes() const { return _nodes; }
+	const std::vector<Link*>& edges() const { return _edges; }
 
 	std::size_t size() const { return _nodes.size(); }
 
