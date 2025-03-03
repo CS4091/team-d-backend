@@ -188,7 +188,11 @@ export class Engine {
 		);
 	}
 
-	public loadConnectivity(graph: { nodes: GraphNode[]; edges: ConnectionEdge[] }): void {
+	public load(edges: Entity[]): void {
+		this.layers[0] = edges;
+	}
+
+	public loadConnectivity(graph: { nodes: GraphNode[]; edges: ConnectionEdge[] }): Entity[] {
 		this.layers.splice(0);
 
 		const bboxBL = new Point(0, 0),
@@ -214,9 +218,13 @@ export class Engine {
 		nodes.forEach((node) => (node.position = node.position.subtract(bboxCenter).scale(900 / bboxDims.x, 600 / bboxDims.y)));
 
 		graph.edges.forEach(({ from, to, data }) => this.add(new Edge(nodes[from], nodes[to], data.duration, 'black'), 0));
+
+		return this.layers[0];
 	}
 
-	public loadDemand(graph: { nodes: GraphNode[]; edges: DemandEdge[] }): void {
+	public loadDemand(graph: { nodes: GraphNode[]; edges: DemandEdge[] }): Entity[] {
+		this.layers[0] = [];
+
 		const nodes = graph.nodes.map(({ id }) => {
 			let node: Node;
 
@@ -232,9 +240,13 @@ export class Engine {
 		});
 
 		graph.edges.forEach(({ from, to, data }) => this.add(new Edge(nodes[from], nodes[to], data, 'red'), 0));
+
+		return this.layers[0];
 	}
 
-	public loadPath(graph: { nodes: GraphNode[]; edges: DemandEdge[] }): void {
+	public loadPath(graph: { nodes: GraphNode[]; edges: DemandEdge[] }): Entity[] {
+		this.layers[0] = [];
+
 		const nodes = graph.nodes.map(({ id }) => {
 			let node: Node;
 
@@ -250,6 +262,8 @@ export class Engine {
 		});
 
 		graph.edges.forEach(({ from, to, data }) => this.add(new Edge(nodes[from], nodes[to], data, 'blue'), 0));
+
+		return this.layers[0];
 	}
 
 	private _tick(): void {

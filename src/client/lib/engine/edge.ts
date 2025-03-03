@@ -72,7 +72,7 @@ export class Edge extends Entity {
 
 				const conditionBasepoint = arcCenter.add(normal.scaleTo(5));
 
-				renderEngine.text(conditionBasepoint, `${this.data.toFixed(2)}`, { direction: tangent });
+				renderEngine.text(conditionBasepoint, `${this._data()}`, { direction: tangent });
 			} else {
 				const dir = toPos.subtract(fromPos),
 					perpRight = new Point(dir.y, -dir.x);
@@ -97,7 +97,7 @@ export class Edge extends Entity {
 
 				const conditionBasepoint = midpoint.add(perpRight.scaleTo(-5));
 
-				renderEngine.text(conditionBasepoint, `${this.data.toFixed(2)}`, { direction: dir });
+				renderEngine.text(conditionBasepoint, `${this._data()}`, { direction: dir });
 			}
 		} else {
 			const { start, center, angle, r, end: arrowTip, endTangent, normal, arcCenter, tangent, endNormal } = this._calculateArcData();
@@ -121,7 +121,7 @@ export class Edge extends Entity {
 
 			const conditionBasepoint = arcCenter.add(normal.scaleTo(tangent.x < 0 ? -15 : -5));
 
-			renderEngine.text(conditionBasepoint, `${this.data.toFixed(2)}`, { direction: tangent.x < 0 ? tangent.invert() : tangent });
+			renderEngine.text(conditionBasepoint, `${this._data()}`, { direction: tangent.x < 0 ? tangent.invert() : tangent });
 		}
 	}
 
@@ -226,6 +226,10 @@ export class Edge extends Entity {
 			normal: perpRight.scaleTo(1),
 			endNormal
 		};
+	}
+
+	private _data(): string {
+		return Number.isInteger(this.data) ? `${this.data}` : `${this.data.toFixed(2)}`;
 	}
 }
 
