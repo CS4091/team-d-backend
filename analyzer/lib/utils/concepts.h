@@ -11,7 +11,7 @@ concept Comparable = requires(T a, T b) {
 template <typename T, typename... A>
 concept Callable = requires(T fn, A... args) { fn(args...); };
 
-template <typename T, typename... A, typename R>
+template <typename T, typename R, typename... A>
 concept Function = Callable<T, A...> && requires(T fn, A... args) {
 	{ fn(args...) } -> std::convertible_to<R>;
 };
