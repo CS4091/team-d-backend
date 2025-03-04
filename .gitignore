@@ -43,3 +43,4 @@ CMakeFiles/
 *.graph
 *.graph.*
 CMakeCache.txt
+Makefile
