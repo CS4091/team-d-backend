@@ -5,7 +5,7 @@ arro::Graph<NodeData, LinkData>::Graph(const Graph<NodeData, LinkData>& other) :
 	_nodes.reserve(other._nodes.size());
 	_edges.reserve(other._edges.size());
 
-	for (auto node : other._nodes) _nodes.push_back(new Node(node->data()));
+	for (auto node : other._nodes) _nodes.push_back(new Node(_nodes.size(), node->data()));
 
 	for (auto edge : other._edges) {
 		Node *from = nullptr, *to = nullptr;
@@ -27,8 +27,30 @@ arro::Graph<NodeData, LinkData>::Graph(const Graph<NodeData, LinkData>& other) :
 }
 
 template <arro::UniqueSerializable NodeData, arro::Serializable LinkData>
+std::size_t arro::Graph<NodeData, LinkData>::indexOf(Node* node) const {
+	using namespace std;
+
+	for (size_t i = 0; i < _nodes.size(); i++) {
+		if (_nodes[i] == node) return i;
+	}
+
+	throw out_of_range("Finding index of node not in graph");
+}
+
+template <arro::UniqueSerializable NodeData, arro::Serializable LinkData>
+std::size_t arro::Graph<NodeData, LinkData>::indexOf(const decltype(NodeData::id)& id) const {
+	using namespace std;
+
+	for (size_t i = 0; i < _nodes.size(); i++) {
+		if (_nodes[i]->data().id == id) return i;
+	}
+
+	throw out_of_range("Finding index of node not in graph");
+}
+
+template <arro::UniqueSerializable NodeData, arro::Serializable LinkData>
 arro::Graph<NodeData, LinkData>::Node* arro::Graph<NodeData, LinkData>::add(const NodeData& data) {
-	Node* node = new Node(data);
+	Node* node = new Node(_nodes.size(), data);
 
 	_nodes.push_back(node);
 
@@ -100,7 +122,7 @@ arro::Graph<NewNodeData, LinkData> arro::Graph<NodeData, LinkData>::map(const Ma
 
 	vector<NewNode*> nodes;
 
-	for (auto node : _nodes) nodes.push_back(new NewNode(fn(node->data())));
+	for (auto node : _nodes) nodes.push_back(new NewNode(nodes.size(), fn(node->data())));
 
 	Graph<NewNodeData, LinkData> newGraph(nodes, _digraph);
 
@@ -186,7 +208,7 @@ arro::Graph<NodeData, LinkData> arro::Graph<NodeData, LinkData>::readFrom(std::i
 			NodeData data;
 			in >> data;
 
-			nodes.push_back(new Node(data));
+			nodes.push_back(new Node(nodes.size(), data));
 		} else if (type == "link") {
 			decltype(NodeData::id) fromId, toId;
 			in >> fromId >> toId;

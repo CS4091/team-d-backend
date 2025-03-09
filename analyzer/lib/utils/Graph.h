@@ -39,7 +39,9 @@ public:
 
 	struct Node : public arro::Node<NodeData> {
 	public:
-		Node(const NodeData& data) : arro::Node<NodeData>(data) {}
+		const std::size_t idx;	// NOTE: relies on grow-only nature of graph
+
+		Node(std::size_t idx, const NodeData& data) : arro::Node<NodeData>(data), idx(idx) {}
 
 		const std::vector<Link*>& neighbors() const { return _neighbors; }
 
@@ -86,6 +88,8 @@ public:
 	const std::vector<Link*>& edges() const { return _edges; }
 
 	std::size_t size() const { return _nodes.size(); }
+	std::size_t indexOf(Node* node) const;
+	std::size_t indexOf(const decltype(NodeData::id)& id) const;
 
 	Node* add(const NodeData& data);
 

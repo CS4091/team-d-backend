@@ -42,5 +42,6 @@ CMakeFiles/
 .vscode/
 *.graph
 *.graph.*
+*.assets
 CMakeCache.txt
 Makefile

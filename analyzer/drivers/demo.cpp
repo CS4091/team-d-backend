@@ -1,4 +1,5 @@
 #include <algo/dijkstra.h>
+#include <algo/fw.h>
 #include <math/Vector3D.h>
 #include <math/aviation.h>
 #include <math/geospatial.h>
@@ -116,13 +117,20 @@ int main(int argc, char* argv[]) {
 
 	// perform knn
 	for (auto node : connectivityGraph.nodes()) {
+		NeighborEntry farthestNeighbor = {nullptr, -INFINITY};
 		priority_queue<NeighborEntry, std::vector<NeighborEntry>, std::greater<NeighborEntry>> queue;
 
 		for (auto other : connectivityGraph.nodes()) {
 			if (node != other) {
 				auto fromCity = node->data(), toCity = other->data();
 
-				queue.emplace(other, arro::aviation::flightDistance(fromCity.pos, toCity.pos));
+				double distance = arro::aviation::flightDistance(fromCity.pos, toCity.pos);
+				queue.emplace(other, distance);
+
+				if (distance > farthestNeighbor.distance) {
+					farthestNeighbor.node = other;
+					farthestNeighbor.distance = distance;
+				}
 			}
 		}
 
@@ -136,6 +144,8 @@ int main(int argc, char* argv[]) {
 
 			connectivityGraph.link(node, entry.node, RouteData{distance, duration});
 		}
+
+		connectivityGraph.link(node, farthestNeighbor.node, RouteData{farthestNeighbor.distance, farthestNeighbor.distance / 901'000});
 	}
 
 	flatten(connectivityGraph).jsonDumpToFile(path + ".c.json");
@@ -143,13 +153,35 @@ int main(int argc, char* argv[]) {
 		return GeoCity{city.id, arro::geospatial::llToRect(city.lat, city.lng)};
 	})).jsonDumpToFile(path + ".d.json");
 
-	const arro::Graph<GeoCity, RouteData>::Node* planeLoc = arro::rand::choice<arro::Graph<GeoCity, RouteData>::Node*>(connectivityGraph.nodes());
+	vector<vector<double>> masterTable = arro::algo::floydWarshall(connectivityGraph);
+
+	ifstream assets("test.assets");
+	string startCity;
+	assets >> startCity;
+	assets.close();
+
+	const arro::Graph<GeoCity, RouteData>::Node* planeLoc = connectivityGraph[startCity];
 	list<const arro::Graph<GeoCity, RouteData>::Node*> route;
 	route.push_back(planeLoc);
 
-	for (auto requestedRoute : demandGraph.edges()) {
-		const arro::Graph<GeoCity, RouteData>::Node *from = connectivityGraph[requestedRoute->from()->data().id],
-													*to = connectivityGraph[requestedRoute->to()->data().id];
+	vector<arro::Graph<MapCity, ArrivalTime>::Link*> requestedRoutes = demandGraph.edges();
+
+	while (requestedRoutes.size() > 0) {
+		size_t fromIdx = planeLoc->idx;
+		arro::Graph<MapCity, ArrivalTime>::Link* closestRoute = requestedRoutes[0];
+
+		for (size_t i = 1; i < requestedRoutes.size(); i++) {
+			size_t toIdx = requestedRoutes[i]->from()->idx, oldToIdx = closestRoute->from()->idx;
+
+			if (masterTable[fromIdx][toIdx] < masterTable[fromIdx][oldToIdx]) {
+				closestRoute = requestedRoutes[i];
+			}
+		}
+
+		requestedRoutes.erase(find(requestedRoutes.begin(), requestedRoutes.end(), closestRoute));
+
+		const arro::Graph<GeoCity, RouteData>::Node *from = connectivityGraph[closestRoute->from()->data().id],
+													*to = connectivityGraph[closestRoute->to()->data().id];
 
 		list<const arro::Graph<GeoCity, RouteData>::Node*> path;
 
