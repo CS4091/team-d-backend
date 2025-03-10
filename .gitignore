@@ -36,6 +36,8 @@ lerna-debug.log*
 
 .env
 bin/
+# cmake extension keeps adding this for some reason >:(
+build/
 _deps/
 CMakeFiles/
 *.cmake
