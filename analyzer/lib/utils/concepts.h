@@ -2,6 +2,8 @@
 #define CONCEPTS_H
 
 #include <concepts>
+#include <nlohmann/json.hpp>
+#include <string>
 
 template <typename T>
 concept Comparable = requires(T a, T b) {
@@ -31,5 +33,20 @@ concept SizedRandomAccess = requires(T arr, std::size_t i) {
 	{ arr.size() } -> std::convertible_to<std::size_t>;
 	{ arr[i] } -> std::convertible_to<E>;
 };
+
+template <typename T>
+concept IDAble = requires(T elem) {
+	elem.id;
+	elem.id == elem.id;
+};
+
+template <typename T>
+concept Serializable = std::copy_constructible<T> && requires(T elem, std::string str) {
+	{ T::stringify(elem) } -> std::convertible_to<nlohmann::json>;
+	{ T::parse(str) } -> std::convertible_to<T>;
+};
+
+template <typename T>
+concept UniqueSerializable = Serializable<T> && IDAble<T>;
 
 #endif

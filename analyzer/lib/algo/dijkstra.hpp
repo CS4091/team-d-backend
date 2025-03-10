@@ -1,13 +1,13 @@
 #include "dijkstra.h"
 
-template <arro::UniqueSerializable NodeData, typename LinkData>
-	requires arro::Serializable<LinkData> && Weighted<LinkData>
+template <UniqueSerializable NodeData, typename LinkData>
+	requires Serializable<LinkData> && Weighted<LinkData>
 bool arro::algo::__dijkstra::operator>(const NodeEntry<NodeData, LinkData>& a, const NodeEntry<NodeData, LinkData>& b) {
 	return a.cost > b.cost;
 }
 
-template <arro::UniqueSerializable NodeData, typename LinkData>
-	requires arro::Serializable<LinkData> && Weighted<LinkData>
+template <UniqueSerializable NodeData, typename LinkData>
+	requires Serializable<LinkData> && Weighted<LinkData>
 std::list<const typename arro::Graph<NodeData, LinkData>::Node*> arro::algo::dijkstra(const arro::Graph<NodeData, LinkData>& graph,
 																					  const typename arro::Graph<NodeData, LinkData>::Node* start,
 																					  const typename arro::Graph<NodeData, LinkData>::Node* end) {

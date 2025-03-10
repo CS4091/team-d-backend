@@ -83,7 +83,7 @@ struct NeighborEntry {
 
 bool operator>(const NeighborEntry& a, const NeighborEntry& b);
 
-template <arro::Serializable T>
+template <Serializable T>
 arro::Graph<GraphCity, T> flatten(const arro::Graph<GeoCity, T>& graph) {
 	arro::Vector3D avg(0, 0, 0);
 	for (auto node : graph.nodes()) avg += node->data().pos;

@@ -9,28 +9,9 @@
 #include <vector>
 
 #include "Node.h"
+#include "concepts.h"
 
 namespace arro {
-template <typename T>
-concept IDAble = requires(T elem) {
-	elem.id;
-	elem.id == elem.id;
-};
-
-template <typename T>
-concept Serializable = std::copy_constructible<T> && requires(T elem, std::string str) {
-	{ T::stringify(elem) } -> std::convertible_to<nlohmann::json>;
-	{ T::parse(str) } -> std::convertible_to<T>;
-};
-
-template <typename T>
-concept UniqueSerializable = Serializable<T> && IDAble<T>;
-
-template <typename T, typename Arg, typename Ret>
-concept __mapperfn = std::copy_constructible<T> && requires(T fn, Arg arg) {
-	{ fn(arg) } -> std::convertible_to<Ret>;
-};
-
 // TODO: add template parameter for digraph property & template specialization (?)
 template <UniqueSerializable NodeData, Serializable LinkData>
 class Graph {
@@ -99,7 +80,7 @@ public:
 	const Node* operator[](const decltype(NodeData::id)& id) const;
 	const Link* operator[](const LinkLookup& lookup) const;
 
-	template <UniqueSerializable NewNodeData, __mapperfn<NodeData, NewNodeData> Mapper>
+	template <UniqueSerializable NewNodeData, Function<NewNodeData, NodeData> Mapper>
 	Graph<NewNodeData, LinkData> map(const Mapper& fn) const;
 
 	// [devalue](https://github.com/Rich-Harris/devalue)-inspired graph-to-json serialization

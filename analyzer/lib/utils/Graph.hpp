@@ -1,6 +1,6 @@
 #include "Graph.h"
 
-template <arro::UniqueSerializable NodeData, arro::Serializable LinkData>
+template <UniqueSerializable NodeData, Serializable LinkData>
 arro::Graph<NodeData, LinkData>::Graph(const Graph<NodeData, LinkData>& other) : _digraph(other._digraph) {
 	_nodes.reserve(other._nodes.size());
 	_edges.reserve(other._edges.size());
@@ -26,7 +26,7 @@ arro::Graph<NodeData, LinkData>::Graph(const Graph<NodeData, LinkData>& other) :
 	}
 }
 
-template <arro::UniqueSerializable NodeData, arro::Serializable LinkData>
+template <UniqueSerializable NodeData, Serializable LinkData>
 std::size_t arro::Graph<NodeData, LinkData>::indexOf(Node* node) const {
 	using namespace std;
 
@@ -37,7 +37,7 @@ std::size_t arro::Graph<NodeData, LinkData>::indexOf(Node* node) const {
 	throw out_of_range("Finding index of node not in graph");
 }
 
-template <arro::UniqueSerializable NodeData, arro::Serializable LinkData>
+template <UniqueSerializable NodeData, Serializable LinkData>
 std::size_t arro::Graph<NodeData, LinkData>::indexOf(const decltype(NodeData::id)& id) const {
 	using namespace std;
 
@@ -48,7 +48,7 @@ std::size_t arro::Graph<NodeData, LinkData>::indexOf(const decltype(NodeData::id
 	throw out_of_range("Finding index of node not in graph");
 }
 
-template <arro::UniqueSerializable NodeData, arro::Serializable LinkData>
+template <UniqueSerializable NodeData, Serializable LinkData>
 arro::Graph<NodeData, LinkData>::Node* arro::Graph<NodeData, LinkData>::add(const NodeData& data) {
 	Node* node = new Node(_nodes.size(), data);
 
@@ -57,7 +57,7 @@ arro::Graph<NodeData, LinkData>::Node* arro::Graph<NodeData, LinkData>::add(cons
 	return node;
 }
 
-template <arro::UniqueSerializable NodeData, arro::Serializable LinkData>
+template <UniqueSerializable NodeData, Serializable LinkData>
 arro::Graph<NodeData, LinkData>::Link* arro::Graph<NodeData, LinkData>::link(const decltype(NodeData::id)& from, const decltype(NodeData::id)& to,
 																			 const LinkData& data) {
 	Node *fromNode, *toNode;
@@ -70,7 +70,7 @@ arro::Graph<NodeData, LinkData>::Link* arro::Graph<NodeData, LinkData>::link(con
 	return link(fromNode, toNode, data);
 }
 
-template <arro::UniqueSerializable NodeData, arro::Serializable LinkData>
+template <UniqueSerializable NodeData, Serializable LinkData>
 arro::Graph<NodeData, LinkData>::Link* arro::Graph<NodeData, LinkData>::link(Node* from, Node* to, const LinkData& data) {
 	if (_digraph) {
 		Link* link = new Link(from, to, data);
@@ -91,7 +91,7 @@ arro::Graph<NodeData, LinkData>::Link* arro::Graph<NodeData, LinkData>::link(Nod
 	}
 }
 
-template <arro::UniqueSerializable NodeData, arro::Serializable LinkData>
+template <UniqueSerializable NodeData, Serializable LinkData>
 const arro::Graph<NodeData, LinkData>::Node* arro::Graph<NodeData, LinkData>::operator[](const decltype(NodeData::id)& id) const {
 	for (auto node : _nodes) {
 		if (node->data().id == id) {
@@ -102,7 +102,7 @@ const arro::Graph<NodeData, LinkData>::Node* arro::Graph<NodeData, LinkData>::op
 	return nullptr;
 }
 
-template <arro::UniqueSerializable NodeData, arro::Serializable LinkData>
+template <UniqueSerializable NodeData, Serializable LinkData>
 const arro::Graph<NodeData, LinkData>::Link* arro::Graph<NodeData, LinkData>::operator[](const LinkLookup& lookup) const {
 	for (auto edge : _edges) {
 		if (edge->_from == lookup.from && edge->_to == lookup.to) {
@@ -113,8 +113,8 @@ const arro::Graph<NodeData, LinkData>::Link* arro::Graph<NodeData, LinkData>::op
 	return nullptr;
 }
 
-template <arro::UniqueSerializable NodeData, arro::Serializable LinkData>
-template <arro::UniqueSerializable NewNodeData, arro::__mapperfn<NodeData, NewNodeData> Mapper>
+template <UniqueSerializable NodeData, Serializable LinkData>
+template <UniqueSerializable NewNodeData, Function<NewNodeData, NodeData> Mapper>
 arro::Graph<NewNodeData, LinkData> arro::Graph<NodeData, LinkData>::map(const Mapper& fn) const {
 	using namespace std;
 
@@ -133,7 +133,7 @@ arro::Graph<NewNodeData, LinkData> arro::Graph<NodeData, LinkData>::map(const Ma
 			if (node->data().id == edge->_to->data().id) to = node;
 		}
 
-		if (!from || !to) throw std::invalid_argument("Graph link between nonexistent nodes");
+		if (!from || !to) throw invalid_argument("Graph link between nonexistent nodes");
 
 		newGraph.link(from, to, edge->data());
 	}
@@ -141,7 +141,7 @@ arro::Graph<NewNodeData, LinkData> arro::Graph<NodeData, LinkData>::map(const Ma
 	return newGraph;
 }
 
-template <arro::UniqueSerializable NodeData, arro::Serializable LinkData>
+template <UniqueSerializable NodeData, Serializable LinkData>
 void arro::Graph<NodeData, LinkData>::jsonDumpToFile(const std::string& path) const {
 	using namespace std;
 	using json = nlohmann::json;
@@ -173,18 +173,18 @@ void arro::Graph<NodeData, LinkData>::jsonDumpToFile(const std::string& path) co
 	out.close();
 }
 
-template <arro::UniqueSerializable NodeData, arro::Serializable LinkData>
+template <UniqueSerializable NodeData, Serializable LinkData>
 arro::Graph<NodeData, LinkData>::~Graph() {
 	_clear();
 }
 
-template <arro::UniqueSerializable NodeData, arro::Serializable LinkData>
+template <UniqueSerializable NodeData, Serializable LinkData>
 void arro::Graph<NodeData, LinkData>::_clear() {
 	for (auto node : _nodes) delete node;
 	for (auto edge : _edges) delete edge;
 }
 
-template <arro::UniqueSerializable NodeData, arro::Serializable LinkData>
+template <UniqueSerializable NodeData, Serializable LinkData>
 arro::Graph<NodeData, LinkData> arro::Graph<NodeData, LinkData>::readFrom(std::istream& in) {
 	using namespace std;
 
@@ -238,7 +238,7 @@ arro::Graph<NodeData, LinkData> arro::Graph<NodeData, LinkData>::readFrom(std::i
 	return Graph(nodes, edges, digraph);
 }
 
-template <arro::UniqueSerializable NodeData, arro::Serializable LinkData>
+template <UniqueSerializable NodeData, Serializable LinkData>
 arro::Graph<NodeData, LinkData> arro::Graph<NodeData, LinkData>::readFromFile(const std::string& path) {
 	std::ifstream in(path);
 

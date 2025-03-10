@@ -1,7 +1,7 @@
 #include "fw.h"
 
-template <arro::UniqueSerializable NodeData, typename LinkData>
-	requires arro::Serializable<LinkData> && Weighted<LinkData>
+template <UniqueSerializable NodeData, typename LinkData>
+	requires Serializable<LinkData> && Weighted<LinkData>
 std::vector<std::vector<double>> arro::algo::floydWarshall(const arro::Graph<NodeData, LinkData>& graph) {
 	using namespace std;
 	using namespace arro;
