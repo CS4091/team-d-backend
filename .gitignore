@@ -47,3 +47,5 @@ CMakeFiles/
 *.assets
 CMakeCache.txt
 Makefile
+data/*
+!data/.gitkeep
