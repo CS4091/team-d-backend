@@ -1,17 +1,14 @@
 import { Controller, Get, Header, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiResponse } from '@nestjs/swagger';
 import { spawn } from 'child_process';
 import { randomBytes } from 'crypto';
 import { readFileSync, rmSync, writeFileSync } from 'fs';
 import { AppService } from './app.service';
-import { Airport } from './aviation/aviation.models';
-import { AviationService } from './aviation/aviation.service';
 import { Page } from './utils/decorators/page.decorator';
 
 @Controller()
 export class AppController {
-	constructor(private readonly appService: AppService, public readonly avaiation: AviationService) {}
+	constructor(private readonly appService: AppService) {}
 
 	@Get('/')
 	@Page()
@@ -24,12 +21,6 @@ export class AppController {
 			demand: JSON.parse(readFileSync(`test.graph.d.json`).toString()),
 			path: JSON.parse(readFileSync(`test.graph.p.json`).toString())
 		};
-	}
-
-	@Get('/airports')
-	@ApiResponse({ type: Airport })
-	public async getAirports(): Promise<Airport[]> {
-		return this.avaiation.airports;
 	}
 
 	@Post('/regraph')
