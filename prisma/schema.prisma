@@ -36,7 +36,7 @@ model Organization {
 model Invite {
     userId    String
     orgId     String
-    token     String
+    token     String   @unique
     createdAt DateTime @default(now())
 
     user         User         @relation(fields: [userId], references: [id])

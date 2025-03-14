@@ -1,4 +1,4 @@
-import { DynamicModule } from '@nestjs/common';
+import { DynamicModule, HttpException } from '@nestjs/common';
 import { ServeStaticModule } from '@nestjs/serve-static';
 
 export function fi<T>(): T {
@@ -65,3 +65,8 @@ export function serveClient(): DynamicModule[] {
 		})
 	];
 }
+
+export function wrap<E extends HttpException, C extends new (...args: any) => E>(ErrClass: C): new (...args: ConstructorParameters<C>) => Error {
+	return ErrClass;
+}
+
