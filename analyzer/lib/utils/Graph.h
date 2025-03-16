@@ -54,8 +54,8 @@ public:
 	};
 
 	struct LinkLookup {
-		Node* from;
-		Node* to;
+		const Node* from;
+		const Node* to;
 	};
 
 	// these should be sets, but that would be ptr equality (which i dont like)

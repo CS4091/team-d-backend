@@ -9,6 +9,8 @@
 #include <list>
 #include <map>
 
+#include "exceptions.h"
+
 namespace arro {
 namespace algo {
 namespace __dijkstra {

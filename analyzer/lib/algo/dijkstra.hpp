@@ -85,6 +85,8 @@ std::list<const typename arro::Graph<NodeData, LinkData>::Node*> arro::algo::dij
 
 	NodeEntry endEntry = costs.at(end);
 
+	if (endEntry.cost == INFINITY) throw algo::UnreachableException<NodeData, LinkData>(start, end);
+
 	list<const Node*> path;
 	path.push_front(end);
 

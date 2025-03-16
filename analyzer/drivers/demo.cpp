@@ -1,5 +1,6 @@
 #include <algo/dijkstra.h>
 #include <algo/fw.h>
+#include <algo/routing.h>
 #include <math/Vector3D.h>
 #include <math/aviation.h>
 #include <math/geospatial.h>
@@ -153,75 +154,48 @@ int main(int argc, char* argv[]) {
 		return GeoCity{city.id, arro::geospatial::llToRect(city.lat, city.lng)};
 	})).jsonDumpToFile(path + ".d.json");
 
-	vector<vector<double>> masterTable = arro::algo::floydWarshall(connectivityGraph);
-
 	ifstream assets("test.assets");
 	string startCity;
 	assets >> startCity;
 	assets.close();
 
-	const arro::Graph<GeoCity, RouteData>::Node* planeLoc = connectivityGraph[startCity];
-	list<const arro::Graph<GeoCity, RouteData>::Node*> route;
-	route.push_back(planeLoc);
+	try {
+		list<const arro::Graph<GeoCity, RouteData>::Node*> route = arro::algo::findRoute(connectivityGraph, demandGraph, startCity);
 
-	vector<arro::Graph<MapCity, ArrivalTime>::Link*> requestedRoutes = demandGraph.edges();
+		arro::Graph<GeoCity, RouteOrder> routeGraph;
 
-	while (requestedRoutes.size() > 0) {
-		size_t fromIdx = planeLoc->idx;
-		arro::Graph<MapCity, ArrivalTime>::Link* closestRoute = requestedRoutes[0];
+		for (auto node : connectivityGraph.nodes()) routeGraph.add(node->data());
 
-		for (size_t i = 1; i < requestedRoutes.size(); i++) {
-			size_t toIdx = requestedRoutes[i]->from()->idx, oldToIdx = closestRoute->from()->idx;
+		int i = 1;
+		for (auto it = route.begin(); it != route.end();) {
+			const arro::Graph<GeoCity, RouteData>::Node* from = *it;
 
-			if (masterTable[fromIdx][toIdx] < masterTable[fromIdx][oldToIdx]) {
-				closestRoute = requestedRoutes[i];
+			it++;
+
+			if (it != route.end()) {
+				const arro::Graph<GeoCity, RouteData>::Node* to = *it;
+
+				routeGraph.link(from->data().id, to->data().id, RouteOrder{i++});
 			}
 		}
 
-		requestedRoutes.erase(find(requestedRoutes.begin(), requestedRoutes.end(), closestRoute));
+		flatten(routeGraph).jsonDumpToFile(path + ".p.json");
 
-		const arro::Graph<GeoCity, RouteData>::Node *from = connectivityGraph[closestRoute->from()->data().id],
-													*to = connectivityGraph[closestRoute->to()->data().id];
-
-		list<const arro::Graph<GeoCity, RouteData>::Node*> path;
-
-		if (from != planeLoc) {
-			path = arro::algo::dijkstra<GeoCity, RouteData>(connectivityGraph, planeLoc, from);
-
-			for (auto it = ++path.begin(); it != path.end(); it++) {
-				route.push_back(*it);
-			}
-
-			planeLoc = from;
+		auto it = route.begin();
+		cout << (*it++)->data().id;
+		for (; it != route.end(); it++) {
+			cout << " -> " << (*it)->data().id;
 		}
+		cout << endl;
+	} catch (exception& e) {
+		cerr << "Warning: " << e.what() << endl;
 
-		path = arro::algo::dijkstra<GeoCity, RouteData>(connectivityGraph, from, to);
+		return 1;
+	} catch (...) {
+		cerr << "Unknown error" << endl;
 
-		for (auto it = ++path.begin(); it != path.end(); it++) {
-			route.push_back(*it);
-		}
-
-		planeLoc = to;
+		return 1;
 	}
-
-	arro::Graph<GeoCity, RouteOrder> routeGraph;
-
-	for (auto node : connectivityGraph.nodes()) routeGraph.add(node->data());
-
-	int i = 1;
-	for (auto it = route.begin(); it != route.end();) {
-		const arro::Graph<GeoCity, RouteData>::Node* from = *it;
-
-		it++;
-
-		if (it != route.end()) {
-			const arro::Graph<GeoCity, RouteData>::Node* to = *it;
-
-			routeGraph.link(from->data().id, to->data().id, RouteOrder{i++});
-		}
-	}
-
-	flatten(routeGraph).jsonDumpToFile(path + ".p.json");
 
 	return 0;
 }
