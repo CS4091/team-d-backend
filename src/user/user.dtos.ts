@@ -46,10 +46,10 @@ export class MeUserResponse implements MeUser {
 	@ApiProperty()
 	token: string = fi();
 
-	@ApiProperty({ type: OrganizationResponse, isArray: true })
+	@ApiProperty({ type: () => OrganizationResponse, isArray: true })
 	organizations: Organization[] = fi();
 
-	@ApiProperty({ type: InviteResponse, isArray: true })
+	@ApiProperty({ type: () => InviteResponse, isArray: true })
 	activeInvites: Invite[] = fi();
 }
 

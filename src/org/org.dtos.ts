@@ -54,13 +54,13 @@ export class InviteResponse implements Invite {
 }
 
 export class FullOrganizationResponse implements FullOrganization {
-	@ApiProperty({ type: InviteResponse, isArray: true })
+	@ApiProperty({ type: () => InviteResponse, isArray: true })
 	activeInvites: Invite[] = fi();
 
-	@ApiProperty({ type: PublicUserResponse, isArray: true })
+	@ApiProperty({ type: () => PublicUserResponse, isArray: true })
 	users: PublicUser[] = fi();
 
-	@ApiProperty({ type: PlaneResponse, isArray: true })
+	@ApiProperty({ type: () => PlaneResponse, isArray: true })
 	planes: Plane[] = fi();
 
 	@ApiProperty()
