@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { createId } from '@paralleldrive/cuid2';
-import { Prisma, User } from '@prisma/client';
+import type { Prisma, User } from '@prisma/client';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { compareSync, genSaltSync, hashSync } from 'bcrypt';
 import { randomBytes } from 'crypto';

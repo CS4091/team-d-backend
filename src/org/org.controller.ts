@@ -1,6 +1,6 @@
 import { BadRequestException, Controller, Get, InternalServerErrorException, NotFoundException, Param, Post, Query } from '@nestjs/common';
 import { ApiResponse } from '@nestjs/swagger';
-import { Invite, Organization, User } from '@prisma/client';
+import type { Invite, Organization, User } from '@prisma/client';
 import { Protected } from 'src/auth/protected.decorator';
 import { UserService } from 'src/user/user.service';
 import { ReqUser } from 'src/utils/decorators/user.decorator';

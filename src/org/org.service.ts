@@ -1,6 +1,6 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { createId } from '@paralleldrive/cuid2';
-import { Invite, Prisma, User } from '@prisma/client';
+import type { Invite, Prisma, User } from '@prisma/client';
 import { randomBytes } from 'crypto';
 import { DateTime } from 'luxon';
 import { DBService } from 'src/db/db.service';

@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Invite, Organization } from '@prisma/client';
+import type { Invite, Organization } from '@prisma/client';
 import { IsEmail, IsString, IsStrongPassword } from 'class-validator';
 import { InviteResponse, OrganizationResponse } from 'src/org/org.dtos';
 import { fi } from 'src/utils/utils';

@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Plane } from '@prisma/client';
+import type { Plane } from '@prisma/client';
 import { IsString } from 'class-validator';
 import { fi } from 'src/utils/utils';
 

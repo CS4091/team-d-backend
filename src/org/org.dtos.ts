@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Invite, Organization, Plane } from '@prisma/client';
+import type { Invite, Organization, Plane } from '@prisma/client';
 import { IsString } from 'class-validator';
 import { PlaneResponse } from 'src/asset/asset.dtos';
 import { PublicUserResponse } from 'src/user/user.dtos';

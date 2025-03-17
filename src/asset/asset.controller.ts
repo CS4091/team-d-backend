@@ -1,6 +1,6 @@
 import { Body, Controller, NotFoundException, Param, Post } from '@nestjs/common';
 import { ApiResponse } from '@nestjs/swagger';
-import { Plane, User } from '@prisma/client';
+import type { Plane, User } from '@prisma/client';
 import { Protected } from 'src/auth/protected.decorator';
 import { OrganizationIDDTO } from 'src/org/org.dtos';
 import { fullOrg } from 'src/org/org.models';
