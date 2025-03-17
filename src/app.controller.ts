@@ -3,12 +3,11 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { spawn } from 'child_process';
 import { randomBytes } from 'crypto';
 import { readFileSync, rmSync, writeFileSync } from 'fs';
-import { AppService } from './app.service';
 import { Page } from './utils/decorators/page.decorator';
 
 @Controller()
 export class AppController {
-	constructor(private readonly appService: AppService) {}
+	constructor() {}
 
 	@Get('/')
 	@Page()
