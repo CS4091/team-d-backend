@@ -1,11 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
 import type { Invite, Organization, Plane } from '@prisma/client';
 import { IsString } from 'class-validator';
-import { PlaneResponse } from 'src/asset/asset.dtos';
-import { PublicUserResponse } from 'src/user/user.dtos';
-import { PublicUser } from 'src/user/user.models';
+import { PlaneResponse } from 'src/assets/assets.dtos';
+import { PublicUserResponse } from 'src/users/users.dtos';
+import { PublicUser } from 'src/users/users.models';
 import { fi } from 'src/utils/utils';
-import { FullOrganization } from './org.models';
+import { FullOrganization } from './orgs.models';
 
 export class CreateOrganizationDTO {
 	@IsString()

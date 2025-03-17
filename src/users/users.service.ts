@@ -7,11 +7,11 @@ import { randomBytes } from 'crypto';
 import { AuthDataSource } from 'src/auth/auth.module';
 import { DBService } from 'src/db/db.service';
 import { wrap } from 'src/utils/utils';
-import { LoginDTO, RegisterDTO } from './user.dtos';
-import { MeUser, meUser } from './user.models';
+import { LoginDTO, RegisterDTO } from './users.dtos';
+import { MeUser, meUser } from './users.models';
 
 @Injectable()
-export class UserService implements AuthDataSource {
+export class UsersService implements AuthDataSource {
 	public constructor(public readonly db: DBService) {}
 
 	public async get<S extends Prisma.UserDefaultArgs>(

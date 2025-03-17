@@ -1,9 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
 import type { Invite, Organization } from '@prisma/client';
 import { IsEmail, IsString, IsStrongPassword } from 'class-validator';
-import { InviteResponse, OrganizationResponse } from 'src/org/org.dtos';
+import { InviteResponse, OrganizationResponse } from 'src/orgs/orgs.dtos';
 import { fi } from 'src/utils/utils';
-import { MeUser, PublicUser } from './user.models';
+import { MeUser, PublicUser } from './users.models';
 
 export class RegisterDTO {
 	@IsString()

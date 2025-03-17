@@ -2,15 +2,15 @@ import { BadRequestException, Controller, Get, InternalServerErrorException, Not
 import { ApiResponse } from '@nestjs/swagger';
 import type { Invite, Organization, User } from '@prisma/client';
 import { Protected } from 'src/auth/protected.decorator';
-import { UserService } from 'src/user/user.service';
+import { UsersService } from 'src/users/users.service';
 import { ReqUser } from 'src/utils/decorators/user.decorator';
-import { AcceptInviteDTO, CreateInviteDTO, CreateOrganizationDTO, InviteResponse, OrganizationIDDTO, OrganizationResponse } from './org.dtos';
-import { fullOrg } from './org.models';
-import { OrgService } from './org.service';
+import { AcceptInviteDTO, CreateInviteDTO, CreateOrganizationDTO, InviteResponse, OrganizationIDDTO, OrganizationResponse } from './orgs.dtos';
+import { fullOrg } from './orgs.models';
+import { OrgsService } from './orgs.service';
 
 @Controller('/organizations')
-export class OrgController {
-	public constructor(private readonly service: OrgService, private readonly users: UserService) {}
+export class OrgsController {
+	public constructor(private readonly service: OrgsService, private readonly users: UsersService) {}
 
 	@Get()
 	@Protected()
@@ -41,7 +41,7 @@ export class OrgController {
 		try {
 			return await this.service.invite(org, other);
 		} catch (err: unknown) {
-			if (err instanceof OrgService.DuplicateException) {
+			if (err instanceof OrgsService.DuplicateException) {
 				throw new BadRequestException(`User with id '${userId}' is already invited to organization '${org.name}'.`);
 			} else {
 				throw new InternalServerErrorException('An unknown error occured.');
@@ -56,9 +56,9 @@ export class OrgController {
 		try {
 			return await this.service.acceptInvite(user, token);
 		} catch (err: unknown) {
-			if (err instanceof OrgService.NotAllowedException) {
+			if (err instanceof OrgsService.NotAllowedException) {
 				throw new NotFoundException(`Invite with token '${token}' does not exist.`);
-			} else if (err instanceof OrgService.InviteExpiredException) {
+			} else if (err instanceof OrgsService.InviteExpiredException) {
 				throw new BadRequestException('Invite is expired.');
 			} else {
 				throw new InternalServerErrorException('An unknown error occured.');

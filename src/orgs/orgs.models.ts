@@ -1,5 +1,5 @@
 import { Prisma } from '@prisma/client';
-import { publicUser } from 'src/user/user.models';
+import { publicUser } from 'src/users/users.models';
 
 export const fullOrg = Prisma.validator<Prisma.OrganizationDefaultArgs>()({
 	include: {

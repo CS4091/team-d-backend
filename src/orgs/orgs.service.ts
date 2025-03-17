@@ -4,14 +4,13 @@ import type { Invite, Prisma, User } from '@prisma/client';
 import { randomBytes } from 'crypto';
 import { DateTime } from 'luxon';
 import { DBService } from 'src/db/db.service';
-import { UserService } from 'src/user/user.service';
 import { wrap } from 'src/utils/utils';
-import { CreateOrganizationDTO } from './org.dtos';
-import { fullOrg, FullOrganization } from './org.models';
+import { CreateOrganizationDTO } from './orgs.dtos';
+import { fullOrg, FullOrganization } from './orgs.models';
 
 @Injectable()
-export class OrgService {
-	public constructor(private readonly db: DBService, private readonly users: UserService) {}
+export class OrgsService {
+	public constructor(private readonly db: DBService) {}
 
 	public async get<S extends Prisma.OrganizationDefaultArgs>(
 		where: Prisma.OrganizationWhereUniqueInput,
@@ -26,7 +25,7 @@ export class OrgService {
 	): Promise<Prisma.OrganizationGetPayload<S>> {
 		const org = await this.db.organization.findUnique({ where, ...selectors });
 
-		if (!org) throw new OrgService.NotFoundException();
+		if (!org) throw new OrgsService.NotFoundException();
 
 		return org as any;
 	}
@@ -43,7 +42,7 @@ export class OrgService {
 	}
 
 	public async invite(to: FullOrganization, user: User): Promise<Invite> {
-		if (to.users.some((u) => u.id === user.id)) throw new OrgService.DuplicateException();
+		if (to.users.some((u) => u.id === user.id)) throw new OrgsService.DuplicateException();
 
 		return this.db.invite.create({ data: { orgId: to.id, userId: user.id, token: randomBytes(32).toString('hex') } });
 	}
@@ -51,10 +50,10 @@ export class OrgService {
 	public async acceptInvite(user: User, token: string): Promise<FullOrganization> {
 		const invite = await this.db.invite.findUnique({ where: { token } });
 
-		if (!invite || invite.userId !== user.id) throw new OrgService.NotAllowedException();
+		if (!invite || invite.userId !== user.id) throw new OrgsService.NotAllowedException();
 		if (DateTime.fromJSDate(invite.createdAt).diffNow().get('days') > 1) {
 			await this.db.invite.delete({ where: { token } }); // realistically should also run cron job or something to periodically cleanup db
-			throw new OrgService.InviteExpiredException();
+			throw new OrgsService.InviteExpiredException();
 		}
 
 		return this.db.organization.update({

@@ -2,16 +2,16 @@ import { Body, Controller, NotFoundException, Param, Post } from '@nestjs/common
 import { ApiResponse } from '@nestjs/swagger';
 import type { Plane, User } from '@prisma/client';
 import { Protected } from 'src/auth/protected.decorator';
-import { OrganizationIDDTO } from 'src/org/org.dtos';
-import { fullOrg } from 'src/org/org.models';
-import { OrgService } from 'src/org/org.service';
+import { OrganizationIDDTO } from 'src/orgs/orgs.dtos';
+import { fullOrg } from 'src/orgs/orgs.models';
+import { OrgsService } from 'src/orgs/orgs.service';
 import { ReqUser } from 'src/utils/decorators/user.decorator';
-import { CreatePlaneDTO, PlaneResponse } from './asset.dtos';
-import { AssetService } from './asset.service';
+import { CreatePlaneDTO, PlaneResponse } from './assets.dtos';
+import { AssetsService } from './assets.service';
 
 @Controller('/organizations/:id/assets')
-export class AssetController {
-	public constructor(private readonly service: AssetService, private readonly organizations: OrgService) {}
+export class AssetsController {
+	public constructor(private readonly service: AssetsService, private readonly organizations: OrgsService) {}
 
 	@Post()
 	@Protected()

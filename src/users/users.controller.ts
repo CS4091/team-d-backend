@@ -2,14 +2,14 @@ import { BadRequestException, Controller, Get, Post } from '@nestjs/common';
 import { ApiResponse } from '@nestjs/swagger';
 import type { User } from '@prisma/client';
 import { Protected } from 'src/auth/protected.decorator';
-import { UserService } from 'src/user/user.service';
+import { UsersService } from 'src/users/users.service';
 import { ReqUser } from 'src/utils/decorators/user.decorator';
-import { LoginDTO, MeUserResponse, RegisterDTO } from './user.dtos';
-import { meUser, MeUser } from './user.models';
+import { LoginDTO, MeUserResponse, RegisterDTO } from './users.dtos';
+import { meUser, MeUser } from './users.models';
 
 @Controller('/users')
-export class UserController {
-	public constructor(private readonly service: UserService) {}
+export class UsersController {
+	public constructor(private readonly service: UsersService) {}
 
 	@Get('/me')
 	@Protected()
