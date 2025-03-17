@@ -1,7 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Invite, Organization } from '@prisma/client';
 import { IsEmail, IsString } from 'class-validator';
+import { InviteResponse, OrganizationResponse } from 'src/org/org.dtos';
 import { fi } from 'src/utils/utils';
-import { PublicUser } from './user.models';
+import { MeUser, PublicUser } from './user.models';
 
 export class RegisterDTO {
 	@IsString()
@@ -29,3 +31,24 @@ export class PublicUserResponse implements PublicUser {
 	@ApiProperty()
 	id: string = fi();
 }
+
+export class MeUserResponse implements MeUser {
+	@ApiProperty()
+	name: string = fi();
+
+	@ApiProperty()
+	email: string = fi();
+
+	@ApiProperty()
+	id: string = fi();
+
+	@ApiProperty()
+	token: string = fi();
+
+	@ApiProperty({ type: OrganizationResponse, isArray: true })
+	organizations: Organization[] = fi();
+
+	@ApiProperty({ type: InviteResponse, isArray: true })
+	activeInvites: Invite[] = fi();
+}
+

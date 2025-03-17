@@ -24,7 +24,8 @@ export class UserService implements AuthDataSource {
 	public async login({ email, password }: LoginDTO): Promise<MeUser | null> {
 		const user = await this.db.user.findUnique({ where: { email } });
 
-		return !user || !compareSync(password, user.password) ? null : this.db.user.findUnique({ where: { email }, ...meUser });
+		// avoid leaking existence data (via timing)
+		return !compareSync(password, user?.password ?? '') ? null : this.db.user.findUnique({ where: { email }, ...meUser });
 	}
 
 	public async register({ name, email, password }: RegisterDTO): Promise<MeUser> {
