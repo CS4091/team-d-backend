@@ -24,7 +24,8 @@ async function bootstrap() {
 	app.use(cookieParser())
 		.useGlobalPipes(new ValidationPipe({ transform: true, transformOptions: { enableImplicitConversion: true } }))
 		.useGlobalFilters(new ErrorPageFilter(app.get(HttpAdapterHost).httpAdapter), new RedirectFilter())
-		.useGlobalInterceptors(new RoutingInterceptor());
+		.useGlobalInterceptors(new RoutingInterceptor())
+		.enableCors({ origin: true });
 
 	if (process.env.NODE_ENV !== 'development') {
 		await app.listen(process.env.PORT || 5000);
