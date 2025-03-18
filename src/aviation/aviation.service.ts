@@ -1,7 +1,8 @@
 import { parse } from '@fast-csv/parse';
 import { Injectable } from '@nestjs/common';
 import { createReadStream } from 'fs';
-import { Airport, RawAirport } from './aviation.models';
+import { Airport, RawAirport, RawIntlAirport } from './aviation.models';
+import { processHeaders } from './utils';
 
 @Injectable()
 export class AviationService {
@@ -16,23 +17,7 @@ export class AviationService {
 					parse({
 						objectMode: true,
 						trim: true,
-						headers: (headers: (string | null | undefined)[]) =>
-							headers.map((header) => {
-								if (typeof header !== 'string') throw new Error('Bad airports.csv header');
-
-								const [first, ...rest] = header.split(/,?\s+/);
-
-								return [
-									first.toLowerCase(),
-									...rest.map((part) =>
-										part.toLowerCase() === 'id'
-											? part.toUpperCase()
-											: part.toUpperCase() === part
-											? part
-											: part[0].toUpperCase() + part.slice(1).toLowerCase()
-									)
-								].join('');
-							})
+						headers: processHeaders
 					})
 				)
 				.on('error', reject)
@@ -42,9 +27,21 @@ export class AviationService {
 						facilityType === 'AIRPORT' && icaoID !== '' && data.push({ name, id: icaoID, lat: Number(arpLatitudeDD), lng: Number(arpLongitudeDD) })
 				)
 				.on('end', () => resolve(data));
+
+			createReadStream('data/airports_intl.csv')
+				.pipe(
+					parse({
+						objectMode: true,
+						trim: true,
+						headers: processHeaders
+					})
+				)
+				.on('error', reject)
+				.on('data', ({ name, ICAO, lat, lng }: RawIntlAirport) => data.push({ name, id: ICAO, lat: Number(lat), lng: Number(lng) }))
+				.on('end', () => resolve(data));
 		}).catch((err) => {
 			console.error(err);
-			throw new Error('Failed to acquire airports.csv');
+			throw new Error('Failed to acquire airports.csv or airports_intl.csv');
 		});
 	}
 }

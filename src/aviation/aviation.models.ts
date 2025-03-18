@@ -110,6 +110,28 @@ export interface RawAirport {
 	arpLongitudeDD: string;
 }
 
+export interface RawIntlAirport {
+	id: string;
+	ICAO: string;
+	type: string;
+	name: string;
+	lat: string;
+	lng: string;
+	unknown1: string;
+	region: string;
+	country: string;
+	state: string;
+	short: string;
+	unknown2: string;
+	ICAO2: string;
+	IATA: string;
+	ICAO3: string;
+	unknown3: string;
+	website: string;
+	wikipedia: string;
+	unknown4: string;
+}
+
 export class Airport {
 	@ApiProperty()
 	name: string = fi();
