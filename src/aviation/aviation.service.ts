@@ -37,7 +37,11 @@ export class AviationService {
 					})
 				)
 				.on('error', reject)
-				.on('data', ({ name, ICAO, lat, lng }: RawIntlAirport) => data.push({ name, id: ICAO, lat: Number(lat), lng: Number(lng) }))
+				.on(
+					'data',
+					({ name, ICAO, lat, lng, country }: RawIntlAirport) =>
+						country !== 'US' && data.push({ name, id: ICAO, lat: Number(lat), lng: Number(lng) })
+				)
 				.on('end', () => resolve(data));
 		}).catch((err) => {
 			console.error(err);
