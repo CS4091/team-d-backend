@@ -65,3 +65,52 @@ export class Airport {
 	runways: Runway[] = fi();
 }
 
+export interface RawPlane {
+	model: string;
+	mtow: string;
+	to_runway_len: string;
+	land_runway_len: string;
+	c5kft_as: string;
+	cfl150_as: string;
+	cfl240_as: string;
+	cruise_as: string;
+	dfl240_as: string;
+	dfl100_as: string;
+	approach_as: string;
+}
+
+export class PlaneModel {
+	@ApiProperty()
+	model: string = fi();
+
+	@ApiProperty()
+	mtow: number = fi();
+
+	@ApiProperty()
+	takeoffRunway: number = fi();
+
+	@ApiProperty()
+	landingRunway: number = fi();
+
+	@ApiProperty()
+	climb5kAirspeed: number = fi();
+
+	@ApiProperty()
+	climb15kAirspeed: number = fi();
+
+	@ApiProperty()
+	climb24kAirspeed: number = fi();
+
+	@ApiProperty()
+	cruiseAirspeed: number = fi();
+
+	@ApiProperty()
+	desc24kAirspeed: number = fi();
+
+	@ApiProperty()
+	desc10kAirspeed: number = fi();
+
+	@ApiProperty()
+	approachAirspeed: number = fi();
+}
+

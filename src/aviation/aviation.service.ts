@@ -1,11 +1,12 @@
 import { parse } from '@fast-csv/parse';
 import { Injectable } from '@nestjs/common';
 import { createReadStream } from 'fs';
-import { Airport, RawAirport, RawRunway } from './aviation.models';
+import { Airport, PlaneModel, RawAirport, RawPlane, RawRunway } from './aviation.models';
 
 @Injectable()
 export class AviationService {
 	public readonly airports: Promise<Airport[]>;
+	public readonly planes: Promise<PlaneModel[]>;
 
 	public constructor() {
 		this.airports = new Promise<Airport[]>((resolve, reject) => {
@@ -54,6 +55,50 @@ export class AviationService {
 				throw new Error('Failed to acquire airports.csv or airports_intl.csv');
 			})
 			.then((airports) => airports.filter((airport) => airport.runways.length > 0));
+
+		this.planes = new Promise<PlaneModel[]>((resolve, reject) => {
+			const data: PlaneModel[] = [];
+
+			createReadStream('data/planes.csv')
+				.pipe(
+					parse({
+						objectMode: true,
+						trim: true,
+						headers: true
+					})
+				)
+				.on('error', reject)
+				.on(
+					'data',
+					({
+						model,
+						mtow,
+						to_runway_len,
+						land_runway_len,
+						c5kft_as,
+						cfl150_as,
+						cfl240_as,
+						cruise_as,
+						dfl240_as,
+						dfl100_as,
+						approach_as
+					}: RawPlane) =>
+						data.push({
+							model,
+							mtow: Number(mtow),
+							takeoffRunway: Number(to_runway_len),
+							landingRunway: Number(land_runway_len),
+							climb5kAirspeed: Number(c5kft_as),
+							climb15kAirspeed: Number(cfl150_as),
+							climb24kAirspeed: Number(cfl240_as),
+							cruiseAirspeed: Number(cruise_as),
+							desc24kAirspeed: Number(dfl240_as),
+							desc10kAirspeed: Number(dfl100_as),
+							approachAirspeed: Number(approach_as)
+						})
+				)
+				.on('end', () => resolve(data));
+		});
 	}
 }
 
