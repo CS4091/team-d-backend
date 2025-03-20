@@ -24,19 +24,10 @@ interface GraphNode {
 	y: number;
 }
 
-interface ConnectionEdge {
+interface GraphEdge {
 	from: number;
 	to: number;
-	data: {
-		distance: number;
-		duration: number;
-	};
-}
-
-interface DemandEdge {
-	from: number;
-	to: number;
-	data: number;
+	data: any;
 }
 
 export class Engine {
@@ -192,78 +183,54 @@ export class Engine {
 		this.layers[0] = edges;
 	}
 
-	public loadConnectivity(graph: { nodes: GraphNode[]; edges: ConnectionEdge[] }): Entity[] {
-		this.layers.splice(0);
+	public loadGraph(graph: { nodes: GraphNode[]; edges: GraphEdge[] }, color: string = 'black'): Entity[] {
+		if (!this.layers[1] || this.layers[1].length === 0) {
+			const bboxBL = new Point(0, 0),
+				bboxUR = new Point(0, 0);
 
-		const bboxBL = new Point(0, 0),
-			bboxUR = new Point(0, 0);
+			const nodes = graph.nodes.map(({ id, x, y }) => {
+				const node = new Node(id);
+				node.position = new Point(x, y);
 
-		const nodes = graph.nodes.map(({ id, x, y }) => {
-			const node = new Node(id);
-			node.position = new Point(x, y);
+				if (x < bboxBL.x) bboxBL.x = x;
+				if (y < bboxBL.y) bboxBL.y = y;
+				if (x > bboxUR.x) bboxUR.x = x;
+				if (y > bboxUR.y) bboxUR.y = y;
 
-			if (x < bboxBL.x) bboxBL.x = x;
-			if (y < bboxBL.y) bboxBL.y = y;
-			if (x > bboxUR.x) bboxUR.x = x;
-			if (y > bboxUR.y) bboxUR.y = y;
+				this.add(node, 1);
 
-			this.add(node, 1);
+				return node;
+			});
 
-			return node;
-		});
+			const bboxDims = new Point(bboxUR.x - bboxBL.x, bboxUR.y - bboxBL.y),
+				bboxCenter = new Point((bboxUR.x + bboxBL.x) / 2, (bboxUR.y + bboxBL.y) / 2);
 
-		const bboxDims = new Point(bboxUR.x - bboxBL.x, bboxUR.y - bboxBL.y),
-			bboxCenter = new Point((bboxUR.x + bboxBL.x) / 2, (bboxUR.y + bboxBL.y) / 2);
+			nodes.forEach((node) => (node.position = node.position.subtract(bboxCenter).scale(900 / bboxDims.x, 600 / bboxDims.y)));
 
-		nodes.forEach((node) => (node.position = node.position.subtract(bboxCenter).scale(900 / bboxDims.x, 600 / bboxDims.y)));
+			graph.edges.forEach(({ from, to, data }) => this.add(new Edge(nodes[from], nodes[to], typeof data === 'object' ? data.duration : data, color), 0));
 
-		graph.edges.forEach(({ from, to, data }) => this.add(new Edge(nodes[from], nodes[to], data.duration, 'black'), 0));
+			return this.layers[0];
+		} else {
+			this.layers[0] = [];
 
-		return this.layers[0];
-	}
+			const nodes = graph.nodes.map(({ id }) => {
+				let node: Node;
 
-	public loadDemand(graph: { nodes: GraphNode[]; edges: DemandEdge[] }): Entity[] {
-		this.layers[0] = [];
+				this.layers.forEach((layer) =>
+					layer.forEach((n) => {
+						if (n instanceof Node && n.label === id) {
+							node = n;
+						}
+					})
+				);
 
-		const nodes = graph.nodes.map(({ id }) => {
-			let node: Node;
+				return node;
+			});
 
-			this.layers.forEach((layer) =>
-				layer.forEach((n) => {
-					if (n instanceof Node && n.label === id) {
-						node = n;
-					}
-				})
-			);
+			graph.edges.forEach(({ from, to, data }) => this.add(new Edge(nodes[from], nodes[to], typeof data === 'object' ? data.duration : data, color), 0));
 
-			return node;
-		});
-
-		graph.edges.forEach(({ from, to, data }) => this.add(new Edge(nodes[from], nodes[to], data, 'red'), 0));
-
-		return this.layers[0];
-	}
-
-	public loadPath(graph: { nodes: GraphNode[]; edges: DemandEdge[] }): Entity[] {
-		this.layers[0] = [];
-
-		const nodes = graph.nodes.map(({ id }) => {
-			let node: Node;
-
-			this.layers.forEach((layer) =>
-				layer.forEach((n) => {
-					if (n instanceof Node && n.label === id) {
-						node = n;
-					}
-				})
-			);
-
-			return node;
-		});
-
-		graph.edges.forEach(({ from, to, data }) => this.add(new Edge(nodes[from], nodes[to], data, 'blue'), 0));
-
-		return this.layers[0];
+			return this.layers[0];
+		}
 	}
 
 	private _tick(): void {

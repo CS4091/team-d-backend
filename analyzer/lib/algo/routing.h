@@ -28,8 +28,15 @@ bool operator>(const RoutePlan<CNData, CLData, DNData, DLData>& a, const RoutePl
 
 template <UniqueSerializable CNData, typename CLData, UniqueSerializable DNData, Serializable DLData>
 	requires Serializable<CLData> && Weighted<CLData>
-std::list<const typename arro::Graph<CNData, CLData>::Node*> findRoute(const arro::Graph<CNData, CLData>& connGraph,
-																	   const arro::Graph<DNData, DLData>& demandGraph, const std::string& startCity);
+struct Routing {
+	std::list<const typename arro::Graph<CNData, CLData>::Node*> route;
+	std::list<const typename arro::Graph<CNData, CLData>::Node*> baseline;
+};
+
+template <UniqueSerializable CNData, typename CLData, UniqueSerializable DNData, Serializable DLData>
+	requires Serializable<CLData> && Weighted<CLData>
+Routing<CNData, CLData, DNData, DLData> findRoute(const arro::Graph<CNData, CLData>& connGraph, const arro::Graph<DNData, DLData>& demandGraph,
+												  const std::string& startCity);
 }  // namespace algo
 }  // namespace arro
 

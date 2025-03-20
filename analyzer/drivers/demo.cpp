@@ -160,19 +160,19 @@ int main(int argc, char* argv[]) {
 	assets.close();
 
 	try {
-		list<const arro::Graph<GeoCity, RouteData>::Node*> route = arro::algo::findRoute(connectivityGraph, demandGraph, startCity);
+		auto route = arro::algo::findRoute(connectivityGraph, demandGraph, startCity);
 
 		arro::Graph<GeoCity, RouteOrder> routeGraph;
 
 		for (auto node : connectivityGraph.nodes()) routeGraph.add(node->data());
 
 		int i = 1;
-		for (auto it = route.begin(); it != route.end();) {
+		for (auto it = route.route.begin(); it != route.route.end();) {
 			const arro::Graph<GeoCity, RouteData>::Node* from = *it;
 
 			it++;
 
-			if (it != route.end()) {
+			if (it != route.route.end()) {
 				const arro::Graph<GeoCity, RouteData>::Node* to = *it;
 
 				routeGraph.link(from->data().id, to->data().id, RouteOrder{i++});
@@ -181,9 +181,28 @@ int main(int argc, char* argv[]) {
 
 		flatten(routeGraph).jsonDumpToFile(path + ".p.json");
 
-		auto it = route.begin();
+		arro::Graph<GeoCity, RouteOrder> baselineGraph;
+
+		for (auto node : connectivityGraph.nodes()) baselineGraph.add(node->data());
+
+		i = 1;
+		for (auto it = route.baseline.begin(); it != route.baseline.end();) {
+			const arro::Graph<GeoCity, RouteData>::Node* from = *it;
+
+			it++;
+
+			if (it != route.baseline.end()) {
+				const arro::Graph<GeoCity, RouteData>::Node* to = *it;
+
+				baselineGraph.link(from->data().id, to->data().id, RouteOrder{i++});
+			}
+		}
+
+		flatten(baselineGraph).jsonDumpToFile(path + ".b.json");
+
+		auto it = route.route.begin();
 		cout << (*it++)->data().id;
-		for (; it != route.end(); it++) {
+		for (; it != route.route.end(); it++) {
 			cout << " -> " << (*it)->data().id;
 		}
 		cout << endl;

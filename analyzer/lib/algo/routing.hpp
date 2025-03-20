@@ -8,12 +8,12 @@ bool arro::algo::__routing::operator>(const RoutePlan<CNData, CLData, DNData, DL
 
 template <UniqueSerializable CNData, typename CLData, UniqueSerializable DNData, Serializable DLData>
 	requires Serializable<CLData> && Weighted<CLData>
-std::list<const typename arro::Graph<CNData, CLData>::Node*> arro::algo::findRoute(const arro::Graph<CNData, CLData>& connGraph,
-																				   const arro::Graph<DNData, DLData>& demandGraph,
-																				   const std::string& startCity) {
+arro::algo::Routing<CNData, CLData, DNData, DLData> arro::algo::findRoute(const arro::Graph<CNData, CLData>& connGraph,
+																		  const arro::Graph<DNData, DLData>& demandGraph, const std::string& startCity) {
 	using namespace std;
 
 	using ConnNode = Graph<CNData, CLData>::Node;
+	using ConnLookup = Graph<CNData, CLData>::LinkLookup;
 	using DemandNode = Graph<DNData, DLData>::Node;
 	using DemandLink = Graph<DNData, DLData>::Link;
 	using RoutePlan = arro::algo::__routing::RoutePlan<CNData, CLData, DNData, DLData>;
@@ -21,6 +21,7 @@ std::list<const typename arro::Graph<CNData, CLData>::Node*> arro::algo::findRou
 	vector<vector<double>> masterTable = arro::algo::floydWarshall(connGraph);
 
 	const ConnNode* planeLoc = connGraph[startCity];
+	double baselineCost = 0;
 	list<const ConnNode*> baselineRoute;
 	baselineRoute.push_back(planeLoc);
 
@@ -47,8 +48,9 @@ std::list<const typename arro::Graph<CNData, CLData>::Node*> arro::algo::findRou
 		if (from != planeLoc) {
 			path = arro::algo::dijkstra<CNData, CLData>(connGraph, planeLoc, from);
 
-			for (auto it = ++path.begin(); it != path.end(); it++) {
+			for (auto it = next(path.begin()); it != path.end(); it++) {
 				baselineRoute.push_back(*it);
+				baselineCost += connGraph[ConnLookup{*prev(it), *it}]->data().cost();
 			}
 
 			planeLoc = from;
@@ -56,8 +58,9 @@ std::list<const typename arro::Graph<CNData, CLData>::Node*> arro::algo::findRou
 
 		path = arro::algo::dijkstra<CNData, CLData>(connGraph, from, to);
 
-		for (auto it = ++path.begin(); it != path.end(); it++) {
+		for (auto it = next(path.begin()); it != path.end(); it++) {
 			baselineRoute.push_back(*it);
+			baselineCost += connGraph[ConnLookup{*prev(it), *it}]->data().cost();
 		}
 
 		planeLoc = to;
@@ -70,13 +73,13 @@ std::list<const typename arro::Graph<CNData, CLData>::Node*> arro::algo::findRou
 
 	make_heap(queue.begin(), queue.end(), std::greater{});
 
-	while (true) {
+	while (queue.size() > 0) {
 		pop_heap(queue.begin(), queue.end(), std::greater{});
 
 		RoutePlan entry = queue.back();
 		queue.pop_back();
 
-		if (entry.remaining.size() == 0) return entry.route;
+		if (entry.remaining.size() == 0) return {entry.route, baselineRoute};
 
 		queue.reserve(queue.size() + entry.remaining.size());
 
@@ -98,7 +101,8 @@ std::list<const typename arro::Graph<CNData, CLData>::Node*> arro::algo::findRou
 					const ConnNode* to = *it;
 
 					newEntry.cost += connGraph[typename arro::Graph<CNData, CLData>::LinkLookup{from, to}]->data().cost();
-					newEntry.route.push_back(to);
+
+					if (newEntry.cost < baselineCost) newEntry.route.push_back(to);
 				}
 			}
 			copy_if(entry.remaining.begin(), entry.remaining.end(), back_inserter(newEntry.remaining),
@@ -107,4 +111,6 @@ std::list<const typename arro::Graph<CNData, CLData>::Node*> arro::algo::findRou
 			queue.push_back(newEntry);
 		}
 	}
+
+	return {baselineRoute, baselineRoute};
 }

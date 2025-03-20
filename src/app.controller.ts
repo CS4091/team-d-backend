@@ -18,7 +18,8 @@ export class AppController {
 		return {
 			connectivity: JSON.parse(readFileSync(`test.graph.c.json`).toString()),
 			demand: JSON.parse(readFileSync(`test.graph.d.json`).toString()),
-			path: JSON.parse(readFileSync(`test.graph.p.json`).toString())
+			path: JSON.parse(readFileSync(`test.graph.p.json`).toString()),
+			baseline: JSON.parse(readFileSync(`test.graph.b.json`).toString())
 		};
 	}
 

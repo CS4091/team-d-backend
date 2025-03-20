@@ -19,9 +19,10 @@
 			fetch('/demo-graph')
 				.then((res) => res.json())
 				.then((data) => {
-					edges.connectivity = engine.loadConnectivity(data.connectivity);
-					edges.demand = engine.loadDemand(data.demand);
-					edges.path = engine.loadPath(data.path);
+					edges.connectivity = engine.loadGraph(data.connectivity);
+					edges.demand = engine.loadGraph(data.demand, 'blue');
+					edges.path = engine.loadGraph(data.path, 'red');
+					edges.baseline = engine.loadGraph(data.baseline, 'red');
 
 					engine.load(edges.connectivity);
 				});
@@ -36,9 +37,10 @@
 			fetch('/regraph', { method: 'POST', body: fd })
 				.then((res) => res.json())
 				.then((data) => {
-					edges.connectivity = engine.loadConnectivity(data.connectivity);
-					edges.demand = engine.loadDemand(data.demand);
-					edges.path = engine.loadPath(data.path);
+					edges.connectivity = engine.loadGraph(data.connectivity);
+					edges.demand = engine.loadGraph(data.demand);
+					edges.path = engine.loadGraph(data.path);
+					edges.baseline = engine.loadGraph(data.baseline);
 
 					engine.load(edges.connectivity);
 
@@ -56,5 +58,6 @@
 	<button onclick={() => engine.load(edges.connectivity)}>Connectivity</button>
 	<button onclick={() => engine.load(edges.demand)}>Demand</button>
 	<button onclick={() => engine.load(edges.path)}>Path</button>
+	<button onclick={() => engine.load(edges.baseline)}>Baseline</button>
 </div>
 <canvas width={1200} height={800} bind:this={canvas}></canvas>
