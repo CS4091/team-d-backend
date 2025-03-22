@@ -1,16 +1,16 @@
 import { Controller, Get } from '@nestjs/common';
 import { ApiResponse } from '@nestjs/swagger';
-import { Airport, PlaneModel } from './aviation.models';
+import { City, PlaneModel } from './aviation.models';
 import { AviationService } from './aviation.service';
 
 @Controller('/aviation')
 export class AviationController {
 	public constructor(public readonly service: AviationService) {}
 
-	@Get('/airports')
-	@ApiResponse({ type: Airport, isArray: true })
-	public async getAirports(): Promise<Airport[]> {
-		return this.service.airports;
+	@Get('/cities')
+	@ApiResponse({ type: City, isArray: true })
+	public async getCities(): Promise<City[]> {
+		return this.service.cities;
 	}
 
 	@Get('/planes')

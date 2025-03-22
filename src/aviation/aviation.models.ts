@@ -50,6 +50,9 @@ export class Airport {
 	name: string = fi();
 
 	@ApiProperty()
+	city: string = fi();
+
+	@ApiProperty()
 	id: string = fi();
 
 	@ApiProperty()
@@ -63,6 +66,17 @@ export class Airport {
 
 	@ApiProperty({ type: Runway })
 	runways: Runway[] = fi();
+}
+
+export class City {
+	@ApiProperty()
+	name: string = fi();
+
+	@ApiProperty()
+	lat: number = fi();
+
+	@ApiProperty()
+	lng: number = fi();
 }
 
 export interface RawPlane {
