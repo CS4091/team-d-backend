@@ -49,3 +49,4 @@ CMakeCache.txt
 Makefile
 data/*
 !data/.gitkeep
+processing/
