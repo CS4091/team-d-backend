@@ -34,7 +34,14 @@ export class AviationController {
 
 		if (!org || !org.users.some((u) => user.id === u.id)) throw new BadRequestException('Unknown organization.');
 
-		if (!demand.every((pair) => pair.length === 2)) throw new BadRequestException('Demand must be an array of [from, to] tuples.');
+		const cities = await this.service.cities;
+		if (
+			!demand.every(
+				(pair) =>
+					pair.length === 2 && pair[0] !== pair[1] && cities.some((city) => city.name === pair[0]) && cities.some((city) => city.name === pair[1])
+			)
+		)
+			throw new BadRequestException('Demand must be an array of [from, to] tuples with from != to, each in the list of available cities.');
 
 		const planeModels = await this.service.planes;
 		const speccedPlanes = org.planes.map((plane) => ({ ...plane, specs: planeModels.find((p) => p.model === plane.model) }));
@@ -44,7 +51,7 @@ export class AviationController {
 
 		const airports = await this.service.airports;
 
-		return this.routing.route(airports, demand, speccedPlanes as any);
+		return this.routing.route(cities, airports, demand, speccedPlanes as any);
 	}
 }
 

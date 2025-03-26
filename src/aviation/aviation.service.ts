@@ -31,6 +31,7 @@ export class AviationService {
 							data.push({
 								name,
 								city: municipality,
+								type,
 								id: ident,
 								iata: iata_code,
 								lat: Number(latitude_deg),

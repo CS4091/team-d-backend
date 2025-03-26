@@ -37,12 +37,17 @@ add_library(
 	"${LIB}/math/geospatial.cpp"
 )
 
+add_library(
+	utils STATIC
+	"${LIB}/utils/syncio.cpp"
+)
+
 add_executable(daemon analyzer/drivers/daemon.cpp)
-target_link_libraries(daemon math)
+target_link_libraries(daemon math utils)
 
 add_executable(demo analyzer/drivers/demo.cpp)
-target_link_libraries(demo math)
+target_link_libraries(demo math utils)
 
 add_executable(graph analyzer/drivers/tests/graph.cpp)
-target_link_libraries(graph PRIVATE Catch2::Catch2WithMain math)
+target_link_libraries(graph PRIVATE Catch2::Catch2WithMain math utils)
 set_target_properties(demo PROPERTIES CMAKE_RUNTIME_OUTPUT_DIRECTORY bin/tests)

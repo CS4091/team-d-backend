@@ -49,4 +49,7 @@ concept Serializable = std::copy_constructible<T> && requires(T elem, std::strin
 template <typename T>
 concept UniqueSerializable = Serializable<T> && IDAble<T>;
 
+template <typename T>
+concept JSONPrimitive = requires(nlohmann::json json, T elem) { json = elem; };
+
 #endif

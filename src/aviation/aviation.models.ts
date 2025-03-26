@@ -53,6 +53,9 @@ export class Airport {
 	city: string = fi();
 
 	@ApiProperty()
+	type: string = fi();
+
+	@ApiProperty()
 	id: string = fi();
 
 	@ApiProperty()

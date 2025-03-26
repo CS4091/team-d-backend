@@ -2,11 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { createId } from '@paralleldrive/cuid2';
 import { Plane } from '@prisma/client';
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
-import { mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'fs';
+import { mkdirSync, rmSync, statSync, writeFileSync } from 'fs';
 import { RouteResult } from './aviation.dtos';
-import { Airport, PlaneModel } from './aviation.models';
-
-const OP_ROUTE = new Uint8Array([0]);
+import { Airport, City, PlaneModel } from './aviation.models';
 
 @Injectable()
 export class RoutingService {
@@ -55,31 +53,26 @@ export class RoutingService {
 		});
 	}
 
-	public async route(airports: Airport[], routes: [string, string][], assets: (Plane & { specs: PlaneModel })[]): Promise<RouteResult> {
+	public async route(cities: City[], airports: Airport[], routes: [string, string][], assets: (Plane & { specs: PlaneModel })[]): Promise<RouteResult> {
 		const opid = createId();
 		mkdirSync(`processing/${opid}`);
 
-		let graphSpec = 'graph';
-		airports.forEach((airport) => (graphSpec += `\nnode ${airport.name} ${airport.city} ${airport.lat} ${airport.lng}`));
-		routes.forEach(([from, to]) => (graphSpec += `\nlink ${from} ${to} 1`));
+		writeFileSync(`processing/${opid}/cities.json`, JSON.stringify(cities));
+		writeFileSync(`processing/${opid}/airports.json`, JSON.stringify(airports));
+		writeFileSync(`processing/${opid}/routes.json`, JSON.stringify(routes.map(([from, to]) => ({ from, to }))));
+		writeFileSync(`processing/${opid}/planes.json`, JSON.stringify(assets.map(({ id, homeBase, specs }) => ({ id, homeBase, ...specs }))));
 
-		writeFileSync(`processing/${opid}/demand.graph`, graphSpec);
+		// return this.process(opid).then(() => {
+		// 	const plan = JSON.parse(readFileSync(`processing/${opid}/routing.json`).toString());
 
-		let assetsSpec = '';
-		assets.forEach((plane) => (assetsSpec += `${plane.id} ${plane.homeBase} ${plane.specs.landingRunway} ${plane.specs.landingRunway}`));
+		// 	// rmSync(`processing/${opid}/routing.json`);
+		// 	// rmSync(`processing/${opid}/demand.graph`);
+		// 	// rmSync(`processing/${opid}/planes.assets`);
+		// 	rmSync(`processing/${opid}`, { recursive: true });
 
-		writeFileSync(`processing/${opid}/planes.assets`, assetsSpec);
-
-		return this.process(opid).then(() => {
-			const plan = JSON.parse(readFileSync(`processing/${opid}/routing.json`).toString());
-
-			// rmSync(`processing/${opid}/routing.json`);
-			// rmSync(`processing/${opid}/demand.graph`);
-			// rmSync(`processing/${opid}/planes.assets`);
-			rmSync(`processing/${opid}`, { recursive: true });
-
-			return plan;
-		});
+		// 	return plan;
+		// });
+		return {} as any;
 	}
 
 	public async process(id: string): Promise<void> {
@@ -92,8 +85,7 @@ export class RoutingService {
 				reject(new Error(`Unable to acquire 'processing' dir for routing`));
 			}
 
-			this.proc.stdin.write(OP_ROUTE);
-			this.proc.stdin.write(id);
+			this.proc.stdin.write(id + '\n');
 
 			this.resolvers.set(id, resolve);
 		});
