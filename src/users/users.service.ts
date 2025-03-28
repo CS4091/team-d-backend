@@ -7,7 +7,7 @@ import { randomBytes } from 'crypto';
 import { AuthDataSource } from 'src/auth/auth.module';
 import { DBService } from 'src/db/db.service';
 import { wrap } from 'src/utils/utils';
-import { LoginDTO, RegisterDTO } from './users.dtos';
+import { LoginDTO, RegisterDTO, UpdateNameDTO } from './users.dtos';
 import { MeUser, meUser } from './users.models';
 
 @Injectable()
@@ -52,17 +52,16 @@ export class UsersService implements AuthDataSource {
 			});
 	}
 
-  public async updateName({ name, email }) {
-    const updateUser = await this.db.user.update({
-      where: {
-        email: email,
-      },
-      data: {
-        name: name,
-      },
-    })
-    return updateUser;
-  }
+	public async updateName(user: User, data: UpdateNameDTO) {
+		const updateUser = await this.db.user.update({
+			where: {
+				id: user.id
+			},
+			data,
+			...meUser
+		});
+		return updateUser;
+	}
 
 	public async auth(token: string): Promise<User | null> {
 		return this.db.user.findUnique({ where: { token } });

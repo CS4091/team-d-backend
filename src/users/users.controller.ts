@@ -1,10 +1,10 @@
-import { BadRequestException, Controller, Get, Post } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Patch, Post } from '@nestjs/common';
 import { ApiResponse } from '@nestjs/swagger';
 import type { User } from '@prisma/client';
 import { Protected } from 'src/auth/protected.decorator';
 import { UsersService } from 'src/users/users.service';
 import { ReqUser } from 'src/utils/decorators/user.decorator';
-import { LoginDTO, MeUserResponse, RegisterDTO } from './users.dtos';
+import { LoginDTO, MeUserResponse, RegisterDTO, UpdateNameDTO } from './users.dtos';
 import { meUser, MeUser } from './users.models';
 
 @Controller('/users')
@@ -20,13 +20,13 @@ export class UsersController {
 
 	@Post('/register')
 	@ApiResponse({ type: MeUserResponse })
-	public async register(data: RegisterDTO): Promise<MeUser> {
+	public async register(@Body() data: RegisterDTO): Promise<MeUser> {
 		return this.service.register(data);
 	}
 
 	@Post()
 	@ApiResponse({ type: MeUserResponse })
-	public async loginUser(data: LoginDTO): Promise<MeUser> {
+	public async loginUser(@Body() data: LoginDTO): Promise<MeUser> {
 		const user = await this.service.login(data);
 
 		if (!user) throw new BadRequestException('No user with specified email/password combination');
@@ -34,10 +34,11 @@ export class UsersController {
 		return user;
 	}
 
-  @Put()
-  @ApiResponse({ type: MeUserResponse })
-  public async updateName(data) {
-    return this.service.updateName(data);
-  }
+	@Patch()
+	@Protected()
+	@ApiResponse({ type: MeUserResponse })
+	public async updateName(@ReqUser() user: User, @Body() data: UpdateNameDTO): Promise<MeUser> {
+		return this.service.updateName(user, data);
+	}
 }
 

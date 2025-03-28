@@ -25,6 +25,11 @@ export class LoginDTO {
 	password: string = fi();
 }
 
+export class UpdateNameDTO {
+	@IsString()
+	name: string = fi();
+}
+
 export class PublicUserResponse implements PublicUser {
 	@ApiProperty()
 	name: string = fi();
