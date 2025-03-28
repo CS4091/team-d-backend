@@ -52,6 +52,18 @@ export class UsersService implements AuthDataSource {
 			});
 	}
 
+  public async updateName({ name, email }) {
+    const updateUser = await this.db.user.update({
+      where: {
+        email: email,
+      },
+      data: {
+        name: name,
+      },
+    })
+    return updateUser;
+  }
+
 	public async auth(token: string): Promise<User | null> {
 		return this.db.user.findUnique({ where: { token } });
 	}

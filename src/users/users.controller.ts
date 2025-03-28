@@ -33,5 +33,11 @@ export class UsersController {
 
 		return user;
 	}
+
+  @Put()
+  @ApiResponse({ type: MeUserResponse })
+  public async updateName(data) {
+    return this.service.updateName(data);
+  }
 }
 
