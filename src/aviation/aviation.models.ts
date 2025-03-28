@@ -87,6 +87,7 @@ export interface RawPlane {
 	mtow: string;
 	to_runway_len: string;
 	land_runway_len: string;
+	range: string;
 	c5kft_as: string;
 	cfl150_as: string;
 	cfl240_as: string;
@@ -108,6 +109,9 @@ export class PlaneModel {
 
 	@ApiProperty()
 	landingRunway: number = fi();
+
+	@ApiProperty()
+	range: number = fi();
 
 	@ApiProperty()
 	climb5kAirspeed: number = fi();

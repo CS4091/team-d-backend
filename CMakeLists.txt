@@ -38,6 +38,11 @@ add_library(
 )
 
 add_library(
+	algo STATIC
+	"${LIB}/algo/routing.cpp"
+)
+
+add_library(
 	utils STATIC
 	"${LIB}/utils/syncio.cpp"
 )

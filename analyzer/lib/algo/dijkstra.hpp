@@ -1,16 +1,15 @@
 #include "dijkstra.h"
 
-template <UniqueSerializable NodeData, typename LinkData>
-	requires Serializable<LinkData> && Weighted<LinkData>
+template <UniqueSerializable NodeData, Serializable LinkData>
 bool arro::algo::__dijkstra::operator>(const NodeEntry<NodeData, LinkData>& a, const NodeEntry<NodeData, LinkData>& b) {
 	return a.cost > b.cost;
 }
 
-template <UniqueSerializable NodeData, typename LinkData>
-	requires Serializable<LinkData> && Weighted<LinkData>
+template <UniqueSerializable NodeData, Serializable LinkData, Function<bool, LinkData> CostFn>
 std::list<const typename arro::Graph<NodeData, LinkData>::Node*> arro::algo::dijkstra(const arro::Graph<NodeData, LinkData>& graph,
 																					  const typename arro::Graph<NodeData, LinkData>::Node* start,
-																					  const typename arro::Graph<NodeData, LinkData>::Node* end) {
+																					  const typename arro::Graph<NodeData, LinkData>::Node* end,
+																					  CostFn costFn) {
 	using namespace std;
 	using Graph = arro::Graph<NodeData, LinkData>;
 	using Node = Graph::Node;
@@ -54,8 +53,8 @@ std::list<const typename arro::Graph<NodeData, LinkData>::Node*> arro::algo::dij
 
 			for (NodeEntry& frontierEntry : queue) {
 				if (frontierEntry.node == link->to()) {
-					if (cost + link->data().cost() < frontierEntry.cost) {
-						frontierEntry.cost = cost + link->data().cost();
+					if (cost + costFn(link->data()) < frontierEntry.cost) {
+						frontierEntry.cost = cost + costFn(link->data());
 						frontierEntry.parent = entry.node;
 					}
 
@@ -67,8 +66,8 @@ std::list<const typename arro::Graph<NodeData, LinkData>::Node*> arro::algo::dij
 			if (!inQueue) {
 				for (auto& [_, oldEntry] : costs) {
 					if (oldEntry.node == link->to()) {
-						if (cost + link->data().cost() < oldEntry.cost) {
-							oldEntry.cost = cost + link->data().cost();
+						if (cost + costFn(link->data()) < oldEntry.cost) {
+							oldEntry.cost = cost + costFn(link->data());
 							oldEntry.parent = entry.node;
 						}
 

@@ -107,114 +107,114 @@ arro::Graph<GraphCity, T> flatten(const arro::Graph<GeoCity, T>& graph) {
 }
 
 int main(int argc, char* argv[]) {
-	string path = argc > 1 ? argv[1] : "test.graph";
+	// string path = argc > 1 ? argv[1] : "test.graph";
 
-	arro::Graph<MapCity, ArrivalTime> demandGraph = arro::Graph<MapCity, ArrivalTime>::readFromFile(path);
-	arro::Graph<GeoCity, RouteData> connectivityGraph;
+	// arro::Graph<MapCity, ArrivalTime> demandGraph = arro::Graph<MapCity, ArrivalTime>::readFromFile(path);
+	// arro::Graph<GeoCity, RouteData> connectivityGraph;
 
-	for (auto node : demandGraph.nodes()) connectivityGraph.add(GeoCity{node->data().id, arro::geospatial::llToRect(node->data().lat, node->data().lng)});
+	// for (auto node : demandGraph.nodes()) connectivityGraph.add(GeoCity{node->data().id, arro::geospatial::llToRect(node->data().lat, node->data().lng)});
 
-	int k = sqrt(connectivityGraph.size());
+	// int k = sqrt(connectivityGraph.size());
 
-	// perform knn
-	for (auto node : connectivityGraph.nodes()) {
-		NeighborEntry farthestNeighbor = {nullptr, -INFINITY};
-		priority_queue<NeighborEntry, std::vector<NeighborEntry>, std::greater<NeighborEntry>> queue;
+	// // perform knn
+	// for (auto node : connectivityGraph.nodes()) {
+	// 	NeighborEntry farthestNeighbor = {nullptr, -INFINITY};
+	// 	priority_queue<NeighborEntry, std::vector<NeighborEntry>, std::greater<NeighborEntry>> queue;
 
-		for (auto other : connectivityGraph.nodes()) {
-			if (node != other) {
-				auto fromCity = node->data(), toCity = other->data();
+	// 	for (auto other : connectivityGraph.nodes()) {
+	// 		if (node != other) {
+	// 			auto fromCity = node->data(), toCity = other->data();
 
-				double distance = arro::aviation::flightDistance(fromCity.pos, toCity.pos);
-				queue.emplace(other, distance);
+	// 			double distance = arro::aviation::flightDistance(fromCity.pos, toCity.pos);
+	// 			queue.emplace(other, distance);
 
-				if (distance > farthestNeighbor.distance) {
-					farthestNeighbor.node = other;
-					farthestNeighbor.distance = distance;
-				}
-			}
-		}
+	// 			if (distance > farthestNeighbor.distance) {
+	// 				farthestNeighbor.node = other;
+	// 				farthestNeighbor.distance = distance;
+	// 			}
+	// 		}
+	// 	}
 
-		for (int i = 0; i < k; i++) {
-			auto entry = queue.top();
-			queue.pop();
-			auto fromCity = node->data(), toCity = entry.node->data();
+	// 	for (int i = 0; i < k; i++) {
+	// 		auto entry = queue.top();
+	// 		queue.pop();
+	// 		auto fromCity = node->data(), toCity = entry.node->data();
 
-			double distance = arro::aviation::flightDistance(fromCity.pos, toCity.pos);
-			double duration = distance / 901'000;  // 901km/h (Boing 737 cruise speed)
+	// 		double distance = arro::aviation::flightDistance(fromCity.pos, toCity.pos);
+	// 		double duration = distance / 901'000;  // 901km/h (Boing 737 cruise speed)
 
-			connectivityGraph.link(node, entry.node, RouteData{distance, duration});
-		}
+	// 		connectivityGraph.link(node, entry.node, RouteData{distance, duration});
+	// 	}
 
-		connectivityGraph.link(node, farthestNeighbor.node, RouteData{farthestNeighbor.distance, farthestNeighbor.distance / 901'000});
-	}
+	// 	connectivityGraph.link(node, farthestNeighbor.node, RouteData{farthestNeighbor.distance, farthestNeighbor.distance / 901'000});
+	// }
 
-	flatten(connectivityGraph).jsonDumpToFile(path + ".c.json");
-	flatten(demandGraph.map<GeoCity>([](const MapCity& city) {
-		return GeoCity{city.id, arro::geospatial::llToRect(city.lat, city.lng)};
-	})).jsonDumpToFile(path + ".d.json");
+	// flatten(connectivityGraph).jsonDumpToFile(path + ".c.json");
+	// flatten(demandGraph.map<GeoCity>([](const MapCity& city) {
+	// 	return GeoCity{city.id, arro::geospatial::llToRect(city.lat, city.lng)};
+	// })).jsonDumpToFile(path + ".d.json");
 
-	ifstream assets("test.assets");
-	string startCity;
-	assets >> startCity;
-	assets.close();
+	// ifstream assets("test.assets");
+	// string startCity;
+	// assets >> startCity;
+	// assets.close();
 
-	try {
-		auto route = arro::algo::findRoute(connectivityGraph, demandGraph, startCity);
+	// try {
+	// 	auto route = arro::algo::findRoute(connectivityGraph, demandGraph, startCity);
 
-		arro::Graph<GeoCity, RouteOrder> routeGraph;
+	// 	arro::Graph<GeoCity, RouteOrder> routeGraph;
 
-		for (auto node : connectivityGraph.nodes()) routeGraph.add(node->data());
+	// 	for (auto node : connectivityGraph.nodes()) routeGraph.add(node->data());
 
-		int i = 1;
-		for (auto it = route.route.begin(); it != route.route.end();) {
-			const arro::Graph<GeoCity, RouteData>::Node* from = *it;
+	// 	int i = 1;
+	// 	for (auto it = route.route.begin(); it != route.route.end();) {
+	// 		const arro::Graph<GeoCity, RouteData>::Node* from = *it;
 
-			it++;
+	// 		it++;
 
-			if (it != route.route.end()) {
-				const arro::Graph<GeoCity, RouteData>::Node* to = *it;
+	// 		if (it != route.route.end()) {
+	// 			const arro::Graph<GeoCity, RouteData>::Node* to = *it;
 
-				routeGraph.link(from->data().id, to->data().id, RouteOrder{i++});
-			}
-		}
+	// 			routeGraph.link(from->data().id, to->data().id, RouteOrder{i++});
+	// 		}
+	// 	}
 
-		flatten(routeGraph).jsonDumpToFile(path + ".p.json");
+	// 	flatten(routeGraph).jsonDumpToFile(path + ".p.json");
 
-		arro::Graph<GeoCity, RouteOrder> baselineGraph;
+	// 	arro::Graph<GeoCity, RouteOrder> baselineGraph;
 
-		for (auto node : connectivityGraph.nodes()) baselineGraph.add(node->data());
+	// 	for (auto node : connectivityGraph.nodes()) baselineGraph.add(node->data());
 
-		i = 1;
-		for (auto it = route.baseline.begin(); it != route.baseline.end();) {
-			const arro::Graph<GeoCity, RouteData>::Node* from = *it;
+	// 	i = 1;
+	// 	for (auto it = route.baseline.begin(); it != route.baseline.end();) {
+	// 		const arro::Graph<GeoCity, RouteData>::Node* from = *it;
 
-			it++;
+	// 		it++;
 
-			if (it != route.baseline.end()) {
-				const arro::Graph<GeoCity, RouteData>::Node* to = *it;
+	// 		if (it != route.baseline.end()) {
+	// 			const arro::Graph<GeoCity, RouteData>::Node* to = *it;
 
-				baselineGraph.link(from->data().id, to->data().id, RouteOrder{i++});
-			}
-		}
+	// 			baselineGraph.link(from->data().id, to->data().id, RouteOrder{i++});
+	// 		}
+	// 	}
 
-		flatten(baselineGraph).jsonDumpToFile(path + ".b.json");
+	// 	flatten(baselineGraph).jsonDumpToFile(path + ".b.json");
 
-		auto it = route.route.begin();
-		cout << (*it++)->data().id;
-		for (; it != route.route.end(); it++) {
-			cout << " -> " << (*it)->data().id;
-		}
-		cout << endl;
-	} catch (exception& e) {
-		cerr << "Warning: " << e.what() << endl;
+	// 	auto it = route.route.begin();
+	// 	cout << (*it++)->data().id;
+	// 	for (; it != route.route.end(); it++) {
+	// 		cout << " -> " << (*it)->data().id;
+	// 	}
+	// 	cout << endl;
+	// } catch (exception& e) {
+	// 	cerr << "Warning: " << e.what() << endl;
 
-		return 1;
-	} catch (...) {
-		cerr << "Unknown error" << endl;
+	// 	return 1;
+	// } catch (...) {
+	// 	cerr << "Unknown error" << endl;
 
-		return 1;
-	}
+	// 	return 1;
+	// }
 
 	return 0;
 }

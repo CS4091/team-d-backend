@@ -8,9 +8,8 @@
 
 namespace arro {
 namespace algo {
-template <UniqueSerializable NodeData, typename LinkData>
-	requires Serializable<LinkData> && Weighted<LinkData>
-std::vector<std::vector<double>> floydWarshall(const Graph<NodeData, LinkData>& graph);
+template <UniqueSerializable NodeData, Serializable LinkData, Function<double, LinkData> WeightOp>
+std::vector<std::vector<double>> floydWarshall(const Graph<NodeData, LinkData>& graph, WeightOp weight);
 }  // namespace algo
 }  // namespace arro
 

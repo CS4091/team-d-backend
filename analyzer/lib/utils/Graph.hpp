@@ -58,8 +58,8 @@ arro::Graph<NodeData, LinkData>::Node* arro::Graph<NodeData, LinkData>::add(cons
 }
 
 template <UniqueSerializable NodeData, Serializable LinkData>
-arro::Graph<NodeData, LinkData>::Link* arro::Graph<NodeData, LinkData>::link(const decltype(NodeData::id)& from, const decltype(NodeData::id)& to,
-																			 const LinkData& data) {
+template <ComparableTo<decltype(NodeData::id)> Search>
+arro::Graph<NodeData, LinkData>::Link* arro::Graph<NodeData, LinkData>::link(const Search& from, const Search& to, const LinkData& data) {
 	Node *fromNode, *toNode;
 
 	for (auto node : _nodes) {
@@ -92,7 +92,20 @@ arro::Graph<NodeData, LinkData>::Link* arro::Graph<NodeData, LinkData>::link(Nod
 }
 
 template <UniqueSerializable NodeData, Serializable LinkData>
-const arro::Graph<NodeData, LinkData>::Node* arro::Graph<NodeData, LinkData>::operator[](const decltype(NodeData::id)& id) const {
+template <ComparableTo<decltype(NodeData::id)> Search>
+const arro::Graph<NodeData, LinkData>::Node* arro::Graph<NodeData, LinkData>::operator[](const Search& id) const {
+	for (auto node : _nodes) {
+		if (node->data().id == id) {
+			return node;
+		}
+	}
+
+	return nullptr;
+}
+
+template <UniqueSerializable NodeData, Serializable LinkData>
+template <ComparableTo<decltype(NodeData::id)> Search>
+arro::Graph<NodeData, LinkData>::Node* arro::Graph<NodeData, LinkData>::operator[](const Search& id) {
 	for (auto node : _nodes) {
 		if (node->data().id == id) {
 			return node;

@@ -74,10 +74,14 @@ public:
 
 	Node* add(const NodeData& data);
 
-	Link* link(const decltype(NodeData::id)& from, const decltype(NodeData::id)& to, const LinkData& data);
+	template <ComparableTo<decltype(NodeData::id)> Search>
+	Link* link(const Search& from, const Search& to, const LinkData& data);
 	Link* link(Node* from, Node* to, const LinkData& data);
 
-	const Node* operator[](const decltype(NodeData::id)& id) const;
+	template <ComparableTo<decltype(NodeData::id)> Search>
+	const Node* operator[](const Search& id) const;
+	template <ComparableTo<decltype(NodeData::id)> Search>
+	Node* operator[](const Search& id);
 	const Link* operator[](const LinkLookup& lookup) const;
 
 	template <UniqueSerializable NewNodeData, Function<NewNodeData, NodeData> Mapper>

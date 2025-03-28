@@ -1,45 +1,104 @@
 #ifndef ROUTING_H
 #define ROUTING_H
 
+#include <math/aviation.h>
+#include <math/geospatial.h>
 #include <utils/Graph.h>
+#include <utils/JSONStruct.h>
 #include <utils/concepts.h>
 
 #include <algorithm>
 #include <iterator>
 #include <list>
+#include <map>
+#include <queue>
 #include <string>
 #include <vector>
 
+#include "dijkstra.h"
+#include "fw.h"
+
 namespace arro {
 namespace algo {
+namespace data {
+struct AirportLatLng : public arro::JSONStruct {
+	arro::JSONStruct::Field<std::string> id;
+	arro::JSONStruct::Field<std::string> city;
+	arro::JSONStruct::Field<std::string> type;
+	arro::JSONStruct::Field<double> lat;
+	arro::JSONStruct::Field<double> lng;
+	arro::JSONStruct::Field<double> fuel;
+
+	AirportLatLng(const nlohmann::json& obj)
+		: arro::JSONStruct(obj), id(this, "id"), city(this, "city"), type(this, "type"), lat(this, "lat"), lng(this, "lng"), fuel(this, "fuel") {}
+
+	static nlohmann::json stringify(const AirportLatLng& airport);
+};
+
+struct CityLatLng : public arro::JSONStruct {
+	arro::JSONStruct::Field<std::string> id;
+	arro::JSONStruct::Field<std::string> name;
+	arro::JSONStruct::Field<double> lat;
+	arro::JSONStruct::Field<double> lng;
+
+	CityLatLng(const nlohmann::json& obj) : arro::JSONStruct(obj), id(this, "name"), name(this, "name"), lat(this, "lat"), lng(this, "lng") {}
+};
+
+struct RouteReq : public arro::JSONStruct {
+	arro::JSONStruct::Field<std::string> from;
+	arro::JSONStruct::Field<std::string> to;
+
+	RouteReq(const nlohmann::json& obj) : arro::JSONStruct(obj), from(this, "from"), to(this, "to") {}
+};
+
+struct AirwayData {
+	aviation::FlightData data;
+	double fuelPrice;
+
+	double cost(unsigned int passengers) const;
+
+	static nlohmann::json stringify(const AirwayData& airway);
+};
+}  // namespace data
+
 namespace __routing {
-template <UniqueSerializable CNData, typename CLData, UniqueSerializable DNData, Serializable DLData>
-	requires Serializable<CLData> && Weighted<CLData>
 struct RoutePlan {
-	std::list<const typename arro::Graph<CNData, CLData>::Node*> route;
-	std::vector<const typename arro::Graph<DNData, DLData>::Link*> remaining;
+	std::map<std::string, std::list<const typename arro::Graph<data::AirportLatLng, data::AirwayData>::Node*>> route;
+	std::vector<data::RouteReq> remaining;
 	double cost;
 };
 
-template <UniqueSerializable CNData, typename CLData, UniqueSerializable DNData, Serializable DLData>
-	requires Serializable<CLData> && Weighted<CLData>
-bool operator>(const RoutePlan<CNData, CLData, DNData, DLData>& a, const RoutePlan<CNData, CLData, DNData, DLData>& b);
-}  // namespace __routing
-
-template <UniqueSerializable CNData, typename CLData, UniqueSerializable DNData, Serializable DLData>
-	requires Serializable<CLData> && Weighted<CLData>
-struct Routing {
-	std::list<const typename arro::Graph<CNData, CLData>::Node*> route;
-	std::list<const typename arro::Graph<CNData, CLData>::Node*> baseline;
+struct PotentialFlight {
+	aviation::FlightData data;
+	std::string from;
+	std::string to;
+	double costApprox;
 };
 
-template <UniqueSerializable CNData, typename CLData, UniqueSerializable DNData, Serializable DLData>
-	requires Serializable<CLData> && Weighted<CLData>
-Routing<CNData, CLData, DNData, DLData> findRoute(const arro::Graph<CNData, CLData>& connGraph, const arro::Graph<DNData, DLData>& demandGraph,
-												  const std::string& startCity);
+struct PlaneLoc {
+	aviation::Plane plane;
+	const typename arro::Graph<data::AirportLatLng, data::AirwayData>::Node* loc;
+	double time;
+};
+
+bool operator>(const RoutePlan& a, const RoutePlan& b);
+
+bool operator>(const PotentialFlight& a, const PotentialFlight& b);
+
+bool operator>(const PlaneLoc& a, const PlaneLoc& b);
+}  // namespace __routing
+
+struct Routing {
+	std::map<std::string, std::list<std::string>> route;
+	std::map<std::string, std::list<std::string>> baseline;
+};
+
+Routing findRoute(const std::vector<data::AirportLatLng>& airports, const std::vector<data::CityLatLng>& cities,
+				  const std::vector<data::RouteReq>& requestedRoutes, const std::vector<aviation::Plane>& planes);
+
+std::map<std::string, arro::Graph<data::AirportLatLng, data::AirwayData>> mapFlights(const std::vector<data::AirportLatLng>& airports,
+																					 const std::vector<aviation::Plane>& planes);
 }  // namespace algo
 }  // namespace arro
-
-#include "routing.hpp"
 
 #endif

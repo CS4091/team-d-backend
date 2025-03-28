@@ -29,7 +29,10 @@ public:
 		Field(const JSONStruct* host, const std::string& name) : _host(host), _name(name) {}
 
 		T operator()() const { return (*_host)[_name]; }
-		bool operator==(const Field<T>& other) { return (*this)() == other(); }
+		bool operator==(const Field<T>& other) const { return (*this)() == other(); }
+		bool operator==(const T& other) const { return (*this)() == other; }
+
+		operator T() const { return (*this)(); }
 
 	public:
 		const JSONStruct* _host;

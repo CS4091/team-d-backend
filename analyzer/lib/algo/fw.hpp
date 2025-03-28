@@ -1,8 +1,7 @@
 #include "fw.h"
 
-template <UniqueSerializable NodeData, typename LinkData>
-	requires Serializable<LinkData> && Weighted<LinkData>
-std::vector<std::vector<double>> arro::algo::floydWarshall(const arro::Graph<NodeData, LinkData>& graph) {
+template <UniqueSerializable NodeData, Serializable LinkData, Function<double, LinkData> WeightOp>
+std::vector<std::vector<double>> arro::algo::floydWarshall(const arro::Graph<NodeData, LinkData>& graph, WeightOp weight) {
 	using namespace std;
 	using namespace arro;
 
@@ -17,7 +16,7 @@ std::vector<std::vector<double>> arro::algo::floydWarshall(const arro::Graph<Nod
 	for (auto edge : graph.edges()) {
 		size_t from = edge->from()->idx, to = edge->to()->idx;
 
-		out[from][to] = edge->data().cost();
+		out[from][to] = weight(edge->data());
 	}
 
 	for (size_t k = 0; k < graph.size(); k++) {
