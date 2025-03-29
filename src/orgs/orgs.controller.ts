@@ -70,8 +70,10 @@ export class OrgsController {
 	@Patch('/:id')
 	@Protected()
 	@ApiResponse({ type: OrganizationResponse })
-	public async updateOrgName(@Param() orgId: OrganizationIDDTO, @Body() { name }: UpdateNameDTO): Promise<Organization> {
+	public async updateOrgName(@ReqUser() user: User, @Param() orgId: OrganizationIDDTO, @Body() { name }: UpdateNameDTO): Promise<Organization> {
 		const org = await this.service.get(orgId, fullOrg);
+
+		if (!org || !org.users.some((u) => u.id === user.id)) throw new NotFoundException(`Organization with id '${orgId.id}' does not exist.`);
 
 		return await this.service.updateOrgName(org, name);
 	}
