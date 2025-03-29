@@ -212,11 +212,36 @@ map<string, Graph<data::AirportLatLng, data::AirwayData>> arro::algo::mapFlights
 			min_pqueue<PotentialFlight> queue;
 
 			for (auto a : airports) {
-				for (auto b : airports) {
-					if (a.id != b.id) {
-						auto data = aviation::planFlight(plane, geospatial::llToRect(a.lat(), a.lng()), geospatial::llToRect(b.lat(), b.lng()));
+				unsigned int neighbors = 0;
 
-						if (data.has_value()) queue.emplace(*data, a.id(), b.id(), data->minFuel * a.fuel());
+				bool available = false;
+				for (auto runway : a.runways()) {
+					if (data::Runway(runway).length() >= max(plane.landingRunway(), plane.takeoffRunway())) {
+						available = true;
+						break;
+					}
+				}
+
+				if (available) {
+					for (auto b : airports) {
+						available = false;
+						for (auto runway : b.runways()) {
+							if (data::Runway(runway).length() >= max(plane.landingRunway(), plane.takeoffRunway())) {
+								available = true;
+								break;
+							}
+						}
+
+						if (available) {
+							auto data = aviation::planFlight(plane, geospatial::llToRect(a.lat(), a.lng()), geospatial::llToRect(b.lat(), b.lng()));
+
+							if (data.has_value()) {
+								queue.emplace(*data, a.id(), b.id(), data->minFuel * a.fuel());
+								neighbors++;
+							}
+						}
+
+						if (neighbors >= 100) break;  // for performance reasons (also no way an airport burns through 100 neighbors surely)
 					}
 				}
 			}
@@ -229,7 +254,7 @@ map<string, Graph<data::AirportLatLng, data::AirwayData>> arro::algo::mapFlights
 
 				if (!from || !to) throw runtime_error("Something dun fucked up big");
 
-				unsigned int fromMaxDegree, toMaxDegree;
+				unsigned int fromMaxDegree;
 
 				if (from->data().type() == "large_airport")
 					fromMaxDegree = lgMaxDegree;
@@ -240,17 +265,7 @@ map<string, Graph<data::AirportLatLng, data::AirwayData>> arro::algo::mapFlights
 				else
 					fromMaxDegree = otherMaxDegree;
 
-				if (to->data().type() == "large_airport")
-					toMaxDegree = lgMaxDegree;
-				else if (to->data().type() == "medium_airport")
-					toMaxDegree = lgMaxDegree;
-				else if (to->data().type() == "small_airport")
-					toMaxDegree = lgMaxDegree;
-				else
-					toMaxDegree = otherMaxDegree;
-
-				if (from->neighbors().size() < fromMaxDegree && to->neighbors().size() < toMaxDegree)
-					graph.link(from, to, data::AirwayData(flight.data, from->data().fuel()));
+				if (from->neighbors().size() < fromMaxDegree) graph.link(from, to, data::AirwayData(flight.data, from->data().fuel()));
 			}
 
 			connGraphs.emplace(plane.model(), graph);

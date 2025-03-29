@@ -31,28 +31,29 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY bin/lib)
 set(LIB "analyzer/lib")
 
 add_library(
-	math STATIC
+	math SHARED
 	"${LIB}/math/Vector3D.cpp"
 	"${LIB}/math/aviation.cpp"
 	"${LIB}/math/geospatial.cpp"
 )
 
 add_library(
-	algo STATIC
+	algo SHARED
 	"${LIB}/algo/routing.cpp"
 )
+target_link_libraries(algo math)
 
 add_library(
-	utils STATIC
+	utils SHARED
 	"${LIB}/utils/syncio.cpp"
 )
 
 add_executable(daemon analyzer/drivers/daemon.cpp)
-target_link_libraries(daemon math utils)
+target_link_libraries(daemon math utils algo)
 
 add_executable(demo analyzer/drivers/demo.cpp)
-target_link_libraries(demo math utils)
+target_link_libraries(demo math utils algo)
 
 add_executable(graph analyzer/drivers/tests/graph.cpp)
-target_link_libraries(graph PRIVATE Catch2::Catch2WithMain math utils)
-set_target_properties(demo PROPERTIES CMAKE_RUNTIME_OUTPUT_DIRECTORY bin/tests)
+target_link_libraries(graph PRIVATE Catch2::Catch2WithMain math utils algo)
+set_target_properties(graph PROPERTIES CMAKE_RUNTIME_OUTPUT_DIRECTORY bin/tests)

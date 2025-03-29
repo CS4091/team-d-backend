@@ -1,13 +1,13 @@
-import { BadRequestException, Controller, Get, InternalServerErrorException, NotFoundException, Param, Post, Query } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, InternalServerErrorException, NotFoundException, Param, Patch, Post, Query } from '@nestjs/common';
 import { ApiResponse } from '@nestjs/swagger';
 import type { Invite, Organization, User } from '@prisma/client';
 import { Protected } from 'src/auth/protected.decorator';
+import { UpdateNameDTO } from 'src/users/users.dtos';
 import { UsersService } from 'src/users/users.service';
 import { ReqUser } from 'src/utils/decorators/user.decorator';
-import { AcceptInviteDTO, CreateInviteDTO, CreateOrganizationDTO, InviteResponse, OrganizationIDDTO, OrganizationResponse, NameUpdateDTO } from './orgs.dtos';
+import { AcceptInviteDTO, CreateInviteDTO, CreateOrganizationDTO, InviteResponse, OrganizationIDDTO, OrganizationResponse } from './orgs.dtos';
 import { fullOrg } from './orgs.models';
 import { OrgsService } from './orgs.service';
-import { UpdateNameDTO } from 'src/users/users.dtos';
 
 @Controller('/organizations')
 export class OrgsController {
@@ -67,13 +67,13 @@ export class OrgsController {
 		}
 	}
 
-  @Patch('/:id')
+	@Patch('/:id')
 	@Protected()
-  @ApiResponse({ type: OrganizationResponse })
-  public async updateOrgName(@Param() orgId: OrganizationIDDTO, @Body() { name }: UpdateNameDTO): Promise<Organization> {
-    const org = await this.service.get(orgId, fullOrg);
+	@ApiResponse({ type: OrganizationResponse })
+	public async updateOrgName(@Param() orgId: OrganizationIDDTO, @Body() { name }: UpdateNameDTO): Promise<Organization> {
+		const org = await this.service.get(orgId, fullOrg);
 
-    return await this.service.updateOrgName(org, name);
-  }
+		return await this.service.updateOrgName(org, name);
+	}
 }
 

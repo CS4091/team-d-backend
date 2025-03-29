@@ -21,6 +21,16 @@
 namespace arro {
 namespace algo {
 namespace data {
+struct Runway : public arro::JSONStruct {
+	arro::JSONStruct::Field<std::string> name;
+	arro::JSONStruct::Field<double> length;
+	arro::JSONStruct::Field<double> width;
+	arro::JSONStruct::Field<bool> lighted;
+
+	Runway(const nlohmann::json& obj) : arro::JSONStruct(obj), name(this, "name"), length(this, "length"), width(this, "width"), lighted(this, "lighted") {}
+	Runway(const Runway& other) : arro::JSONStruct(other), name(this, "name"), length(this, "length"), width(this, "width"), lighted(this, "lighted") {}
+};
+
 struct AirportLatLng : public arro::JSONStruct {
 	arro::JSONStruct::Field<std::string> id;
 	arro::JSONStruct::Field<std::string> city;
@@ -28,9 +38,26 @@ struct AirportLatLng : public arro::JSONStruct {
 	arro::JSONStruct::Field<double> lat;
 	arro::JSONStruct::Field<double> lng;
 	arro::JSONStruct::Field<double> fuel;
+	arro::JSONStruct::Field<nlohmann::json> runways;
 
 	AirportLatLng(const nlohmann::json& obj)
-		: arro::JSONStruct(obj), id(this, "id"), city(this, "city"), type(this, "type"), lat(this, "lat"), lng(this, "lng"), fuel(this, "fuel") {}
+		: arro::JSONStruct(obj),
+		  id(this, "id"),
+		  city(this, "city"),
+		  type(this, "type"),
+		  lat(this, "lat"),
+		  lng(this, "lng"),
+		  fuel(this, "fuel"),
+		  runways(this, "runways") {}
+	AirportLatLng(const AirportLatLng& other)
+		: arro::JSONStruct(other),
+		  id(this, "id"),
+		  city(this, "city"),
+		  type(this, "type"),
+		  lat(this, "lat"),
+		  lng(this, "lng"),
+		  fuel(this, "fuel"),
+		  runways(this, "runways") {}
 
 	static nlohmann::json stringify(const AirportLatLng& airport);
 };
@@ -42,6 +69,7 @@ struct CityLatLng : public arro::JSONStruct {
 	arro::JSONStruct::Field<double> lng;
 
 	CityLatLng(const nlohmann::json& obj) : arro::JSONStruct(obj), id(this, "name"), name(this, "name"), lat(this, "lat"), lng(this, "lng") {}
+	CityLatLng(const CityLatLng& other) : arro::JSONStruct(other), id(this, "name"), name(this, "name"), lat(this, "lat"), lng(this, "lng") {}
 };
 
 struct RouteReq : public arro::JSONStruct {
@@ -49,6 +77,7 @@ struct RouteReq : public arro::JSONStruct {
 	arro::JSONStruct::Field<std::string> to;
 
 	RouteReq(const nlohmann::json& obj) : arro::JSONStruct(obj), from(this, "from"), to(this, "to") {}
+	RouteReq(const RouteReq& other) : arro::JSONStruct(other), from(this, "from"), to(this, "to") {}
 };
 
 struct AirwayData {

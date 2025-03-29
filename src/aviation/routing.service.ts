@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { createId } from '@paralleldrive/cuid2';
 import { Plane } from '@prisma/client';
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
-import { mkdirSync, rmSync, statSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, rmSync, statSync, writeFileSync } from 'fs';
 import { RouteResult } from './aviation.dtos';
 import { Airport, City, PlaneModel } from './aviation.models';
 
@@ -73,6 +73,16 @@ export class RoutingService {
 		// 	return plan;
 		// });
 		return {} as any;
+	}
+
+	public async prep(cities: City[], airports: Airport[], planes: PlaneModel[]): Promise<void> {
+		if (!existsSync('processing/test')) {
+			mkdirSync('processing/test');
+
+			writeFileSync('processing/test/cities.json', JSON.stringify(cities));
+			writeFileSync('processing/test/airports.json', JSON.stringify(airports));
+			writeFileSync('processing/test/planes.json', JSON.stringify(planes));
+		}
 	}
 
 	public async process(id: string): Promise<void> {

@@ -52,6 +52,21 @@ struct Plane : public arro::JSONStruct {
 		  desc24kAirspeed(this, "desc24kAirspeed"),
 		  desc10kAirspeed(this, "desc10kAirspeed"),
 		  approachAirspeed(this, "approachAirspeed") {}
+	Plane(const Plane& other)
+		: arro::JSONStruct(other),
+		  id(this, "id"),
+		  homeBase(this, "homeBase"),
+		  model(this, "model"),
+		  range(this, "range"),
+		  takeoffRunway(this, "takeoffRunway"),
+		  landingRunway(this, "landingRunway"),
+		  climb5kAirspeed(this, "climb5kAirspeed"),
+		  climb15kAirspeed(this, "climb15kAirspeed"),
+		  climb24kAirspeed(this, "climb24kAirspeed"),
+		  cruiseAirspeed(this, "cruiseAirspeed"),
+		  desc24kAirspeed(this, "desc24kAirspeed"),
+		  desc10kAirspeed(this, "desc10kAirspeed"),
+		  approachAirspeed(this, "approachAirspeed") {}
 };
 
 struct FlightData {

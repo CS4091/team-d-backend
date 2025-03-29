@@ -1,7 +1,7 @@
 import { parse } from '@fast-csv/parse';
 import { Injectable } from '@nestjs/common';
 import { createReadStream } from 'fs';
-import { Airport, City, PlaneModel, RawAirport, RawPlane, RawRunway } from './aviation.models';
+import { Airport, City, PlaneModel, RawAirport, RawFuel, RawPlane, RawRunway } from './aviation.models';
 
 @Injectable()
 export class AviationService {
@@ -32,6 +32,7 @@ export class AviationService {
 								name,
 								city: municipality,
 								type,
+								fuel: 0,
 								id: ident,
 								iata: iata_code,
 								lat: Number(latitude_deg),
@@ -40,9 +41,9 @@ export class AviationService {
 							})
 					)
 					.on('end', () => resolve())
-			)
-				.then(() =>
-					createReadStream('data/runways.csv')
+			).then(() =>
+				new Promise<void>((resolve, reject) =>
+					createReadStream('data/fuel.csv')
 						.pipe(
 							parse({
 								objectMode: true,
@@ -51,20 +52,45 @@ export class AviationService {
 							})
 						)
 						.on('error', reject)
-						.on('data', ({ airport_ident, le_ident, length_ft, width_ft, lighted }: RawRunway) =>
-							data
-								.find((airport) => airport.id === airport_ident)
-								?.runways.push({ name: le_ident, length: Number(length_ft), width: Number(width_ft), lighted: lighted === '1' })
-						)
-						.on('end', () => resolve(data))
+						.on('data', ({ id, price }: RawFuel) => {
+							const airport = data.find((airport) => airport.id === id);
+
+							if (!airport) return reject(new Error(`Unknown airport for fuel id '${id}'`));
+
+							airport.fuel = Number(price);
+						})
+						.on('end', () => resolve())
 				)
-				.catch((err) => reject(err));
+					.then(() =>
+						createReadStream('data/runways.csv')
+							.pipe(
+								parse({
+									objectMode: true,
+									trim: true,
+									headers: true
+								})
+							)
+							.on('error', reject)
+							.on('data', ({ airport_ident, le_ident, length_ft, width_ft, lighted }: RawRunway) =>
+								data
+									.find((airport) => airport.id === airport_ident)
+									?.runways.push({
+										name: le_ident,
+										length: Number(length_ft) * 0.3048,
+										width: Number(width_ft) * 0.3048,
+										lighted: lighted === '1'
+									})
+							)
+							.on('end', () => resolve(data))
+					)
+					.catch((err) => reject(err))
+			);
 		})
 			.catch((err) => {
 				console.error(err);
 				throw new Error('Failed to acquire airports.csv or airports_intl.csv');
 			})
-			.then((airports) => airports.filter((airport) => airport.runways.length > 0));
+			.then((airports) => airports.filter((airport) => airport.runways.length > 0 && !!airport.fuel)); // don't worry about type coersion because fuel isn't free
 
 		this.cities = this.airports.then((airports) => {
 			const groups = new Map<string, Airport[]>();

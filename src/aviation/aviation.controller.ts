@@ -53,5 +53,15 @@ export class AviationController {
 
 		return this.routing.route(cities, airports, demand, speccedPlanes as any);
 	}
+
+	@Post('/prep')
+	@ApiResponse({ type: RouteResult })
+	public async prepEnv(): Promise<void> {
+		const cities = await this.service.cities;
+		const planeModels = await this.service.planes;
+		const airports = await this.service.airports;
+
+		return this.routing.prep(cities, airports, planeModels);
+	}
 }
 

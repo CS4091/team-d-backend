@@ -1,6 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { fi } from 'src/utils/utils';
 
+export interface RawFuel {
+	id: string;
+	price: string;
+}
+
 export interface RawRunway {
 	id: string;
 	airport_ref: string;
@@ -60,6 +65,9 @@ export class Airport {
 
 	@ApiProperty()
 	iata: string = fi();
+
+	@ApiProperty()
+	fuel: number = fi();
 
 	@ApiProperty()
 	lat: number = fi();
