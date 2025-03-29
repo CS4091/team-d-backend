@@ -63,6 +63,14 @@ export class OrgsService {
 		});
 	}
 
+  public async updateOrgName(to: FullOrganization, name: string): Promise<FullOrganization> {
+    return this.db.organization.update({
+			where: { id: to.id },
+			data: { name: name },
+			...fullOrg
+		});
+  }  
+
 	public static readonly NotFoundException = class extends wrap(NotFoundException) {};
 	public static readonly NotAllowedException = class extends wrap(ForbiddenException) {};
 	public static readonly DuplicateException = class extends wrap(BadRequestException) {};
