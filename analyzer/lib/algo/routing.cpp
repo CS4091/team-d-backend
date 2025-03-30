@@ -88,12 +88,13 @@ Routing arro::algo::findRoute(const vector<data::AirportLatLng>& airports, const
 		data::RouteReq closestRoute = baselineReqRoutes[0];
 		size_t crIdx = 0;
 		for (size_t i = 1; i < baselineReqRoutes.size(); i++) {
-			// unsafe dereference but fuck ups should have been validated out earlier
-			size_t toIdx = connGraph[baselineReqRoutes[i].from]->idx, oldToIdx = connGraph[closestRoute.from]->idx;
+			if (connGraph[baselineReqRoutes[i].from]) {
+				size_t toIdx = connGraph[baselineReqRoutes[i].from]->idx, oldToIdx = connGraph[closestRoute.from]->idx;
 
-			if (masterTable[fromIdx][toIdx] < masterTable[fromIdx][oldToIdx]) {
-				closestRoute = baselineReqRoutes[i];
-				crIdx = i;
+				if (masterTable[fromIdx][toIdx] < masterTable[fromIdx][oldToIdx] && connGraph[baselineReqRoutes[i].to]) {
+					closestRoute = baselineReqRoutes[i];
+					crIdx = i;
+				}
 			}
 		}
 
