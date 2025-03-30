@@ -33,10 +33,10 @@ std::list<const typename arro::Graph<NodeData, LinkData>::Node*> arro::algo::dij
 	}
 
 	if (!foundStart) {
-		throw invalid_argument("Start node not found in graph");
+		throw invalid_argument("Start node '" + std::string(start->data().id) + "' not found in graph");
 	}
 	if (!foundEnd) {
-		throw invalid_argument("End node not found in graph");
+		throw invalid_argument("End node '" + std::string(end->data().id) + "' not found in graph");
 	}
 
 	make_heap(queue.begin(), queue.end(), std::greater{});

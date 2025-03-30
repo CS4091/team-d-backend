@@ -5,24 +5,10 @@ arro::Graph<NodeData, LinkData>::Graph(const Graph<NodeData, LinkData>& other) :
 	_nodes.reserve(other._nodes.size());
 	_edges.reserve(other._edges.size());
 
-	for (auto node : other._nodes) _nodes.push_back(new Node(_nodes.size(), node->data()));
+	for (const Node* node : other._nodes) _nodes.push_back(new Node(_nodes.size(), node->data()));
 
-	for (auto edge : other._edges) {
-		Node *from = nullptr, *to = nullptr;
-
-		for (auto node : other._nodes) {
-			if (node->data().id == edge->_from->data().id) from = node;
-			if (node->data().id == edge->_to->data().id) to = node;
-		}
-
-		if (!from || !to) throw std::invalid_argument("Graph link between nonexistent nodes");
-
-		if (_digraph) {
-			_edges.push_back(new Link(from, to, edge->data()));
-		} else {
-			_edges.push_back(new Link(from, to, edge->data()));
-			_edges.push_back(new Link(to, from, edge->data()));
-		}
+	for (const Link* edge : other._edges) {
+		link(_nodes[edge->from()->idx], _nodes[edge->to()->idx], edge->data());
 	}
 }
 

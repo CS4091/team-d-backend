@@ -2,7 +2,6 @@
 #define AVIATION_H
 
 #include <math/Vector3D.h>
-#include <utils/JSONStruct.h>
 
 #include <nlohmann/json.hpp>
 #include <optional>
@@ -22,51 +21,35 @@ struct FlightPhase {
 	double lateral;
 };
 
-struct Plane : public arro::JSONStruct {
-	arro::JSONStruct::Field<std::string> id;
-	arro::JSONStruct::Field<std::string> homeBase;
-	arro::JSONStruct::Field<std::string> model;
-	arro::JSONStruct::Field<double> range;
-	arro::JSONStruct::Field<double> takeoffRunway;
-	arro::JSONStruct::Field<double> landingRunway;
-	arro::JSONStruct::Field<double> climb5kAirspeed;
-	arro::JSONStruct::Field<double> climb15kAirspeed;
-	arro::JSONStruct::Field<double> climb24kAirspeed;
-	arro::JSONStruct::Field<double> cruiseAirspeed;
-	arro::JSONStruct::Field<double> desc24kAirspeed;
-	arro::JSONStruct::Field<double> desc10kAirspeed;
-	arro::JSONStruct::Field<double> approachAirspeed;
+struct Plane {
+	std::string id;
+	std::string homeBase;
+	std::string model;
+	double range;
+	double takeoffRunway;
+	double landingRunway;
+	double climb5kAirspeed;
+	double climb15kAirspeed;
+	double climb24kAirspeed;
+	double cruiseAirspeed;
+	double desc24kAirspeed;
+	double desc10kAirspeed;
+	double approachAirspeed;
 
 	Plane(const nlohmann::json& obj)
-		: arro::JSONStruct(obj),
-		  id(this, "id"),
-		  homeBase(this, "homeBase"),
-		  model(this, "model"),
-		  range(this, "range"),
-		  takeoffRunway(this, "takeoffRunway"),
-		  landingRunway(this, "landingRunway"),
-		  climb5kAirspeed(this, "climb5kAirspeed"),
-		  climb15kAirspeed(this, "climb15kAirspeed"),
-		  climb24kAirspeed(this, "climb24kAirspeed"),
-		  cruiseAirspeed(this, "cruiseAirspeed"),
-		  desc24kAirspeed(this, "desc24kAirspeed"),
-		  desc10kAirspeed(this, "desc10kAirspeed"),
-		  approachAirspeed(this, "approachAirspeed") {}
-	Plane(const Plane& other)
-		: arro::JSONStruct(other),
-		  id(this, "id"),
-		  homeBase(this, "homeBase"),
-		  model(this, "model"),
-		  range(this, "range"),
-		  takeoffRunway(this, "takeoffRunway"),
-		  landingRunway(this, "landingRunway"),
-		  climb5kAirspeed(this, "climb5kAirspeed"),
-		  climb15kAirspeed(this, "climb15kAirspeed"),
-		  climb24kAirspeed(this, "climb24kAirspeed"),
-		  cruiseAirspeed(this, "cruiseAirspeed"),
-		  desc24kAirspeed(this, "desc24kAirspeed"),
-		  desc10kAirspeed(this, "desc10kAirspeed"),
-		  approachAirspeed(this, "approachAirspeed") {}
+		: id(obj["id"]),
+		  homeBase(obj["homeBase"]),
+		  model(obj["model"]),
+		  range(obj["range"]),
+		  takeoffRunway(obj["takeoffRunway"]),
+		  landingRunway(obj["landingRunway"]),
+		  climb5kAirspeed(obj["climb5kAirspeed"]),
+		  climb15kAirspeed(obj["climb15kAirspeed"]),
+		  climb24kAirspeed(obj["climb24kAirspeed"]),
+		  cruiseAirspeed(obj["cruiseAirspeed"]),
+		  desc24kAirspeed(obj["desc24kAirspeed"]),
+		  desc10kAirspeed(obj["desc10kAirspeed"]),
+		  approachAirspeed(obj["approachAirspeed"]) {}
 };
 
 struct FlightData {

@@ -20,11 +20,23 @@ using namespace std;
 using namespace numbers;
 using json = nlohmann::json;
 
+template <JSONConstructable T>
+vector<T> readArray(const string& path) {
+	ifstream in(path);
+	vector<json> arr = json::parse(in);
+	in.close();
+
+	vector<T> out;
+	copy(arr.begin(), arr.end(), back_inserter(out));
+
+	return out;
+}
+
 int main(int argc, char* argv[]) {
-	vector<arro::algo::data::AirportLatLng> airports = arro::JSONStruct::parseArray<arro::algo::data::AirportLatLng>("airports.json");
-	vector<arro::algo::data::CityLatLng> cities = arro::JSONStruct::parseArray<arro::algo::data::CityLatLng>("cities.json");
-	vector<arro::algo::data::RouteReq> routes = arro::JSONStruct::parseArray<arro::algo::data::RouteReq>("routes.json");
-	vector<arro::aviation::Plane> planes = arro::JSONStruct::parseArray<arro::aviation::Plane>("planes.json");
+	vector<arro::algo::data::AirportLatLng> airports = readArray<arro::algo::data::AirportLatLng>("airports.json");
+	vector<arro::algo::data::CityLatLng> cities = readArray<arro::algo::data::CityLatLng>("cities.json");
+	vector<arro::algo::data::RouteReq> routes = readArray<arro::algo::data::RouteReq>("routes.json");
+	vector<arro::aviation::Plane> planes = readArray<arro::aviation::Plane>("planes.json");
 
 	cout << "Done reading inputs" << endl;
 	cout << airports.size() << " airports" << endl;

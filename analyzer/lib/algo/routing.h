@@ -4,7 +4,6 @@
 #include <math/aviation.h>
 #include <math/geospatial.h>
 #include <utils/Graph.h>
-#include <utils/JSONStruct.h>
 #include <utils/concepts.h>
 
 #include <algorithm>
@@ -12,6 +11,7 @@
 #include <list>
 #include <map>
 #include <queue>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -21,63 +21,43 @@
 namespace arro {
 namespace algo {
 namespace data {
-struct Runway : public arro::JSONStruct {
-	arro::JSONStruct::Field<std::string> name;
-	arro::JSONStruct::Field<double> length;
-	arro::JSONStruct::Field<double> width;
-	arro::JSONStruct::Field<bool> lighted;
+struct Runway {
+	std::string name;
+	double length;
+	double width;
+	bool lighted;
 
-	Runway(const nlohmann::json& obj) : arro::JSONStruct(obj), name(this, "name"), length(this, "length"), width(this, "width"), lighted(this, "lighted") {}
-	Runway(const Runway& other) : arro::JSONStruct(other), name(this, "name"), length(this, "length"), width(this, "width"), lighted(this, "lighted") {}
+	Runway(const nlohmann::json& obj) : name(obj["name"]), length(obj["length"]), width(obj["width"]), lighted(obj["lighted"]) {}
 };
 
-struct AirportLatLng : public arro::JSONStruct {
-	arro::JSONStruct::Field<std::string> id;
-	arro::JSONStruct::Field<std::string> city;
-	arro::JSONStruct::Field<std::string> type;
-	arro::JSONStruct::Field<double> lat;
-	arro::JSONStruct::Field<double> lng;
-	arro::JSONStruct::Field<double> fuel;
-	arro::JSONStruct::Field<nlohmann::json> runways;
+struct AirportLatLng {
+	std::string id;
+	std::string city;
+	std::string type;
+	double lat;
+	double lng;
+	double fuel;
+	std::vector<Runway> runways;
 
-	AirportLatLng(const nlohmann::json& obj)
-		: arro::JSONStruct(obj),
-		  id(this, "id"),
-		  city(this, "city"),
-		  type(this, "type"),
-		  lat(this, "lat"),
-		  lng(this, "lng"),
-		  fuel(this, "fuel"),
-		  runways(this, "runways") {}
-	AirportLatLng(const AirportLatLng& other)
-		: arro::JSONStruct(other),
-		  id(this, "id"),
-		  city(this, "city"),
-		  type(this, "type"),
-		  lat(this, "lat"),
-		  lng(this, "lng"),
-		  fuel(this, "fuel"),
-		  runways(this, "runways") {}
+	AirportLatLng(const nlohmann::json& obj);
 
 	static nlohmann::json stringify(const AirportLatLng& airport);
 };
 
-struct CityLatLng : public arro::JSONStruct {
-	arro::JSONStruct::Field<std::string> id;
-	arro::JSONStruct::Field<std::string> name;
-	arro::JSONStruct::Field<double> lat;
-	arro::JSONStruct::Field<double> lng;
+struct CityLatLng {
+	std::string id;
+	std::string name;
+	double lat;
+	double lng;
 
-	CityLatLng(const nlohmann::json& obj) : arro::JSONStruct(obj), id(this, "name"), name(this, "name"), lat(this, "lat"), lng(this, "lng") {}
-	CityLatLng(const CityLatLng& other) : arro::JSONStruct(other), id(this, "name"), name(this, "name"), lat(this, "lat"), lng(this, "lng") {}
+	CityLatLng(const nlohmann::json& obj) : id(obj["name"]), name(obj["name"]), lat(obj["lat"]), lng(obj["lng"]) {}
 };
 
-struct RouteReq : public arro::JSONStruct {
-	arro::JSONStruct::Field<std::string> from;
-	arro::JSONStruct::Field<std::string> to;
+struct RouteReq {
+	std::string from;
+	std::string to;
 
-	RouteReq(const nlohmann::json& obj) : arro::JSONStruct(obj), from(this, "from"), to(this, "to") {}
-	RouteReq(const RouteReq& other) : arro::JSONStruct(other), from(this, "from"), to(this, "to") {}
+	RouteReq(const nlohmann::json& obj) : from(obj["from"]), to(obj["to"]) {}
 };
 
 struct AirwayData {
@@ -127,6 +107,8 @@ Routing findRoute(const std::vector<data::AirportLatLng>& airports, const std::v
 
 std::map<std::string, arro::Graph<data::AirportLatLng, data::AirwayData>> mapFlights(const std::vector<data::AirportLatLng>& airports,
 																					 const std::vector<aviation::Plane>& planes);
+
+void recluster(arro::Graph<data::AirportLatLng, data::AirwayData>& graph, const aviation::Plane& plane);
 }  // namespace algo
 }  // namespace arro
 

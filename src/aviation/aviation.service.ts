@@ -26,7 +26,8 @@ export class AviationService {
 					.on(
 						'data',
 						({ type, ident, iata_code, latitude_deg, longitude_deg, name, municipality }: RawAirport) =>
-							/^(small|medium|large)_airport$/.test(type) &&
+							// /^(small|medium|large)_airport$/.test(type) &&
+							/^large_airport$/.test(type) &&
 							iata_code !== '' &&
 							data.push({
 								name,
@@ -55,7 +56,7 @@ export class AviationService {
 						.on('data', ({ id, price }: RawFuel) => {
 							const airport = data.find((airport) => airport.id === id);
 
-							if (!airport) return reject(new Error(`Unknown airport for fuel id '${id}'`));
+							if (!airport) return; // reject(new Error(`Unknown airport for fuel id '${id}'`));
 
 							airport.fuel = Number(price);
 						})

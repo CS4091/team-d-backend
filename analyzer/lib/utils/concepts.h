@@ -44,7 +44,9 @@ template <typename T>
 concept UniqueSerializable = Serializable<T> && IDAble<T>;
 
 template <typename T>
-concept JSONPrimitive = requires(nlohmann::json json, T elem) { json = elem; };
+concept JSONConstructable = requires(nlohmann::json json) {
+	{ T(json) } -> std::same_as<T>;
+};
 
 template <typename T, typename Target>
 concept ComparableTo = requires(T a, Target b) { a == b; };
