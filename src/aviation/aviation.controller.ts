@@ -6,13 +6,19 @@ import { fullOrg } from 'src/orgs/orgs.models';
 import { OrgsService } from 'src/orgs/orgs.service';
 import { ReqUser } from 'src/utils/decorators/user.decorator';
 import { RouteResult, RouteScenario } from './aviation.dtos';
-import { City, PlaneModel } from './aviation.models';
+import { Airport, City, PlaneModel } from './aviation.models';
 import { AviationService } from './aviation.service';
 import { RoutingService } from './routing.service';
 
 @Controller('/aviation')
 export class AviationController {
 	public constructor(public readonly service: AviationService, private readonly routing: RoutingService, private readonly orgs: OrgsService) {}
+
+	@Get('/airports')
+	@ApiResponse({ type: Airport, isArray: true })
+	public async getAirports(): Promise<Airport[]> {
+		return this.service.airports;
+	}
 
 	@Get('/cities')
 	@ApiResponse({ type: City, isArray: true })
