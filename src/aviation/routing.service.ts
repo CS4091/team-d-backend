@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { createId } from '@paralleldrive/cuid2';
-import { Plane } from '@prisma/client';
+import type { Plane } from '@prisma/client';
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 import { existsSync, mkdirSync, rmSync, statSync, writeFileSync } from 'fs';
 import { RouteResult } from './aviation.dtos';

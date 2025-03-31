@@ -1,6 +1,6 @@
 import { BadRequestException, Body, Controller, Get, Post } from '@nestjs/common';
 import { ApiResponse } from '@nestjs/swagger';
-import { User } from '@prisma/client';
+import type { User } from '@prisma/client';
 import { Protected } from 'src/auth/protected.decorator';
 import { fullOrg } from 'src/orgs/orgs.models';
 import { OrgsService } from 'src/orgs/orgs.service';
