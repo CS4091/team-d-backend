@@ -7,26 +7,32 @@ import { MeUser, PublicUser } from './users.models';
 
 export class RegisterDTO {
 	@IsString()
+	@ApiProperty()
 	name: string = fi();
 
 	@IsEmail()
+	@ApiProperty()
 	email: string = fi();
 
 	@IsString()
+	@ApiProperty()
 	password: string = fi();
 }
 
 export class LoginDTO {
 	@IsEmail()
+	@ApiProperty()
 	email: string = fi();
 
 	@IsString()
 	@IsStrongPassword()
+	@ApiProperty()
 	password: string = fi();
 }
 
 export class UpdateNameDTO {
 	@IsString()
+	@ApiProperty()
 	name: string = fi();
 }
 
