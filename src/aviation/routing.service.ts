@@ -27,30 +27,31 @@ export class RoutingService {
 		}
 
 		this.resolvers = new Map();
-		this.proc = spawn('./bin/daemon', { cwd: 'processing' });
+		this.proc = null as any;
+		// this.proc = spawn('./bin/daemon', { cwd: 'processing' });
 
 		let stdout = '';
-		this.proc.stdout.on('data', (chunk) => {
-			if (typeof chunk === 'string') stdout += chunk;
-			else if (Buffer.isBuffer(chunk)) stdout += chunk.toString('utf-8');
-			else {
-				console.error(chunk);
-				throw new Error('Unrecognized chunk type');
-			}
+		// this.proc.stdout.on('data', (chunk) => {
+		// 	if (typeof chunk === 'string') stdout += chunk;
+		// 	else if (Buffer.isBuffer(chunk)) stdout += chunk.toString('utf-8');
+		// 	else {
+		// 		console.error(chunk);
+		// 		throw new Error('Unrecognized chunk type');
+		// 	}
 
-			let match = /^(\w{24})\n(.*)$/.exec(stdout);
-			while (match) {
-				const [, id, rest] = match;
+		// 	let match = /^(\w{24})\n(.*)$/.exec(stdout);
+		// 	while (match) {
+		// 		const [, id, rest] = match;
 
-				if (this.resolvers.has(id)) {
-					this.resolvers.get(id)!();
-					this.resolvers.delete(id);
-				}
+		// 		if (this.resolvers.has(id)) {
+		// 			this.resolvers.get(id)!();
+		// 			this.resolvers.delete(id);
+		// 		}
 
-				stdout = rest;
-				match = /^(\w{24})\n(.*)$/.exec(stdout);
-			}
-		});
+		// 		stdout = rest;
+		// 		match = /^(\w{24})\n(.*)$/.exec(stdout);
+		// 	}
+		// });
 	}
 
 	public async route(cities: City[], airports: Airport[], routes: [string, string][], assets: (Plane & { specs: PlaneModel })[]): Promise<RouteResult> {
