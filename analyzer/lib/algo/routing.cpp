@@ -102,8 +102,7 @@ Routing arro::algo::findRoute(const vector<data::AirportLatLng>& airports, const
 
 		const ConnNode *from = connGraph[closestRoute.from], *to = connGraph[closestRoute.to];
 
-		if (!from) throw runtime_error("Start airport '" + closestRoute.from + "' not found in graph");
-		if (!to) throw runtime_error("End airport '" + closestRoute.to + "' not found in graph");
+		if (!from || !to) continue;	 // plane has no available routes to service
 
 		list<const ConnNode*> path;
 		double endTime = nextPlane.time;
