@@ -23,7 +23,7 @@ export class OrgsController {
 	@Post()
 	@Protected()
 	@ApiResponse({ type: OrganizationResponse })
-	public async createOrg(@ReqUser() user: User, data: CreateOrganizationDTO): Promise<Organization> {
+	public async createOrg(@ReqUser() user: User, @Body() data: CreateOrganizationDTO): Promise<Organization> {
 		return this.service.create(user, data);
 	}
 
