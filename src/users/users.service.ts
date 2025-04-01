@@ -21,6 +21,10 @@ export class UsersService implements AuthDataSource {
 		return this.db.user.findUnique({ where, ...selectors }) as any;
 	}
 
+	public async getAll<S extends Prisma.UserDefaultArgs>(where: Prisma.UserWhereInput, selectors: S = {} as any): Promise<Prisma.UserGetPayload<S>[]> {
+		return this.db.user.findMany({ where, ...selectors }) as any;
+	}
+
 	public async login({ email, password }: LoginDTO): Promise<MeUser | null> {
 		const user = await this.db.user.findUnique({ where: { email } });
 
