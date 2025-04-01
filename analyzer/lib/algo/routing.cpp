@@ -77,6 +77,8 @@ Routing arro::algo::findRoute(const vector<data::AirportLatLng>& airports, const
 
 	vector<data::RouteReq> baselineReqRoutes = requestedRoutes;
 	while (baselineReqRoutes.size() > 0) {
+		if (planeOrder.empty()) throw UnroutableException(baselineReqRoutes);
+
 		auto nextPlane = planeOrder.top();
 		planeOrder.pop();
 		const auto& connGraph = connGraphs[nextPlane.plane.model];

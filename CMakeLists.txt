@@ -40,6 +40,7 @@ add_library(
 add_library(
 	algo SHARED
 	"${LIB}/algo/routing.cpp"
+	"${LIB}/algo/exceptions.cpp"
 )
 target_link_libraries(algo math)
 
