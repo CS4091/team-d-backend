@@ -15,6 +15,7 @@ interface ShapeStyles {
 
 export class RenderEngine {
 	private readonly norm: Point;
+	public readonly fov: { center: Point; scale: number };
 
 	constructor(public readonly context: CanvasRenderingContext2D, private readonly canvas: HTMLCanvasElement) {
 		context.strokeStyle = 'black';
@@ -23,6 +24,7 @@ export class RenderEngine {
 		context.font = '12px sans-serif';
 
 		this.norm = new Point(canvas.width / 2, canvas.height / 2);
+		this.fov = { center: new Point(), scale: 1 };
 	}
 
 	public line(from: Point, to: Point, width = 1, style: string | CanvasGradient | CanvasPattern = 'black') {
@@ -121,7 +123,7 @@ export class RenderEngine {
 
 		this.context.fillStyle = 'black';
 
-		const [x, y] = sx.direction === DEFAULT_DIR ? this.norm.add(center.invert('y')).add(new Point(0, 4)) : [0, 0];
+		const [x, y] = sx.direction === DEFAULT_DIR ? this.spaceToCanvas(center).add(new Point(0, 4)) : [0, 0];
 
 		if (sx.direction !== DEFAULT_DIR) {
 			const angle = Math.atan2(sx.direction.y, sx.direction.x);
@@ -213,11 +215,11 @@ export class RenderEngine {
 	}
 
 	public spaceToCanvas(point: Point): Point {
-		return this.norm.add(point.invert('y'));
+		return this.norm.add(point.invert('y')).subtract(this.fov.center).times(this.fov.scale);
 	}
 
 	public canvasToSpace(point: Point): Point {
-		return point.invert('y').add(this.norm.invert('x'));
+		return point.divide(this.fov.scale).add(this.fov.center).invert('y').add(this.norm.invert('x'));
 	}
 }
 

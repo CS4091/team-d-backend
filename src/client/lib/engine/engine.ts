@@ -111,6 +111,33 @@ export class Engine {
 					evt.preventDefault();
 				}
 			});
+
+			canvas.addEventListener('wheel', (evt) => {
+				if (evt.deltaY > 0) {
+					if (this.renderEngine.fov.scale > 0.1) {
+						this.renderEngine.fov.scale -= 0.1;
+					}
+				} else {
+					this.renderEngine.fov.scale += 0.1;
+				}
+			});
+
+			window.addEventListener('keypress', (evt) => {
+				switch (evt.key) {
+					case 'w':
+						this.renderEngine.fov.center.y -= this.renderEngine.fov.scale;
+						break;
+					case 'a':
+						this.renderEngine.fov.center.x -= this.renderEngine.fov.scale;
+						break;
+					case 's':
+						this.renderEngine.fov.center.y += this.renderEngine.fov.scale;
+						break;
+					case 'd':
+						this.renderEngine.fov.center.x += this.renderEngine.fov.scale;
+						break;
+				}
+			});
 		} else {
 			throw new Error('Unable to get canvas context');
 		}

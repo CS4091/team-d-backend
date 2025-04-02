@@ -229,7 +229,7 @@ export class Edge extends Entity {
 	}
 
 	private _data(): string {
-		return Number.isInteger(this.data) ? `${this.data}` : `${this.data.toFixed(2)}`;
+		return typeof this.data === 'number' ? (Number.isInteger(this.data) ? `${this.data}` : `${this.data.toFixed(2)}`) : this.data;
 	}
 }
 

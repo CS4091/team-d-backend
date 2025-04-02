@@ -1,8 +1,5 @@
-import { Controller, Get, Header, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { spawn } from 'child_process';
-import { randomBytes } from 'crypto';
-import { readFileSync, rmSync, writeFileSync } from 'fs';
+import { Controller, Get, Header, Query } from '@nestjs/common';
+import { readFileSync } from 'fs';
 import { Page } from './utils/decorators/page.decorator';
 
 @Controller()
@@ -23,44 +20,15 @@ export class AppController {
 		};
 	}
 
-	@Post('/regraph')
+	@Get('/regraph')
 	@Header('Content-Type', 'application/json')
-	@UseInterceptors(FileInterceptor('file'))
-	public async regraph(@UploadedFile() file: Express.Multer.File): Promise<any> {
-		const id = randomBytes(16).toString('hex');
-
-		writeFileSync(`${id}.graph`, file.buffer);
-
-		return new Promise((resolve, reject) => {
-			let stdout = '',
-				stderr = '';
-
-			const proc = spawn('./bin/demo', [`${id}.graph`]);
-
-			proc.stdout.on('data', (c) => (stdout += c.toString()));
-			proc.stderr.on('data', (c) => (stderr += c.toString()));
-
-			proc.on('exit', (status) => {
-				if (status === 0) {
-					resolve({
-						connectivity: JSON.parse(readFileSync(`${id}.graph.c.json`).toString()),
-						demand: JSON.parse(readFileSync(`${id}.graph.d.json`).toString()),
-						path: JSON.parse(readFileSync(`test.graph.p.json`).toString())
-					});
-				} else {
-					console.error('Error child', status);
-					console.error(stdout);
-					console.error(stderr);
-
-					reject(stderr);
-				}
-
-				rmSync(`${id}.graph`);
-				rmSync(`${id}.graph.c.json`);
-				rmSync(`${id}.graph.d.json`);
-				rmSync(`${id}.graph.p.json`);
-			});
-		});
+	public async regraph(@Query('workspace') workspace: string): Promise<any> {
+		return {
+			connectivity: JSON.parse(readFileSync(`processing/${workspace}/routing.graph.c.json`).toString()),
+			// demand: JSON.parse(readFileSync(`processing/${workspace}/routing.graph.d.json`).toString()),
+			// path: JSON.parse(readFileSync(`processing/${workspace}/routing.graph.p.json`).toString()),
+			baseline: JSON.parse(readFileSync(`processing/${workspace}/routing.graph.b.json`).toString())
+		};
 	}
 }
 

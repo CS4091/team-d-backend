@@ -95,6 +95,12 @@ bool operator>(const RoutePlan& a, const RoutePlan& b);
 bool operator>(const PotentialFlight& a, const PotentialFlight& b);
 
 bool operator>(const PlaneLoc& a, const PlaneLoc& b);
+
+struct PlannedFlight {
+	std::string plane;
+
+	static nlohmann::json stringify(const PlannedFlight& flight);
+};
 }  // namespace __routing
 
 struct Routing {

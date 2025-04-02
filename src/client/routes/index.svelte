@@ -2,8 +2,8 @@
 	import { Engine } from '$lib/engine/engine';
 	import type { Entity } from '$lib/engine/entity';
 
-	let canvas: HTMLCanvasElement = $state(null),
-		files: FileList = $state(null),
+	let workspace: string = $state(''),
+		canvas: HTMLCanvasElement = $state(null),
 		form: HTMLFormElement,
 		engine: Engine,
 		edges: Record<string, Entity[]> = {};
@@ -30,28 +30,25 @@
 	});
 
 	function reload() {
-		if (files) {
-			const fd = new FormData();
-			fd.append('file', files[0]);
+		fetch(`/regraph?workspace=${workspace}`)
+			.then((res) => res.json())
+			.then((data) => {
+				(engine as any).layers = [[], []];
 
-			fetch('/regraph', { method: 'POST', body: fd })
-				.then((res) => res.json())
-				.then((data) => {
-					edges.connectivity = engine.loadGraph(data.connectivity);
-					edges.demand = engine.loadGraph(data.demand);
-					edges.path = engine.loadGraph(data.path);
-					edges.baseline = engine.loadGraph(data.baseline);
+				edges.connectivity = engine.loadGraph(data.connectivity);
+				// edges.demand = engine.loadGraph(data.demand);
+				// edges.path = engine.loadGraph(data.path);
+				edges.baseline = engine.loadGraph(data.baseline);
 
-					engine.load(edges.connectivity);
+				engine.load(edges.connectivity);
 
-					form.reset();
-				});
-		}
+				form.reset();
+			});
 	}
 </script>
 
 <form bind:this={form}>
-	<input type="file" bind:files />
+	<input type="text" bind:value={workspace} />
 </form>
 <div class="row">
 	<button onclick={reload}>Upload</button>

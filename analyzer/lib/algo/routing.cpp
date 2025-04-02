@@ -30,6 +30,10 @@ json data::AirwayData::stringify(const AirwayData& airway) {
 	return {{"distance", airway.data.totalLateral}};
 }
 
+json __routing::PlannedFlight::stringify(const PlannedFlight& flight) {
+	return flight.plane;
+}
+
 bool __routing::operator>(const RoutePlan& a, const RoutePlan& b) {
 	return a.cost > b.cost;
 }
@@ -42,9 +46,40 @@ bool __routing::operator>(const PlaneLoc& a, const PlaneLoc& b) {
 	return a.time > b.time;
 }
 
+struct __PlaneCity {
+	string id;
+	double x;
+	double y;
+
+	static nlohmann::json stringify(const __PlaneCity& city) { return {{"id", city.id}, {"x", city.x}, {"y", city.y}}; }
+};
+
+template <Serializable T>
+arro::Graph<__PlaneCity, T> flatten(const arro::Graph<data::AirportLatLng, T>& graph) {
+	arro::Vector3D avg(0, 0, 0);
+	for (auto node : graph.nodes()) avg += arro::geospatial::llToRect(node->data().lat, node->data().lng);
+
+	// avg is now the normal vector to the "average plane" of the city points (and also the center of the points)
+	avg /= graph.nodes().size();
+
+	arro::Vector3D north = arro::Vector3D(0, 0, 1), east = arro::Vector3D(1, 0, 0);
+	// project north and east into the plane (will serve as y and x respectively)
+	north = north - (north % avg);
+	east = east - (east % avg);
+
+	return graph.template map<__PlaneCity>([&avg, &north, &east](const data::AirportLatLng& city) {
+		arro::Vector3D pos = arro::geospatial::llToRect(city.lat, city.lng), planeVec = pos - (pos % avg);
+
+		double x = planeVec[east], y = planeVec[north];
+
+		return __PlaneCity{city.id, x, y};
+	});
+}
+
 Routing arro::algo::findRoute(const vector<data::AirportLatLng>& airports, const vector<data::CityLatLng>& cities,
 							  const vector<data::RouteReq>& requestedRoutes, const vector<Plane>& planes) {
 	using ConnGraph = Graph<data::AirportLatLng, data::AirwayData>;
+	using DbgGraph = Graph<data::AirportLatLng, __routing::PlannedFlight>;
 	using ConnNode = ConnGraph::Node;
 	using ConnLookup = ConnGraph::LinkLookup;
 	using RoutePlan = arro::algo::__routing::RoutePlan;
@@ -135,6 +170,19 @@ Routing arro::algo::findRoute(const vector<data::AirportLatLng>& airports, const
 
 		planeOrder.emplace(nextPlane.plane, to, endTime);
 	}
+
+	DbgGraph dbgRouting;
+	for (auto node : connGraphs[planes[0].model].nodes()) dbgRouting.add(node->data());
+
+	flatten(dbgRouting).jsonDumpToFile("routing.graph.c.json");
+
+	for (auto [plane, routing] : baselineRoute) {
+		for (auto it = next(routing.begin()); it != routing.end(); it++) {
+			dbgRouting.link((*prev(it))->data().id, (*it)->data().id, __routing::PlannedFlight(plane));
+		}
+	}
+
+	flatten(dbgRouting).jsonDumpToFile("routing.graph.b.json");
 
 	// vector<RoutePlan> queue(1);
 	// queue[0].cost = 0;
