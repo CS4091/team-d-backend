@@ -155,16 +155,7 @@ void arro::Graph<NodeData, LinkData>::jsonDumpToFile(const std::string& path) co
 	for (auto node : _nodes) nodes.push_back(NodeData::stringify(node->data()));
 
 	for (auto edge : _edges) {
-		size_t fromIdx = (size_t)-1, toIdx = (size_t)-1;
-
-		for (size_t i = 0; i < _nodes.size(); i++) {
-			if (_nodes[i]->data().id == edge->_from->data().id) fromIdx = i;
-			if (_nodes[i]->data().id == edge->_to->data().id) toIdx = i;
-		}
-
-		if (fromIdx == (size_t)-1 || toIdx == (size_t)-1) throw domain_error("Graph state inconsistent");
-
-		edges.push_back({{"from", fromIdx}, {"to", toIdx}, {"data", LinkData::stringify(edge->data())}});
+		edges.push_back({{"from", edge->from->idx}, {"to", edge->to->idx}, {"data", LinkData::stringify(edge->data())}});
 	}
 
 	out << std::setw(4) << json{{"nodes", nodes}, {"edges", edges}};
