@@ -74,15 +74,15 @@ export class Edge extends Entity {
 			renderEngine.fillShape(
 				[
 					arrowTip,
-					arrowTip.add(endTangent.invert().scaleTo(7.5 / renderEngine.fov.scale)).add(endNormal.scaleTo(4)),
+					arrowTip.add(endTangent.invert().scaleTo(7.5 / renderEngine.fov.scale)).add(endNormal.scaleTo(4 / renderEngine.fov.scale)),
 					arrowTip.add(endTangent.invert().scaleTo(4 / renderEngine.fov.scale)),
-					arrowTip.add(endTangent.invert().scaleTo(7.5 / renderEngine.fov.scale)).add(endNormal.scaleTo(-4)),
+					arrowTip.add(endTangent.invert().scaleTo(7.5 / renderEngine.fov.scale)).add(endNormal.scaleTo(-4 / renderEngine.fov.scale)),
 					arrowTip
 				],
 				this.color
 			);
 
-			const conditionBasepoint = arcCenter.add(normal.scaleTo(tangent.x < 0 ? -15 : -5));
+			const conditionBasepoint = arcCenter.add(normal.scaleTo(tangent.x < 0 ? -15 : -5).divide(renderEngine.fov.scale));
 
 			renderEngine.text(conditionBasepoint, `${this._data()}`, { direction: tangent.x < 0 ? tangent.invert() : tangent });
 		}
