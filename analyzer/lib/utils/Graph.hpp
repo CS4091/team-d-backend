@@ -155,7 +155,7 @@ void arro::Graph<NodeData, LinkData>::jsonDumpToFile(const std::string& path) co
 	for (auto node : _nodes) nodes.push_back(NodeData::stringify(node->data()));
 
 	for (auto edge : _edges) {
-		edges.push_back({{"from", edge->from->idx}, {"to", edge->to->idx}, {"data", LinkData::stringify(edge->data())}});
+		edges.push_back({{"from", edge->_from->idx}, {"to", edge->_to->idx}, {"data", LinkData::stringify(edge->data())}});
 	}
 
 	out << std::setw(4) << json{{"nodes", nodes}, {"edges", edges}};

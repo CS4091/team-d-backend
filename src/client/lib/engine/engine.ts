@@ -42,6 +42,8 @@ export class Engine {
 
 	private _listeners: { [K in keyof EngineEvents]: EngineEvents[K][] };
 
+	private _keys: Set<string>;
+
 	private mouseListener: (evt: MouseEvent) => void = (evt) => {
 		if (this._mousePos) {
 			this._mousePos = this.renderEngine.canvasToSpace(new Point(evt.offsetX, evt.offsetY));
@@ -61,6 +63,7 @@ export class Engine {
 			this.renderEngine = new RenderEngine(ctx, canvas);
 
 			this._listeners = { entityClicked: [], click: [], entityDblClicked: [] };
+			this._keys = new Set();
 
 			canvas.addEventListener('mouseout', () => {
 				this._mousePos = null;
@@ -122,22 +125,8 @@ export class Engine {
 				}
 			});
 
-			window.addEventListener('keypress', (evt) => {
-				switch (evt.key) {
-					case 'w':
-						this.renderEngine.fov.center.y -= this.renderEngine.fov.scale;
-						break;
-					case 'a':
-						this.renderEngine.fov.center.x -= this.renderEngine.fov.scale;
-						break;
-					case 's':
-						this.renderEngine.fov.center.y += this.renderEngine.fov.scale;
-						break;
-					case 'd':
-						this.renderEngine.fov.center.x += this.renderEngine.fov.scale;
-						break;
-				}
-			});
+			window.addEventListener('keydown', (evt) => this._keys.add(evt.key));
+			window.addEventListener('keyup', (evt) => this._keys.delete(evt.key));
 		} else {
 			throw new Error('Unable to get canvas context');
 		}
@@ -272,6 +261,11 @@ export class Engine {
 		} else {
 			this.canvas.style.cursor = 'unset';
 		}
+
+		if (this._keys.has('w')) this.renderEngine.fov.center.y -= this.renderEngine.fov.scale;
+		if (this._keys.has('a')) this.renderEngine.fov.center.x -= this.renderEngine.fov.scale;
+		if (this._keys.has('s')) this.renderEngine.fov.center.y += this.renderEngine.fov.scale;
+		if (this._keys.has('d')) this.renderEngine.fov.center.x += this.renderEngine.fov.scale;
 
 		const relationshipLinks: [Node, Node, Edge][] = [];
 		this.layers.forEach((layer) => {

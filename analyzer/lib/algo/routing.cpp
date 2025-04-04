@@ -56,23 +56,10 @@ struct __PlaneCity {
 
 template <Serializable T>
 arro::Graph<__PlaneCity, T> flatten(const arro::Graph<data::AirportLatLng, T>& graph) {
-	arro::Vector3D avg(0, 0, 0);
-	for (auto node : graph.nodes()) avg += arro::geospatial::llToRect(node->data().lat, node->data().lng);
+	return graph.template map<__PlaneCity>([](const data::AirportLatLng& city) {
+		arro::Vector3D pos = arro::geospatial::mercator(city.lat, city.lng);
 
-	// avg is now the normal vector to the "average plane" of the city points (and also the center of the points)
-	avg /= graph.nodes().size();
-
-	arro::Vector3D north = arro::Vector3D(0, 0, 1), east = arro::Vector3D(1, 0, 0);
-	// project north and east into the plane (will serve as y and x respectively)
-	north = north - (north % avg);
-	east = east - (east % avg);
-
-	return graph.template map<__PlaneCity>([&avg, &north, &east](const data::AirportLatLng& city) {
-		arro::Vector3D pos = arro::geospatial::llToRect(city.lat, city.lng), planeVec = pos - (pos % avg);
-
-		double x = planeVec[east], y = planeVec[north];
-
-		return __PlaneCity{city.id, x, y};
+		return __PlaneCity{city.id, pos[0], pos[1]};
 	});
 }
 
