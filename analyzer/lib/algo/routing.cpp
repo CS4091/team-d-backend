@@ -83,7 +83,7 @@ Routing arro::algo::findRoute(const vector<data::CityLatLng>& cities, const vect
 	for (auto plane : planes) {
 		if (!connGraphs.count(plane.model)) {
 			connGraphs.emplace(plane.model, ConnGraph::readFromBinFile(
-												filesystem::current_path() / ".." / "maps" / (plane.model + ".bing"),
+												filesystem::current_path() / "maps" / (plane.model + ".bing"),
 												[](int fd) {
 													data::AirportLatLng airport;
 

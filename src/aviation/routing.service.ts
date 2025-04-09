@@ -2,9 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { createId } from '@paralleldrive/cuid2';
 import type { Plane } from '@prisma/client';
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
-import { existsSync, mkdirSync, rmSync, statSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'fs';
+import { cwd } from 'process';
 import { RouteResult } from './aviation.dtos';
-import { Airport, City, PlaneModel } from './aviation.models';
+import { City, PlaneModel } from './aviation.models';
 
 @Injectable()
 export class RoutingService {
@@ -27,61 +28,63 @@ export class RoutingService {
 		}
 
 		this.resolvers = new Map();
-		this.proc = null as any;
-		// this.proc = spawn('./bin/daemon', { cwd: 'processing' });
+		this.proc = spawn(`${cwd()}/bin/daemon`, { cwd: 'processing' });
+		this.proc.on('error', (err) => console.error(err));
+
+		this.proc.stdin.on('error', (error: NodeJS.ErrnoException) => {
+			if (error.code === 'EPIPE') console.error('EPIPE error: child process pipe is closed.', error);
+			else console.error('Error on stdin:', error);
+		});
 
 		let stdout = '';
-		// this.proc.stdout.on('data', (chunk) => {
-		// 	if (typeof chunk === 'string') stdout += chunk;
-		// 	else if (Buffer.isBuffer(chunk)) stdout += chunk.toString('utf-8');
-		// 	else {
-		// 		console.error(chunk);
-		// 		throw new Error('Unrecognized chunk type');
-		// 	}
+		this.proc.stdout.on('data', (chunk) => {
+			if (typeof chunk === 'string') stdout += chunk;
+			else if (Buffer.isBuffer(chunk)) stdout += chunk.toString('utf-8');
+			else {
+				console.error(chunk);
+				throw new Error('Unrecognized chunk type');
+			}
 
-		// 	let match = /^(\w{24})\n(.*)$/.exec(stdout);
-		// 	while (match) {
-		// 		const [, id, rest] = match;
+			let match = /^(\w{24})\n(.*)$/.exec(stdout);
+			while (match) {
+				const [, id, rest] = match;
 
-		// 		if (this.resolvers.has(id)) {
-		// 			this.resolvers.get(id)!();
-		// 			this.resolvers.delete(id);
-		// 		}
+				if (this.resolvers.has(id)) {
+					this.resolvers.get(id)!();
+					this.resolvers.delete(id);
+				}
 
-		// 		stdout = rest;
-		// 		match = /^(\w{24})\n(.*)$/.exec(stdout);
-		// 	}
-		// });
+				stdout = rest;
+				match = /^(\w{24})\n(.*)$/.exec(stdout);
+			}
+		});
+		this.proc.stderr.on('data', (chunk) => console.log(chunk));
 	}
 
-	public async route(cities: City[], airports: Airport[], routes: [string, string][], assets: (Plane & { specs: PlaneModel })[]): Promise<RouteResult> {
+	public async route(cities: City[], routes: [string, string][], assets: (Plane & { specs: PlaneModel })[]): Promise<RouteResult> {
 		const opid = createId();
 		mkdirSync(`processing/${opid}`);
 
 		writeFileSync(`processing/${opid}/cities.json`, JSON.stringify(cities));
-		writeFileSync(`processing/${opid}/airports.json`, JSON.stringify(airports));
 		writeFileSync(`processing/${opid}/routes.json`, JSON.stringify(routes.map(([from, to]) => ({ from, to }))));
 		writeFileSync(`processing/${opid}/planes.json`, JSON.stringify(assets.map(({ id, homeBase, specs }) => ({ id, homeBase, ...specs }))));
 
-		// return this.process(opid).then(() => {
-		// 	const plan = JSON.parse(readFileSync(`processing/${opid}/routing.json`).toString());
+		return this.process(opid)
+			.then(() => {
+				const plan = JSON.parse(readFileSync(`processing/${opid}/routing.json`).toString());
 
-		// 	// rmSync(`processing/${opid}/routing.json`);
-		// 	// rmSync(`processing/${opid}/demand.graph`);
-		// 	// rmSync(`processing/${opid}/planes.assets`);
-		// 	rmSync(`processing/${opid}`, { recursive: true });
+				rmSync(`processing/${opid}`, { recursive: true });
 
-		// 	return plan;
-		// });
-		return {} as any;
+				return plan;
+			})
+			.catch((err) => console.error(err));
 	}
 
-	public async prep(cities: City[], airports: Airport[], planes: PlaneModel[]): Promise<void> {
+	public async prep(cities: City[], planes: PlaneModel[]): Promise<void> {
 		if (!existsSync('processing/test')) {
 			mkdirSync('processing/test');
 
 			writeFileSync('processing/test/cities.json', JSON.stringify(cities));
-			writeFileSync('processing/test/airports.json', JSON.stringify(airports));
 			writeFileSync('processing/test/planes.json', JSON.stringify(planes));
 		}
 	}
@@ -90,10 +93,10 @@ export class RoutingService {
 		return new Promise<void>((resolve, reject) => {
 			try {
 				if (!statSync(`processing/${id}`).isDirectory()) {
-					reject(new Error(`Path 'processing' is not directory`));
+					reject(new Error("Path 'processing' is not directory"));
 				}
 			} catch {
-				reject(new Error(`Unable to acquire 'processing' dir for routing`));
+				reject(new Error("Unable to acquire 'processing' dir for routing"));
 			}
 
 			this.proc.stdin.write(id + '\n');

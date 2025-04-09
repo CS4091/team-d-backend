@@ -25,13 +25,20 @@ export class UsersController {
 		return this.service.get({ id: user.id }, meUser) as Promise<MeUser>;
 	}
 
+	@Patch('/me')
+	@Protected()
+	@ApiResponse({ type: MeUserResponse })
+	public async updateName(@ReqUser() user: User, @Body() data: UpdateNameDTO): Promise<MeUser> {
+		return this.service.updateName(user, data);
+	}
+
 	@Post('/register')
 	@ApiResponse({ type: MeUserResponse })
 	public async register(@Body() data: RegisterDTO): Promise<MeUser> {
 		return this.service.register(data);
 	}
 
-	@Post()
+	@Post('/login')
 	@ApiResponse({ type: MeUserResponse })
 	public async loginUser(@Body() data: LoginDTO): Promise<MeUser> {
 		const user = await this.service.login(data);
@@ -39,13 +46,6 @@ export class UsersController {
 		if (!user) throw new BadRequestException('No user with specified email/password combination');
 
 		return user;
-	}
-
-	@Patch()
-	@Protected()
-	@ApiResponse({ type: MeUserResponse })
-	public async updateName(@ReqUser() user: User, @Body() data: UpdateNameDTO): Promise<MeUser> {
-		return this.service.updateName(user, data);
 	}
 }
 

@@ -44,20 +44,15 @@ add_library(
 )
 target_link_libraries(algo math)
 
-add_library(
-	utils SHARED
-	"${LIB}/utils/syncio.cpp"
-)
-
 add_executable(daemon analyzer/drivers/daemon.cpp)
-target_link_libraries(daemon math utils algo)
+target_link_libraries(daemon math algo)
 
 add_executable(demo analyzer/drivers/demo.cpp)
-target_link_libraries(demo math utils algo)
+target_link_libraries(demo math algo)
 
 add_executable(mapgen analyzer/drivers/mapgen.cpp)
-target_link_libraries(mapgen math utils algo)
+target_link_libraries(mapgen math algo)
 
 add_executable(graph analyzer/drivers/tests/graph.cpp)
-target_link_libraries(graph PRIVATE Catch2::Catch2WithMain math utils algo)
+target_link_libraries(graph PRIVATE Catch2::Catch2WithMain math algo)
 set_target_properties(graph PROPERTIES CMAKE_RUNTIME_OUTPUT_DIRECTORY bin/tests)

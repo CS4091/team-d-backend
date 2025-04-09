@@ -26,8 +26,8 @@ export class AviationService {
 					.on(
 						'data',
 						({ type, ident, iata_code, latitude_deg, longitude_deg, name, municipality }: RawAirport) =>
-							// /^(small|medium|large)_airport$/.test(type) &&
-							/^large_airport$/.test(type) &&
+							/^(small|medium|large)_airport$/.test(type) &&
+							// /^large_airport$/.test(type) &&
 							iata_code !== '' &&
 							data.push({
 								name,

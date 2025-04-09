@@ -40,11 +40,15 @@ export class AviationController {
 
 		if (!org || !org.users.some((u) => user.id === u.id)) throw new BadRequestException('Unknown organization.');
 
-		const cities = await this.service.cities;
+		const cities = await this.service.cities,
+			airports = await this.service.airports;
 		if (
 			!demand.every(
 				(pair) =>
-					pair.length === 2 && pair[0] !== pair[1] && cities.some((city) => city.name === pair[0]) && cities.some((city) => city.name === pair[1])
+					pair.length === 2 &&
+					pair[0] !== pair[1] &&
+					(cities.some((city) => city.name === pair[0]) || airports.some((airport) => airport.id === pair[0])) &&
+					(cities.some((city) => city.name === pair[1]) || airports.some((airport) => airport.id === pair[1]))
 			)
 		)
 			throw new BadRequestException('Demand must be an array of [from, to] tuples with from != to, each in the list of available cities.');
@@ -55,9 +59,7 @@ export class AviationController {
 		const missingPlane = speccedPlanes.find((plane) => !plane.specs);
 		if (missingPlane) throw new BadRequestException(`Unknown plane model '${missingPlane.model}'.`);
 
-		const airports = await this.service.airports;
-
-		return this.routing.route(cities, airports, demand, speccedPlanes as any);
+		return this.routing.route(cities, demand, speccedPlanes as any);
 	}
 
 	@Post('/prep')
@@ -67,7 +69,7 @@ export class AviationController {
 		const planeModels = await this.service.planes;
 		const airports = await this.service.airports;
 
-		return this.routing.prep(cities, airports, planeModels);
+		return this.routing.prep(cities, planeModels);
 	}
 }
 
