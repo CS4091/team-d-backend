@@ -37,8 +37,8 @@ struct Plane {
 	double approachAirspeed;
 
 	Plane(const nlohmann::json& obj)
-		: id(obj["id"]),
-		  homeBase(obj["homeBase"]),
+		: id(obj.count("id") ? obj["id"] : ""),					   // needs to be optional for mapgen
+		  homeBase(obj.count("homeBase") ? obj["homeBase"] : ""),  // needs to be optional for mapgen
 		  model(obj["model"]),
 		  range(obj["range"]),
 		  takeoffRunway(obj["takeoffRunway"]),

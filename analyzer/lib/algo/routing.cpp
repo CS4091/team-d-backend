@@ -6,19 +6,26 @@ using namespace std;
 using namespace arro;
 using namespace arro::algo;
 using namespace arro::aviation;
+using namespace filesystem;
 using json = nlohmann::json;
 
 template <typename T>
 using min_pqueue = priority_queue<T, vector<T>, greater<T>>;
 
 data::AirportLatLng::AirportLatLng(const json& obj)
-	: id(obj["id"]), city(obj["city"]), type(obj["type"]), lat(obj["lat"]), lng(obj["lng"]), fuel(obj["fuel"]) {
-	vector<json> runways = obj["runways"];
-
-	copy(runways.begin(), runways.end(), back_inserter(data::AirportLatLng::runways));
-}
+	: id(obj["id"]), city(obj["city"]), type(obj["type"]), lat(obj["lat"]), lng(obj["lng"]), fuel(obj["fuel"]) {}
 
 json data::AirportLatLng::stringify(const AirportLatLng& airport) {
+	return {{"id", airport.id}, {"city", airport.city}, {"lat", airport.lat}, {"lng", airport.lng}};
+}
+
+data::AirportWithRunways::AirportWithRunways(const json& obj) : AirportLatLng(obj) {
+	vector<json> runways = obj["runways"];
+
+	copy(runways.begin(), runways.end(), back_inserter(data::AirportWithRunways::runways));
+}
+
+json data::AirportWithRunways::stringify(const AirportWithRunways& airport) {
 	return {{"id", airport.id}, {"city", airport.city}, {"lat", airport.lat}, {"lng", airport.lng}};
 }
 
@@ -63,19 +70,51 @@ arro::Graph<__PlaneCity, T> flatten(const arro::Graph<data::AirportLatLng, T>& g
 	});
 }
 
-Routing arro::algo::findRoute(const vector<data::AirportLatLng>& airports, const vector<data::CityLatLng>& cities,
-							  const vector<data::RouteReq>& requestedRoutes, const vector<Plane>& planes) {
+Routing arro::algo::findRoute(const vector<data::CityLatLng>& cities, const vector<data::RouteReq>& requestedRoutes, const vector<Plane>& planes) {
 	using ConnGraph = Graph<data::AirportLatLng, data::AirwayData>;
 	using DbgGraph = Graph<data::AirportLatLng, __routing::PlannedFlight>;
 	using ConnNode = ConnGraph::Node;
 	using ConnLookup = ConnGraph::LinkLookup;
 	using RoutePlan = arro::algo::__routing::RoutePlan;
 
-	map<string, ConnGraph> connGraphs = mapFlights(airports, planes);
+	map<string, ConnGraph> connGraphs;
 
 	map<string, vector<vector<double>>> masterTables;  // master routing table for routing around empty aircraft
 	for (auto plane : planes) {
-		if (!masterTables.count(plane.model)) {
+		if (!connGraphs.count(plane.model)) {
+			connGraphs.emplace(plane.model, ConnGraph::readFromBinFile(
+												filesystem::current_path() / ".." / "maps" / (plane.model + ".bing"),
+												[](int fd) {
+													data::AirportLatLng airport;
+
+													char c;
+													do {
+														read(fd, &c, 1);
+														if (c != '\0') airport.id.push_back(c);
+													} while (c != '\0');
+													do {
+														read(fd, &c, 1);
+														if (c != '\0') airport.city.push_back(c);
+													} while (c != '\0');
+													do {
+														read(fd, &c, 1);
+														if (c != '\0') airport.type.push_back(c);
+													} while (c != '\0');
+
+													read(fd, &airport.lat, sizeof(double));
+													read(fd, &airport.lng, sizeof(double));
+													read(fd, &airport.fuel, sizeof(double));
+
+													return airport;
+												},
+												[](int fd) {
+													data::AirwayData data;
+
+													read(fd, &data, sizeof(data::AirwayData));
+
+													return data;
+												}));
+
 			masterTables.emplace(plane.model, arro::algo::floydWarshall(connGraphs[plane.model], [](const data::AirwayData& airway) {
 									 return airway.cost(0);
 								 }));  // again, aircraft are empty
@@ -228,159 +267,4 @@ Routing arro::algo::findRoute(const vector<data::AirportLatLng>& airports, const
 	}
 
 	return out;
-}
-
-map<string, Graph<data::AirportLatLng, data::AirwayData>> arro::algo::mapFlights(const vector<data::AirportLatLng>& airports,
-																				 const vector<aviation::Plane>& planes) {
-	using ConnGraph = Graph<data::AirportLatLng, data::AirwayData>;
-	using PotentialFlight = __routing::PotentialFlight;
-
-	// collect some general stats first (determines degree of nodes in graph)
-	unsigned int large = 0, medium = 0, small = 0, other = 0;
-	for (auto airport : airports) {
-		if (airport.type == "large_airport")
-			large++;
-		else if (airport.type == "medium_airport")
-			medium++;
-		else if (airport.type == "small_airport")
-			small++;
-		else
-			other++;
-	}
-
-	unsigned int lgMaxDegree = log(large) * 3, medMaxDegree = log(medium) * 2, smMaxDegree = log(small), otherMaxDegree = log(other) / 2;
-
-	map<string, ConnGraph> connGraphs;
-
-	for (auto plane : planes) {
-		if (!connGraphs.count(plane.model)) {
-			ConnGraph graph;
-			vector<data::AirportLatLng> availableAirports;
-			for (auto airport : airports) {
-				unsigned int neighbors = 0;
-
-				bool available = false;
-				for (auto runway : airport.runways) {
-					if (runway.length >= max(plane.landingRunway, plane.takeoffRunway)) {
-						available = true;
-						break;
-					}
-				}
-
-				if (available) availableAirports.push_back(airport);
-			}
-
-			for (auto airport : availableAirports) graph.add(airport);
-
-			min_pqueue<PotentialFlight> queue;
-
-			for (auto a : availableAirports) {
-				for (auto b : availableAirports) {
-					auto data = aviation::planFlight(plane, geospatial::llToRect(a.lat, a.lng), geospatial::llToRect(b.lat, b.lng));
-
-					if (data.has_value()) queue.emplace(*data, a.id, b.id, data->minFuel * a.fuel);
-				}
-			}
-
-			while (!queue.empty()) {
-				auto flight = queue.top();
-				queue.pop();
-
-				auto from = graph[flight.from], to = graph[flight.to];
-
-				if (!from || !to) throw runtime_error("Something dun fucked up big");
-
-				unsigned int fromMaxDegree;
-
-				if (from->data().type == "large_airport")
-					fromMaxDegree = lgMaxDegree;
-				else if (from->data().type == "medium_airport")
-					fromMaxDegree = lgMaxDegree;
-				else if (from->data().type == "small_airport")
-					fromMaxDegree = lgMaxDegree;
-				else
-					fromMaxDegree = otherMaxDegree;
-
-				if (from->neighbors().size() < fromMaxDegree) graph.link(from, to, data::AirwayData(flight.data, from->data().fuel));
-			}
-
-			recluster(graph, plane);
-
-			connGraphs.emplace(plane.model, graph);
-		}
-	}
-
-	return connGraphs;
-}
-
-void arro::algo::recluster(arro::Graph<data::AirportLatLng, data::AirwayData>& graph, const aviation::Plane& plane) {
-	using ConnNode = arro::Graph<data::AirportLatLng, data::AirwayData>::Node;
-
-	vector<vector<double>> table = floydWarshall(graph, [](const data::AirwayData& airway) { return airway.cost(0); });
-
-	auto badRow = find_if(table.begin(), table.end(),
-						  [](const vector<double>& row) { return find_if(row.begin(), row.end(), [](double val) { return val == INFINITY; }) != row.end(); });
-	while (badRow != table.end()) {
-		size_t badFrom = badRow - table.begin(),
-			   badTo = find_if(badRow->begin(), badRow->end(), [](double val) { return val == INFINITY; }) - badRow->begin();
-		auto from = graph.nodes()[badFrom], to = graph.nodes()[badTo];
-
-		ConnNode* nearest = nullptr;
-		aviation::FlightData nearestFlight;
-
-		do {
-			for (size_t i = 0; i < graph.size(); i++) {
-				if (i != badFrom && i != badTo && table[badFrom][i] != INFINITY) {
-					auto intermediary = graph.nodes()[i];
-
-					auto flightData = aviation::planFlight(plane, geospatial::llToRect(intermediary->data().lat, intermediary->data().lng),
-														   geospatial::llToRect(to->data().lat, to->data().lng));
-
-					if (flightData.has_value() &&
-						(!nearest || flightData->minFuel * nearest->data().fuel < nearestFlight.minFuel * intermediary->data().fuel)) {
-						nearest = intermediary;
-						nearestFlight = flightData.value();
-					}
-				}
-			}
-
-			if (!nearest) {
-				auto nextBadTo = find_if(next(badRow->begin(), badTo + 1), badRow->end(), [](double val) { return val == INFINITY; });
-				if (nextBadTo == badRow->end()) {
-					badRow = find_if(next(badRow), table.end(), [](const vector<double>& row) {
-						return find_if(row.begin(), row.end(), [](double val) { return val == INFINITY; }) != row.end();
-					});
-					if (badRow != table.end()) nextBadTo = badRow->begin();
-				}
-
-				if (badRow == table.end()) {
-					nearest = from;
-					auto flightData = aviation::planFlight(plane, geospatial::llToRect(from->data().lat, from->data().lng),
-														   geospatial::llToRect(to->data().lat, to->data().lng));
-
-					cout << from->data().id << ": " << from->neighbors().size() << endl;
-					cout << to->data().id << ": " << to->neighbors().size() << endl;
-					if (flightData.has_value()) {
-						nearestFlight = flightData.value();
-						break;
-					} else {
-						// throw runtime_error("Unable to recluster graph, no intermediary for '" + from->data().id + "' and '" + to->data().id + "'");
-						return;
-					}
-				}
-
-				badFrom = badRow - table.begin();
-				badTo = find_if(nextBadTo, badRow->end(), [](double val) { return val == INFINITY; }) - badRow->begin();
-				from = graph.nodes()[badFrom];
-				to = graph.nodes()[badTo];
-			}
-		} while (!nearest);
-
-		graph.link(nearest, to, data::AirwayData(nearestFlight, from->data().fuel));
-		cout << "fixed " << from->data().id << " to " << to->data().id << " via " << nearest->data().id << endl;
-
-		table = arro::algo::floydWarshall(graph, [](const data::AirwayData& airway) { return airway.cost(0); });
-		badRow = find_if(table.begin(), table.end(),
-						 [](const vector<double>& row) { return find_if(row.begin(), row.end(), [](double val) { return val == INFINITY; }) != row.end(); });
-	}
 }

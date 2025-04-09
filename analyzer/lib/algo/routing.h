@@ -7,6 +7,7 @@
 #include <utils/concepts.h>
 
 #include <algorithm>
+#include <filesystem>
 #include <iterator>
 #include <list>
 #include <map>
@@ -37,11 +38,19 @@ struct AirportLatLng {
 	double lat;
 	double lng;
 	double fuel;
-	std::vector<Runway> runways;
 
+	AirportLatLng() {}
 	AirportLatLng(const nlohmann::json& obj);
 
 	static nlohmann::json stringify(const AirportLatLng& airport);
+};
+
+struct AirportWithRunways : public AirportLatLng {
+	std::vector<Runway> runways;
+
+	AirportWithRunways(const nlohmann::json& obj);
+
+	static nlohmann::json stringify(const AirportWithRunways& airport);
 };
 
 struct CityLatLng {
@@ -108,13 +117,8 @@ struct Routing {
 	std::map<std::string, std::list<std::string>> baseline;
 };
 
-Routing findRoute(const std::vector<data::AirportLatLng>& airports, const std::vector<data::CityLatLng>& cities,
-				  const std::vector<data::RouteReq>& requestedRoutes, const std::vector<aviation::Plane>& planes);
-
-std::map<std::string, arro::Graph<data::AirportLatLng, data::AirwayData>> mapFlights(const std::vector<data::AirportLatLng>& airports,
-																					 const std::vector<aviation::Plane>& planes);
-
-void recluster(arro::Graph<data::AirportLatLng, data::AirwayData>& graph, const aviation::Plane& plane);
+Routing findRoute(const std::vector<data::CityLatLng>& cities, const std::vector<data::RouteReq>& requestedRoutes,
+				  const std::vector<aviation::Plane>& planes);
 }  // namespace algo
 }  // namespace arro
 

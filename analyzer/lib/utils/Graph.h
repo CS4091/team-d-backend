@@ -1,6 +1,8 @@
 #ifndef GRAPH_H
 #define GRAPH_H
 
+#include <fcntl.h>
+
 #include <fstream>
 #include <iomanip>
 #include <nlohmann/json.hpp>
@@ -89,11 +91,15 @@ public:
 
 	// [devalue](https://github.com/Rich-Harris/devalue)-inspired graph-to-json serialization
 	void jsonDumpToFile(const std::string& path) const;
+	template <Routine<int, NodeData> NodeSerializer, Routine<int, LinkData> EdgeSerializer>
+	void binDumpToFile(const std::string& path, const NodeSerializer& dumpNode, const EdgeSerializer& dumpEdge) const;
 
 	~Graph();
 
 	static Graph<NodeData, LinkData> readFrom(std::istream& in);
 	static Graph<NodeData, LinkData> readFromFile(const std::string& path);
+	template <Function<NodeData, int> NodeSerializer, Function<LinkData, int> EdgeSerializer>
+	static Graph<NodeData, LinkData> readFromBinFile(const std::string& path, const NodeSerializer& readNode, const EdgeSerializer& readEdge);
 
 private:
 	bool _digraph;

@@ -33,15 +33,11 @@ vector<T> readArray(const string& path) {
 }
 
 int main(int argc, char* argv[]) {
-	vector<arro::algo::data::AirportLatLng> airports = readArray<arro::algo::data::AirportLatLng>("airports.json");
 	vector<arro::algo::data::CityLatLng> cities = readArray<arro::algo::data::CityLatLng>("cities.json");
 	vector<arro::algo::data::RouteReq> routes = readArray<arro::algo::data::RouteReq>("routes.json");
 	vector<arro::aviation::Plane> planes = readArray<arro::aviation::Plane>("planes.json");
 
-	cout << "Done reading inputs" << endl;
-	cout << airports.size() << " airports" << endl;
-
-	arro::algo::Routing routing = arro::algo::findRoute(airports, cities, routes, planes);
+	arro::algo::Routing routing = arro::algo::findRoute(cities, routes, planes);
 
 	cout << "Baseline:\n";
 	for (auto [id, route] : routing.baseline) {
