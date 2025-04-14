@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import type { Invite, Organization } from '@prisma/client';
-import { IsEmail, IsString, IsStrongPassword } from 'class-validator';
+import { IsEmail, IsString } from 'class-validator';
 import { InviteResponse, OrganizationResponse } from 'src/orgs/orgs.dtos';
 import { fi } from 'src/utils/utils';
 import { MeUser, PublicUser } from './users.models';
@@ -15,6 +15,7 @@ export class RegisterDTO {
 	email: string = fi();
 
 	@IsString()
+	// @IsStrongPassword()
 	@ApiProperty()
 	password: string = fi();
 }
@@ -25,7 +26,7 @@ export class LoginDTO {
 	email: string = fi();
 
 	@IsString()
-	@IsStrongPassword()
+	// @IsStrongPassword()
 	@ApiProperty()
 	password: string = fi();
 }
