@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { createId } from '@paralleldrive/cuid2';
 import type { Prisma, User } from '@prisma/client';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
@@ -51,8 +51,25 @@ export class UsersService implements AuthDataSource {
 			})
 			.catch((err) => {
 				if (err instanceof PrismaClientKnownRequestError && err.code === 'P2002') {
-					this.log.error(err, err.meta);
-					return this.register({ name, email, password });
+					if (err.meta) {
+						const match = /User_(\w+)_key/.exec(err.meta.target as string);
+
+						if (match) {
+							if (match[1] === 'id') {
+								return this.register({ name, email, password });
+							} else {
+								throw new BadRequestException(`Duplicate value for '${match[1]}'`);
+							}
+						} else {
+							this.log.error(err, err.meta);
+
+							throw new InternalServerErrorException('Unknown error occured');
+						}
+					} else {
+						this.log.error(err, err.meta);
+
+						throw new InternalServerErrorException('Unknown error occured');
+					}
 				} else {
 					throw err;
 				}
