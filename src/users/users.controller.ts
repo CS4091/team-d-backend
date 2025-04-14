@@ -14,8 +14,8 @@ export class UsersController {
 	@Get('/')
 	@Protected()
 	@ApiResponse({ type: PublicUserResponse, isArray: true })
-	public async getAllUsers(@ReqUser() user: User): Promise<PublicUserResponse[]> {
-		return this.service.getAll({ id: user.id }, publicUser);
+	public async getAllUsers(): Promise<PublicUserResponse[]> {
+		return this.service.getAll({}, publicUser);
 	}
 
 	@Get('/me')
