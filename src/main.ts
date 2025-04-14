@@ -22,7 +22,6 @@ async function bootstrap() {
 	const config = new DocumentBuilder().setTitle('TSP Backend').setDescription('Capstone II project backend').build();
 	SwaggerModule.setup('/docs', app, SwaggerModule.createDocument(app, config));
 
-	app.enableCors({ origin: true });
 	app.use(cookieParser())
 		.useGlobalGuards(new AuthGuard(app.get(Reflector)))
 		.useGlobalPipes(new ValidationPipe({ transform: true, transformOptions: { enableImplicitConversion: true } }))
