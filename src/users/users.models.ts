@@ -3,7 +3,8 @@ import { Prisma } from '@prisma/client';
 export const publicUser = Prisma.validator<Prisma.UserDefaultArgs>()({
 	select: {
 		id: true,
-		name: true
+		name: true,
+		email: true
 	}
 });
 

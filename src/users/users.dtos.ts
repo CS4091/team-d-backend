@@ -43,6 +43,9 @@ export class PublicUserResponse implements PublicUser {
 
 	@ApiProperty()
 	id: string = fi();
+
+	@ApiProperty()
+	email: string = fi();
 }
 
 export class MeUserResponse implements MeUser {
