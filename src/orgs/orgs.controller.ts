@@ -5,7 +5,7 @@ import { Protected } from 'src/auth/protected.decorator';
 import { UpdateNameDTO } from 'src/users/users.dtos';
 import { UsersService } from 'src/users/users.service';
 import { ReqUser } from 'src/utils/decorators/user.decorator';
-import { AcceptInviteDTO, CreateInviteDTO, CreateOrganizationDTO, InviteResponse, OrganizationIDDTO, OrganizationResponse } from './orgs.dtos';
+import { AcceptInviteDTO, CreateInviteDTO, CreateOrganizationDTO, InviteResponse, OrganizationIDDTO, OrganizationResponse, NameUpdateDTO } from './orgs.dtos';
 import { fullOrg } from './orgs.models';
 import { OrgsService } from './orgs.service';
 
@@ -26,6 +26,17 @@ export class OrgsController {
 	public async createOrg(@ReqUser() user: User, @Body() data: CreateOrganizationDTO): Promise<Organization> {
 		return this.service.create(user, data);
 	}
+
+	@Patch(':id')
+	@Protected()
+	@ApiResponse({ type: Object })
+	public async update(
+		@Param() { id }: OrganizationIDDTO,
+		@Body() data: NameUpdateDTO
+	): Promise<Organization> {
+		return this.service.update(id, data);
+	}
+
 
 	@Post('/:id/invite')
 	@Protected()

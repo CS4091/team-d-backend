@@ -5,7 +5,7 @@ import { randomBytes } from 'crypto';
 import { DateTime } from 'luxon';
 import { DBService } from 'src/db/db.service';
 import { wrap } from 'src/utils/utils';
-import { CreateOrganizationDTO } from './orgs.dtos';
+import { CreateOrganizationDTO, NameUpdateDTO } from './orgs.dtos';
 import { fullOrg, FullOrganization } from './orgs.models';
 
 @Injectable()
@@ -17,6 +17,13 @@ export class OrgsService {
 		selectors: S = {} as any
 	): Promise<Prisma.OrganizationGetPayload<S>> {
 		return this.db.organization.findUnique({ where, ...selectors }) as any;
+	}
+
+	public async update(id: string, data: NameUpdateDTO) {
+		return this.db.organization.update({
+			where: {id},
+			data,
+		});
 	}
 
 	public async getOrThrow<S extends Prisma.OrganizationDefaultArgs>(
