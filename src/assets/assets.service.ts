@@ -11,5 +11,11 @@ export class AssetsService {
 	public async create(data: CreatePlaneDTO, organization: Organization): Promise<Plane> {
 		return this.db.plane.create({ data: { id: createId(), ...data, organization: { connect: { id: organization.id } } } });
 	}
+
+	public async delete(planeId: string, orgId: string ): Promise<Plane> {
+		return this.db.plane.delete({
+			where: { id_orgId: { id: planeId, orgId } },
+		});
+	}
 }
 

@@ -1,4 +1,4 @@
-import { Body, Controller, NotFoundException, Param, Post } from '@nestjs/common';
+import { Body, Controller, Delete, NotFoundException, Param, Post } from '@nestjs/common';
 import { ApiResponse } from '@nestjs/swagger';
 import type { Plane, User } from '@prisma/client';
 import { Protected } from 'src/auth/protected.decorator';
@@ -22,6 +22,28 @@ export class AssetsController {
 		if (!org || !org.users.some((u) => u.id === user.id)) throw new NotFoundException(`Organization with id '${id}' does not exist.`);
 
 		return this.service.create(data, org);
+	}
+
+	@Delete(':planeId')
+	@Protected()
+	@ApiResponse({ type: PlaneResponse })
+	public async deletePlane(
+		@ReqUser() user: User,
+		@Param() { id }: OrganizationIDDTO,
+		@Param('planeId') planeId: string
+	): Promise<Plane> {
+		const org = await this.organizations.get({ id }, fullOrg);
+
+		if (!org || !org.users.some((u) => u.id === user.id)) {
+			throw new NotFoundException(`Organization with id '${id}' does not exist.`);
+		}
+
+		const match = org.planes.find((p) => p.id === planeId);
+		if (!match) {
+			throw new NotFoundException(`Plane with id '${planeId}' not found in this organization.`);
+		}
+
+		return this.service.delete(planeId, org.id);
 	}
 }
 
