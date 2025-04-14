@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { createId } from '@paralleldrive/cuid2';
 import type { Prisma, User } from '@prisma/client';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
@@ -12,6 +12,8 @@ import { MeUser, meUser } from './users.models';
 
 @Injectable()
 export class UsersService implements AuthDataSource {
+	private readonly log = new Logger('Users Service');
+
 	public constructor(public readonly db: DBService) {}
 
 	public async get<S extends Prisma.UserDefaultArgs>(
@@ -49,6 +51,7 @@ export class UsersService implements AuthDataSource {
 			})
 			.catch((err) => {
 				if (err instanceof PrismaClientKnownRequestError && err.code === 'P2002') {
+					this.log.error(err, err.meta);
 					return this.register({ name, email, password });
 				} else {
 					throw err;
