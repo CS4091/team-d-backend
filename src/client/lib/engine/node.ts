@@ -2,27 +2,6 @@ import { Entity, type Metadata } from './entity';
 import { Point } from './point';
 import type { RenderEngine } from './renderEngine';
 
-export class DummyNode extends Entity {
-	public update(metadata: Metadata): void {
-		if (metadata.mouse?.position) {
-			this.position = metadata.mouse.position.clone();
-		}
-	}
-
-	public render(renderEngine: RenderEngine): void {
-		renderEngine.fillCircle(this.position, 37.5, 'white');
-		renderEngine.circle(this.position, 37.5);
-	}
-
-	public selectedBy(point: Point): boolean {
-		return point.distanceTo(this.position) <= 37.5;
-	}
-
-	public serialize(): never {
-		throw new Error('Attempting to serialize a placeholder entity');
-	}
-}
-
 export class Node extends Entity {
 	constructor(public label: string) {
 		super();
@@ -46,8 +25,8 @@ export class Node extends Entity {
 		renderEngine.text(this.position, this.label);
 	}
 
-	public selectedBy(point: Point): boolean {
-		return point.distanceTo(this.position) <= 20;
+	public selectedBy(point: Point, renderEngine: RenderEngine): boolean {
+		return point.distanceTo(this.position) <= 20 / renderEngine.fov.scale;
 	}
 }
 

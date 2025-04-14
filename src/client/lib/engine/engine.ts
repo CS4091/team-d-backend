@@ -39,6 +39,7 @@ export class Engine {
 	private _mousePos: Point | null = null;
 	private _mouseDown = false;
 	private _mouseDelta: Point | null = null;
+	private _dirty = false;
 
 	private _listeners: { [K in keyof EngineEvents]: EngineEvents[K][] };
 
@@ -72,7 +73,7 @@ export class Engine {
 			});
 
 			canvas.addEventListener('mouseover', (evt) => {
-				this._mousePos = new Point(evt.offsetX, evt.offsetY);
+				this._mousePos = this.renderEngine.canvasToSpace(new Point(evt.offsetX, evt.offsetY));
 
 				canvas.addEventListener('mousemove', this.mouseListener);
 			});
@@ -119,9 +120,13 @@ export class Engine {
 				if (evt.deltaY > 0) {
 					if (this.renderEngine.fov.scale > 0.1) {
 						this.renderEngine.fov.scale -= 0.1;
+
+						this._dirty = true;
 					}
 				} else {
 					this.renderEngine.fov.scale += 0.1;
+
+					this._dirty = true;
 				}
 			});
 
@@ -138,6 +143,8 @@ export class Engine {
 		}
 
 		this.layers[layer].push(entity);
+
+		this._dirty = true;
 	}
 
 	public remove(entity: Entity, layer?: number): void {
@@ -169,6 +176,8 @@ export class Engine {
 				doppel.cycleState = null;
 			}
 		}
+
+		this._dirty = true;
 	}
 
 	public start(): void {
@@ -199,54 +208,54 @@ export class Engine {
 		this.layers[0] = edges;
 	}
 
-	public loadGraph(graph: { nodes: GraphNode[]; edges: GraphEdge[] }, color: string = 'black'): Entity[] {
-		if (!this.layers[1] || this.layers[1].length === 0) {
-			const bboxBL = new Point(0, 0),
-				bboxUR = new Point(0, 0);
+	public loadNodes(graph: { nodes: GraphNode[]; edges: GraphEdge[] }): void {
+		const bboxBL = new Point(0, 0),
+			bboxUR = new Point(0, 0);
 
-			const nodes = graph.nodes.map(({ id, x, y }) => {
-				const node = new Node(id);
-				node.position = new Point(x, y);
+		const nodes = graph.nodes.map(({ id, x, y }) => {
+			const node = new Node(id);
+			node.position = new Point(x, y);
 
-				if (x < bboxBL.x) bboxBL.x = x;
-				if (y < bboxBL.y) bboxBL.y = y;
-				if (x > bboxUR.x) bboxUR.x = x;
-				if (y > bboxUR.y) bboxUR.y = y;
+			if (x < bboxBL.x) bboxBL.x = x;
+			if (y < bboxBL.y) bboxBL.y = y;
+			if (x > bboxUR.x) bboxUR.x = x;
+			if (y > bboxUR.y) bboxUR.y = y;
 
-				this.add(node, 1);
+			this.add(node, 1);
 
-				return node;
-			});
+			return node;
+		});
 
-			const bboxDims = new Point(bboxUR.x - bboxBL.x, bboxUR.y - bboxBL.y),
-				bboxCenter = new Point((bboxUR.x + bboxBL.x) / 2, (bboxUR.y + bboxBL.y) / 2);
+		const bboxDims = new Point(bboxUR.x - bboxBL.x, bboxUR.y - bboxBL.y),
+			bboxCenter = new Point((bboxUR.x + bboxBL.x) / 2, (bboxUR.y + bboxBL.y) / 2);
 
-			nodes.forEach((node) => (node.position = node.position.subtract(bboxCenter).scale(900 / bboxDims.x, 600 / bboxDims.y)));
+		nodes.forEach((node) => (node.position = node.position.subtract(bboxCenter).scale(900 / bboxDims.x, 600 / bboxDims.y)));
 
-			graph.edges.forEach(({ from, to, data }) => this.add(new Edge(nodes[from], nodes[to], typeof data === 'object' ? data.duration : data, color), 0));
+		this._dirty = true;
+	}
 
-			return this.layers[0];
-		} else {
-			this.layers[0] = [];
+	public loadEdges(graph: { nodes: GraphNode[]; edges: GraphEdge[] }, color: string = 'black'): Entity[] {
+		this.layers[0] = [];
 
-			const nodes = graph.nodes.map(({ id }) => {
-				let node: Node;
+		const nodes = graph.nodes.map(({ id }) => {
+			let node: Node;
 
-				this.layers.forEach((layer) =>
-					layer.forEach((n) => {
-						if (n instanceof Node && n.label === id) {
-							node = n;
-						}
-					})
-				);
+			this.layers.forEach((layer) =>
+				layer.forEach((n) => {
+					if (n instanceof Node && n.label === id) {
+						node = n;
+					}
+				})
+			);
 
-				return node;
-			});
+			return node;
+		});
 
-			graph.edges.forEach(({ from, to, data }) => this.add(new Edge(nodes[from], nodes[to], typeof data === 'object' ? data.duration : data, color), 0));
+		graph.edges.forEach(({ from, to, data }) => this.add(new Edge(nodes[from], nodes[to], typeof data === 'object' ? data.duration : data, color), 0));
 
-			return this.layers[0];
-		}
+		this._dirty = true;
+
+		return this.layers[0];
 	}
 
 	private _tick(): void {
@@ -262,60 +271,76 @@ export class Engine {
 			this.canvas.style.cursor = 'unset';
 		}
 
-		if (this._keys.has('w')) this.renderEngine.fov.center.y -= this.renderEngine.fov.scale;
-		if (this._keys.has('a')) this.renderEngine.fov.center.x -= this.renderEngine.fov.scale;
-		if (this._keys.has('s')) this.renderEngine.fov.center.y += this.renderEngine.fov.scale;
-		if (this._keys.has('d')) this.renderEngine.fov.center.x += this.renderEngine.fov.scale;
+		if (this._keys.has('w')) {
+			this.renderEngine.fov.center.y -= 20 / this.renderEngine.fov.scale;
+			this._dirty = true;
+		}
+		if (this._keys.has('a')) {
+			this.renderEngine.fov.center.x -= 20 / this.renderEngine.fov.scale;
+			this._dirty = true;
+		}
+		if (this._keys.has('s')) {
+			this.renderEngine.fov.center.y += 20 / this.renderEngine.fov.scale;
+			this._dirty = true;
+		}
+		if (this._keys.has('d')) {
+			this.renderEngine.fov.center.x += 20 / this.renderEngine.fov.scale;
+			this._dirty = true;
+		}
 
-		const relationshipLinks: [Node, Node, Edge][] = [];
-		this.layers.forEach((layer) => {
-			layer.forEach((entity) => {
-				if (entity instanceof Edge) {
-					let relationship: [Node, Node, Edge];
-					if ((relationship = relationshipLinks.find(([from, to]) => entity.from === to && entity.to === from)!)) {
-						relationship[2].cycleState = CycleSide.LEFT;
-						entity.cycleState = CycleSide.RIGHT;
+		if (this._dirty) {
+			const relationshipLinks: [Node, Node, Edge][] = [];
+			this.layers.forEach((layer) => {
+				layer.forEach((entity) => {
+					if (entity instanceof Edge) {
+						let relationship: [Node, Node, Edge];
+						if ((relationship = relationshipLinks.find(([from, to]) => entity.from === to && entity.to === from)!)) {
+							relationship[2].cycleState = CycleSide.LEFT;
+							entity.cycleState = CycleSide.RIGHT;
 
-						relationshipLinks.splice(
-							relationshipLinks.findIndex(([, , t]) => t === relationship[2]),
-							1
-						);
-					} else if (entity.from !== entity.to) {
-						relationshipLinks.push([entity.from, entity.to, entity]);
+							relationshipLinks.splice(
+								relationshipLinks.findIndex(([, , t]) => t === relationship[2]),
+								1
+							);
+						} else if (entity.from !== entity.to) {
+							relationshipLinks.push([entity.from, entity.to, entity]);
+						}
 					}
-				}
-			});
-		});
-
-		this.layers.forEach((layer) => {
-			layer.forEach((entity) => {
-				if (entity instanceof Edge && entity.cycleState !== null && relationshipLinks.some(([, , t]) => t === entity)) {
-					entity.cycleState = null;
-				}
-			});
-		});
-
-		this.layers.forEach((layer) => {
-			layer.forEach((entity) => {
-				entity.update({
-					selected: this._selectedEntity === entity,
-					mouse: { down: this._mouseDown, delta: this._mouseDelta, position: this._mousePos?.clone() || null } as MouseData
 				});
 			});
-		});
 
-		this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
-		this.context.fillStyle = 'white';
-		this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
-		this.context.fillStyle = 'black';
-		this.layers.forEach((layer) => {
-			layer.forEach((entity) => {
-				entity.render(this.renderEngine, {
-					selected: this._selectedEntity === entity,
-					mouse: null
+			this.layers.forEach((layer) => {
+				layer.forEach((entity) => {
+					if (entity instanceof Edge && entity.cycleState !== null && relationshipLinks.some(([, , t]) => t === entity)) {
+						entity.cycleState = null;
+					}
 				});
 			});
-		});
+
+			this.layers.forEach((layer) => {
+				layer.forEach((entity) => {
+					entity.update({
+						selected: this._selectedEntity === entity,
+						mouse: { down: this._mouseDown, delta: this._mouseDelta, position: this._mousePos?.clone() || null } as MouseData
+					});
+				});
+			});
+
+			this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+			this.context.fillStyle = 'white';
+			this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
+			this.context.fillStyle = 'black';
+			this.layers.forEach((layer) => {
+				layer.forEach((entity) => {
+					entity.render(this.renderEngine, {
+						selected: this._selectedEntity === entity,
+						mouse: null
+					});
+				});
+			});
+
+			this._dirty = false;
+		}
 
 		if (this._mouseDelta) {
 			this._mouseDelta = new Point();
@@ -331,7 +356,9 @@ export class Engine {
 
 				for (const entity of reversedEntities) {
 					if (entity.selectedBy(this._mousePos, this.renderEngine)) {
+						if (this._selectedEntity !== entity) this._dirty = true;
 						this._selectedEntity = entity;
+
 						return;
 					}
 				}
@@ -339,6 +366,7 @@ export class Engine {
 		}
 
 		this._selectedEntity = null;
+		this._dirty = true;
 	}
 }
 

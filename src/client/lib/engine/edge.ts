@@ -61,7 +61,7 @@ export class Edge extends Entity {
 
 			const conditionBasepoint = midpoint.add(perpRight.scaleTo(-5 / renderEngine.fov.scale));
 
-			renderEngine.text(conditionBasepoint, `${this._data()}`, { direction: dir });
+			if (this.data) renderEngine.text(conditionBasepoint, `${this._data()}`, { direction: dir });
 		} else {
 			const { start, center, angle, r, end: arrowTip, endTangent, normal, arcCenter, tangent, endNormal } = this._calculateArcData(renderEngine);
 
@@ -84,7 +84,7 @@ export class Edge extends Entity {
 
 			const conditionBasepoint = arcCenter.add(normal.scaleTo(tangent.x < 0 ? -15 : -5).divide(renderEngine.fov.scale));
 
-			renderEngine.text(conditionBasepoint, `${this._data()}`, { direction: tangent.x < 0 ? tangent.invert() : tangent });
+			if (this.data) renderEngine.text(conditionBasepoint, `${this._data()}`, { direction: tangent.x < 0 ? tangent.invert() : tangent });
 		}
 	}
 
@@ -166,9 +166,9 @@ export class Edge extends Entity {
 			midpoint = fromPos.add(dir.scaleTo(fromPos.distanceTo(toPos) / 2)),
 			perpRight = new Point(dir.y, -dir.x);
 
-		const center = midpoint.add(perpRight.scaleTo(r - 25));
+		const center = midpoint.add(perpRight.scaleTo(r - 20));
 
-		const end = calculateLHIntersection(center, toPos, r, 20 / re.fov.scale);
+		const end = calculateLHIntersection(center, toPos, r, 20);
 		const radVec = end.subtract(center);
 		const endTangent = new Point(radVec.y, -radVec.x).scaleTo(1);
 		const start = calculateRHIntersection(center, fromPos, r, 20);
@@ -184,7 +184,7 @@ export class Edge extends Entity {
 			r,
 			angle,
 			endTangent,
-			arcCenter: midpoint.add(perpRight.scaleTo(-25)),
+			arcCenter: midpoint.add(perpRight.scaleTo(-20)),
 			tangent: dir.scaleTo(1),
 			normal: perpRight.scaleTo(1),
 			endNormal

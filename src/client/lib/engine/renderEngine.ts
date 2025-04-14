@@ -105,6 +105,7 @@ export class RenderEngine {
 		this.context.moveTo(sx, sy);
 
 		this.context.arc(cx, cy, radius, startAngle, startAngle + angle);
+		this.context.closePath();
 
 		this.context.stroke();
 
