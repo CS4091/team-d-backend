@@ -1,6 +1,6 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import type { Plane } from '@prisma/client';
-import { IsString } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 import { fi } from 'src/utils/utils';
 
 export class CreatePlaneDTO {
@@ -32,5 +32,22 @@ export class PlaneResponse implements Plane {
 
 	@ApiProperty()
 	homeBase: string = fi();
+}
+
+export class UpdatePlaneDTO {
+	@IsOptional()
+	@IsString()
+	@ApiPropertyOptional()
+	manufacturer?: string;
+
+	@IsOptional()
+	@IsString()
+	@ApiPropertyOptional()
+	model?: string;
+
+	@IsOptional()
+	@IsString()
+	@ApiPropertyOptional()
+	homeBase?: string;
 }
 

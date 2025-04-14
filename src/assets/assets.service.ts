@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { createId } from '@paralleldrive/cuid2';
 import type { Organization, Plane } from '@prisma/client';
 import { DBService } from 'src/db/db.service';
-import { CreatePlaneDTO } from './assets.dtos';
+import { CreatePlaneDTO, UpdatePlaneDTO } from './assets.dtos';
 
 @Injectable()
 export class AssetsService {
@@ -15,6 +15,13 @@ export class AssetsService {
 	public async delete(planeId: string, orgId: string ): Promise<Plane> {
 		return this.db.plane.delete({
 			where: { id_orgId: { id: planeId, orgId } },
+		});
+	}
+
+	public async update(id: string, orgId: string, data: UpdatePlaneDTO): Promise<Plane> {
+		return this.db.plane.update({
+			where: { id_orgId: { id, orgId } },
+			data,
 		});
 	}
 }
