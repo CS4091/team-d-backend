@@ -72,10 +72,13 @@ arro::Graph<__PlaneCity, T> flatten(const arro::Graph<data::AirportLatLng, T>& g
 
 Routing arro::algo::findRoute(const vector<data::CityLatLng>& cities, const vector<data::RouteReq>& requestedRoutes, const vector<Plane>& planes) {
 	using ConnGraph = Graph<data::AirportLatLng, data::AirwayData>;
+	using CNData = data::AirportLatLng;
+	using CLData = data::AirwayData;
 	using DbgGraph = Graph<data::AirportLatLng, __routing::PlannedFlight>;
 	using ConnNode = ConnGraph::Node;
 	using ConnLookup = ConnGraph::LinkLookup;
 	using RoutePlan = arro::algo::__routing::RoutePlan;
+	using PlaneLoc = arro::algo::__routing::PlaneLoc;
 
 	map<string, ConnGraph> connGraphs;
 
@@ -197,74 +200,129 @@ Routing arro::algo::findRoute(const vector<data::CityLatLng>& cities, const vect
 		planeOrder.emplace(nextPlane.plane, to, endTime);
 	}
 
-	DbgGraph dbgRouting;
-	for (auto node : connGraphs[planes[0].model].nodes()) dbgRouting.add(node->data());
+	// DbgGraph dbgRouting;
+	// for (auto node : connGraphs[planes[0].model].nodes()) dbgRouting.add(node->data());
 
-	flatten(dbgRouting).jsonDumpToFile("routing.graph.c.json");
+	// flatten(dbgRouting).jsonDumpToFile("routing.graph.c.json");
 
-	for (auto [plane, routing] : baselineRoute) {
-		for (auto it = next(routing.begin()); it != routing.end(); it++) {
-			dbgRouting.link((*prev(it))->data().id, (*it)->data().id, __routing::PlannedFlight(plane));
-		}
-	}
-
-	flatten(dbgRouting).jsonDumpToFile("routing.graph.b.json");
-
-	// vector<RoutePlan> queue(1);
-	// queue[0].cost = 0;
-	// copy(demandGraph.edges().begin(), demandGraph.edges().end(), back_inserter(queue[0].remaining));
-	// queue[0].route.push_back(connGraph[startCity]);
-
-	// make_heap(queue.begin(), queue.end(), std::greater{});
-
-	// while (queue.size() > 0) {
-	// 	pop_heap(queue.begin(), queue.end(), std::greater{});
-
-	// 	RoutePlan entry = queue.back();
-	// 	queue.pop_back();
-
-	// 	if (entry.remaining.size() == 0) return {entry.route, baselineRoute};
-
-	// 	queue.reserve(queue.size() + entry.remaining.size());
-
-	// 	for (auto link : entry.remaining) {
-	// 		const ConnNode *lastCity = entry.route.back(), *nextCity = connGraph[link->from()->data().id], *routeEnd = connGraph[link->to()->data().id];
-
-	// 		RoutePlan newEntry(entry.route, vector<const DemandLink*>(), entry.cost);
-	// 		newEntry.cost += masterTable[lastCity->idx][nextCity->idx];
-
-	// 		list<const ConnNode*> path = arro::algo::dijkstra<CNData, CLData>(connGraph, lastCity, nextCity);
-	// 		for (auto it = next(path.begin()); it != path.end(); it++) newEntry.route.push_back(*it);
-	// 		path = arro::algo::dijkstra<CNData, CLData>(connGraph, nextCity, routeEnd);
-	// 		for (auto it = path.begin(); it != path.end();) {
-	// 			const ConnNode* from = *it;
-
-	// 			it++;
-
-	// 			if (it != path.end()) {
-	// 				const ConnNode* to = *it;
-
-	// 				newEntry.cost += connGraph[typename arro::Graph<CNData, CLData>::LinkLookup{from, to}]->data().cost();
-
-	// 				if (newEntry.cost < baselineCost) newEntry.route.push_back(to);
-	// 			}
-	// 		}
-	// 		copy_if(entry.remaining.begin(), entry.remaining.end(), back_inserter(newEntry.remaining),
-	// 				[link](const DemandLink* route) { return route != link; });
-
-	// 		queue.push_back(newEntry);
+	// for (auto [plane, routing] : baselineRoute) {
+	// 	for (auto it = next(routing.begin()); it != routing.end(); it++) {
+	// 		dbgRouting.link((*prev(it))->data().id, (*it)->data().id, __routing::PlannedFlight(plane));
 	// 	}
 	// }
 
-	Routing out;
-	for (auto [id, routing] : baselineRoute) {
-		list<string> route;
+	// flatten(dbgRouting).jsonDumpToFile("routing.graph.b.json");
 
-		for (auto airport : routing) route.push_back(airport->data().id);
+	vector<RoutePlan> queue(1);
+	queue[0].cost = 0;
+	copy(requestedRoutes.begin(), requestedRoutes.end(), back_inserter(queue[0].remaining));
+	for (auto plane : planes) {
+		list<const ConnNode*> path;
 
-		out.route.emplace(id, route);
-		out.baseline.emplace(id, route);
+		auto base = connGraphs[plane.model][plane.homeBase];
+		path.push_back(base);
+
+		queue[0].route.emplace(plane.id, path);
+
+		queue[0].planeOrder.emplace(plane, base, 0);
 	}
 
-	return out;
+	while (queue.size() > 0) {
+		pop_heap(queue.begin(), queue.end(), std::greater{});
+
+		RoutePlan entry = queue.back();
+		queue.pop_back();
+
+		if (entry.remaining.size() == 0) {
+			Routing out;
+			for (auto [id, routing] : baselineRoute) {
+				list<string> route;
+
+				for (auto airport : routing) route.push_back(airport->data().id);
+
+				out.baseline.emplace(id, route);
+			}
+
+			for (auto [id, routing] : entry.route) {
+				list<string> route;
+
+				for (auto airport : routing) route.push_back(airport->data().id);
+
+				out.route.emplace(id, route);
+			}
+
+			out.baselineCost = baselineCost;
+			out.routeCost = entry.cost;
+
+			return out;
+		}
+
+		queue.reserve(queue.size() + entry.remaining.size());
+
+		min_pqueue<PlaneLoc> planeOrder = entry.planeOrder;
+		auto nextPlane = planeOrder.top();
+		auto plane = nextPlane.plane;
+		planeOrder.pop();
+
+		const auto& connGraph = connGraphs[plane.model];
+		const auto& masterTable = masterTables[plane.model];
+
+		bool hasRoute = false;
+		for (auto route : entry.remaining) {
+			const ConnNode *lastCity = nextPlane.loc, *nextCity = connGraph[route.from], *routeEnd = connGraph[route.to];
+
+			if (nextCity && routeEnd) {
+				hasRoute = true;
+
+				double endTime = nextPlane.time;
+				vector<data::RouteReq> remaining;
+				copy_if(entry.remaining.begin(), entry.remaining.end(), back_inserter(remaining),
+						[&route](const data::RouteReq& r) { return !(r.from == route.from && r.to == route.to); });
+
+				RoutePlan newEntry(entry.route, planeOrder, remaining, entry.cost);
+				newEntry.cost += masterTable[lastCity->idx][nextCity->idx];
+
+				list<const ConnNode*> path;
+
+				if (lastCity != nextCity) {
+					path = dijkstra<CNData, CLData>(connGraph, lastCity, nextCity, [](const data::AirwayData& airway) { return airway.cost(0); });
+
+					for (auto it = next(path.begin()); it != path.end(); it++) {
+						newEntry.route[nextPlane.plane.id].push_back(*it);
+
+						auto airway = connGraph[ConnLookup{*prev(it), *it}]->data();
+						newEntry.cost += airway.cost(0);
+						endTime += airway.data.time;
+					}
+				}
+
+				path = dijkstra<CNData, CLData>(connGraph, nextCity, routeEnd, [](const data::AirwayData& airway) { return airway.cost(1); });
+
+				for (auto it = next(path.begin()); it != path.end(); it++) {
+					newEntry.route[nextPlane.plane.id].push_back(*it);
+
+					auto airway = connGraph[ConnLookup{*prev(it), *it}]->data();
+					newEntry.cost += airway.cost(0);
+					endTime += airway.data.time;
+				}
+
+				newEntry.planeOrder.emplace(plane, routeEnd, endTime);
+
+				if (newEntry.cost < baselineCost) queue.push_back(newEntry);
+			}
+		}
+
+		if (!hasRoute) {
+			if (entry.planeOrder.size() == 1)
+				throw UnroutableException(entry.remaining);
+			else {
+				entry.planeOrder.pop();
+				queue.push_back(entry);
+			}
+		}
+
+		make_heap(queue.begin(), queue.end(), std::greater{});
+	}
+
+	throw UnroutableException(requestedRoutes);
 }

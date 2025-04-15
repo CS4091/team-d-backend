@@ -9,6 +9,7 @@
 
 #include <cmath>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <list>
 #include <numbers>
@@ -46,12 +47,16 @@ int main(int argc, char* argv[]) {
 		cout << endl;
 	}
 
+	cout << "cost: $" << put_money(routing.baselineCost) << endl;
+
 	cout << "\nOptimized:\n";
 	for (auto [id, route] : routing.route) {
 		cout << "Plane[" << id << "]: " << route.front();
 		for (auto it = next(route.begin()); it != route.end(); it++) cout << " -> " << *it;
 		cout << endl;
 	}
+
+	cout << "cost: $" << put_money(routing.routeCost) << endl;
 
 	return 0;
 }

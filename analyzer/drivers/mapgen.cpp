@@ -50,23 +50,41 @@ vector<T> readArray(const string& path) {
 	return out;
 }
 
+struct __PlaneCity {
+	string id;
+	double x;
+	double y;
+
+	static nlohmann::json stringify(const __PlaneCity& city) { return {{"id", city.id}, {"x", city.x}, {"y", city.y}}; }
+};
+
+arro::Graph<__PlaneCity, arro::algo::data::AirwayData> flatten(const ConnGraph& graph) {
+	return graph.template map<__PlaneCity>([](const arro::algo::data::AirportWithRunways& city) {
+		arro::Vector3D pos = arro::geospatial::mercator(city.lat, city.lng);
+
+		return __PlaneCity{city.id, pos[0], pos[1]};
+	});
+}
+
 int main(int argc, char* argv[]) {
 	vector<arro::algo::data::AirportWithRunways> airports = readArray<arro::algo::data::AirportWithRunways>("airports.json");
 	vector<arro::aviation::Plane> planes = readArray<arro::aviation::Plane>("planes.json");
 
 	for (auto plane : planes) {
-		mapFlights(airports, plane)
-			.binDumpToFile(
-				plane.model + ".bing",
-				[](int fd, const arro::algo::data::AirportWithRunways& airport) {
-					write(fd, airport.id.c_str(), airport.id.length() + 1);
-					write(fd, airport.city.c_str(), airport.city.length() + 1);
-					write(fd, airport.type.c_str(), airport.type.length() + 1);
-					write(fd, &airport.lat, sizeof(double));
-					write(fd, &airport.lng, sizeof(double));
-					write(fd, &airport.fuel, sizeof(double));
-				},
-				[](int fd, const arro::algo::data::AirwayData& airway) { write(fd, &airway, sizeof(arro::algo::data::AirwayData)); });
+		auto graph = mapFlights(airports, plane);
+
+		graph.binDumpToFile(
+			plane.model + ".bing",
+			[](int fd, const arro::algo::data::AirportWithRunways& airport) {
+				write(fd, airport.id.c_str(), airport.id.length() + 1);
+				write(fd, airport.city.c_str(), airport.city.length() + 1);
+				write(fd, airport.type.c_str(), airport.type.length() + 1);
+				write(fd, &airport.lat, sizeof(double));
+				write(fd, &airport.lng, sizeof(double));
+				write(fd, &airport.fuel, sizeof(double));
+			},
+			[](int fd, const arro::algo::data::AirwayData& airway) { write(fd, &airway, sizeof(arro::algo::data::AirwayData)); });
+		flatten(graph).jsonDumpToFile(plane.model + ".graph.json");
 	}
 
 	return 0;

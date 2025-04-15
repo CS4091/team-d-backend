@@ -80,8 +80,17 @@ struct AirwayData {
 }  // namespace data
 
 namespace __routing {
+struct PlaneLoc {
+	aviation::Plane plane;
+	const typename arro::Graph<data::AirportLatLng, data::AirwayData>::Node* loc;
+	double time;
+};
+
+bool operator>(const PlaneLoc& a, const PlaneLoc& b);
+
 struct RoutePlan {
 	std::map<std::string, std::list<const typename arro::Graph<data::AirportLatLng, data::AirwayData>::Node*>> route;
+	std::priority_queue<PlaneLoc, std::vector<PlaneLoc>, std::greater<PlaneLoc>> planeOrder;
 	std::vector<data::RouteReq> remaining;
 	double cost;
 };
@@ -93,17 +102,9 @@ struct PotentialFlight {
 	double costApprox;
 };
 
-struct PlaneLoc {
-	aviation::Plane plane;
-	const typename arro::Graph<data::AirportLatLng, data::AirwayData>::Node* loc;
-	double time;
-};
-
 bool operator>(const RoutePlan& a, const RoutePlan& b);
 
 bool operator>(const PotentialFlight& a, const PotentialFlight& b);
-
-bool operator>(const PlaneLoc& a, const PlaneLoc& b);
 
 struct PlannedFlight {
 	std::string plane;
@@ -115,6 +116,9 @@ struct PlannedFlight {
 struct Routing {
 	std::map<std::string, std::list<std::string>> route;
 	std::map<std::string, std::list<std::string>> baseline;
+
+	double baselineCost;
+	double routeCost;
 };
 
 Routing findRoute(const std::vector<data::CityLatLng>& cities, const std::vector<data::RouteReq>& requestedRoutes,
