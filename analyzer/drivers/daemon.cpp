@@ -58,11 +58,11 @@ void processRouting(path id) {
 	json optimized = routing.route;
 
 	ofstream bOut(id / "baseline.json");
-	bOut << baseline;
+	bOut << json{{"routing", baseline}, {"cost", routing.baselineCost}};
 	bOut.close();
 
 	ofstream oOut(id / "routing.json");
-	oOut << optimized;
+	oOut << json{{"routing", optimized}, {"cost", routing.routeCost}};
 	oOut.close();
 
 	lock_guard lock(streamMutex);
