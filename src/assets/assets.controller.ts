@@ -26,7 +26,7 @@ export class AssetsController {
 
 	@Get()
 	@Protected()
-	@ApiResponse({ type: PlaneResponse })
+	@ApiResponse({ type: PlaneResponse, isArray: true })
 	public async getPlanes(@ReqUser() user: User, @Param() { id }: OrganizationIDDTO): Promise<Plane[]> {
 		const org = await this.organizations.get({ id }, fullOrg);
 
