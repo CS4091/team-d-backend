@@ -58,7 +58,14 @@ export class RoutingService {
 				match = /^(\w{24})\n(.*)$/.exec(stdout);
 			}
 		});
-		this.proc.stderr.on('data', (chunk) => console.log(chunk));
+		this.proc.stderr.on('data', (chunk) => {
+			if (typeof chunk === 'string') console.error(chunk);
+			else if (Buffer.isBuffer(chunk)) console.error(chunk.toString('utf-8'));
+			else {
+				console.error(chunk);
+				throw new Error('Unrecognized chunk type');
+			}
+		});
 	}
 
 	public async route(cities: City[], routes: [string, string][], assets: (Plane & { specs: PlaneModel })[]): Promise<RouteResult> {
