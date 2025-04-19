@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "Node.h"
+#include "bench.h"
 #include "concepts.h"
 
 namespace arro {

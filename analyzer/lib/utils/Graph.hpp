@@ -277,51 +277,80 @@ arro::Graph<NodeData, LinkData> arro::Graph<NodeData, LinkData>::readFromBinFile
 	using OutNode = OutGraph::Node;
 	using OutLink = OutGraph::Link;
 
-	int fd = open(path.c_str(), O_RDONLY);
+#ifdef BENCHMARK
+	return bench::benchmark<OutGraph>([path, readNode, readEdge](bench::BenchmarkCtx& ctx) {
+#endif
+		int fd = open(path.c_str(), O_RDONLY);
 
-	if (fd == -1) throw invalid_argument("Unable to acquire graph file '" + path + "'");
+		if (fd == -1) throw invalid_argument("Unable to acquire graph file '" + path + "'");
 
-	unsigned char buf[2];
-	int bytesRead = read(fd, buf, 2);
+#ifdef BENCHMARK
+		ctx.start("Read Headers");
+#endif
 
-	if (bytesRead != 2 || buf[0] != 0x09 || buf[1] != 0x0B) throw invalid_argument("Failed to read magic bytes");
+		unsigned char buf[2];
+		int bytesRead = read(fd, buf, 2);
 
-	bytesRead = read(fd, buf, 1);
-	if (bytesRead != 1) throw invalid_argument("Failed to read digraph bit");
+		if (bytesRead != 2 || buf[0] != 0x09 || buf[1] != 0x0B) throw invalid_argument("Failed to read magic bytes");
 
-	bool digraph = buf[0];
+		bytesRead = read(fd, buf, 1);
+		if (bytesRead != 1) throw invalid_argument("Failed to read digraph bit");
 
-	size_t sfieldLen;
-	bytesRead = read(fd, &sfieldLen, sizeof(size_t));
-	if (bytesRead != sizeof(size_t)) throw invalid_argument("Failed to read max str len");
-	char* strBuf = new char[sfieldLen + 1];
+		bool digraph = buf[0];
 
-	size_t numNodes;
-	bytesRead = read(fd, &numNodes, sizeof(size_t));
-	if (bytesRead != sizeof(size_t)) throw invalid_argument("Failed to read number of nodes");
+		size_t sfieldLen;
+		bytesRead = read(fd, &sfieldLen, sizeof(size_t));
+		if (bytesRead != sizeof(size_t)) throw invalid_argument("Failed to read max str len");
+		char* strBuf = new char[sfieldLen + 1];
 
-	size_t numEdges;
-	bytesRead = read(fd, &numEdges, sizeof(size_t));
-	if (bytesRead != sizeof(size_t)) throw invalid_argument("Failed to read number of edges");
+		size_t numNodes;
+		bytesRead = read(fd, &numNodes, sizeof(size_t));
+		if (bytesRead != sizeof(size_t)) throw invalid_argument("Failed to read number of nodes");
 
-	size_t* connectivity = new size_t[numEdges * 2];
-	bytesRead = read(fd, connectivity, sizeof(size_t) * numEdges * 2);
-	if (bytesRead != sizeof(size_t) * numEdges * 2) throw invalid_argument("Failed to read edge endpoints list");
+		size_t numEdges;
+		bytesRead = read(fd, &numEdges, sizeof(size_t));
+		if (bytesRead != sizeof(size_t)) throw invalid_argument("Failed to read number of edges");
 
-	vector<OutNode*> nodes;
-	nodes.reserve(numNodes);
-	for (size_t i = 0; i < numNodes; i++) nodes.push_back(new OutNode(i, readNode(fd, sfieldLen, strBuf)));
+#ifdef BENCHMARK
+		ctx.stop();
+		ctx.start("Read Connectivity");
+#endif
 
-	vector<OutLink*> edges;
-	edges.reserve(numEdges);
-	for (size_t i = 0; i < numEdges; i++)
-		edges.push_back(new OutLink(nodes[connectivity[2 * i]], nodes[connectivity[2 * i + 1]], readEdge(fd, sfieldLen, strBuf)));
+		size_t* connectivity = new size_t[numEdges * 2];
+		bytesRead = read(fd, connectivity, sizeof(size_t) * numEdges * 2);
+		if (bytesRead != sizeof(size_t) * numEdges * 2) throw invalid_argument("Failed to read edge endpoints list");
 
-	close(fd);
-	delete[] connectivity;
-	delete[] strBuf;
+#ifdef BENCHMARK
+		ctx.stop();
+		ctx.start("Read Node Data");
+#endif
 
-	return OutGraph(nodes, edges, digraph);
+		vector<OutNode*> nodes;
+		nodes.reserve(numNodes);
+		for (size_t i = 0; i < numNodes; i++) nodes.push_back(new OutNode(i, readNode(fd, sfieldLen, strBuf)));
+
+#ifdef BENCHMARK
+		ctx.stop();
+		ctx.start("Read Edge Data");
+#endif
+
+		vector<OutLink*> edges;
+		edges.reserve(numEdges);
+		for (size_t i = 0; i < numEdges; i++)
+			edges.push_back(new OutLink(nodes[connectivity[2 * i]], nodes[connectivity[2 * i + 1]], readEdge(fd, sfieldLen, strBuf)));
+
+#ifdef BENCHMARK
+		ctx.stop();
+#endif
+
+		close(fd);
+		delete[] connectivity;
+		delete[] strBuf;
+
+		return OutGraph(nodes, edges, digraph);
+#ifdef BENCHMARK
+	});
+#endif
 }
 
 template <UniqueSerializable NodeData, Serializable LinkData>
@@ -333,55 +362,84 @@ arro::Graph<NodeData, LinkData> arro::Graph<NodeData, LinkData>::readFromBinFile
 	using OutNode = OutGraph::Node;
 	using OutLink = OutGraph::Link;
 
-	int fd = open(path.c_str(), O_RDONLY);
+#ifdef BENCHMARK
+	return bench::benchmark<OutGraph>([path, readNode](bench::BenchmarkCtx& ctx) {
+#endif
+		int fd = open(path.c_str(), O_RDONLY);
 
-	if (fd == -1) throw invalid_argument("Unable to acquire graph file '" + path + "'");
+		if (fd == -1) throw invalid_argument("Unable to acquire graph file '" + path + "'");
 
-	unsigned char buf[2];
-	int bytesRead = read(fd, buf, 2);
+#ifdef BENCHMARK
+		ctx.start("Read Headers");
+#endif
 
-	if (bytesRead != 2 || buf[0] != 0x09 || buf[1] != 0x0B) throw invalid_argument("Failed to read magic bytes");
+		unsigned char buf[2];
+		int bytesRead = read(fd, buf, 2);
 
-	bytesRead = read(fd, buf, 1);
-	if (bytesRead != 1) throw invalid_argument("Failed to read digraph bit");
+		if (bytesRead != 2 || buf[0] != 0x09 || buf[1] != 0x0B) throw invalid_argument("Failed to read magic bytes");
 
-	bool digraph = buf[0];
+		bytesRead = read(fd, buf, 1);
+		if (bytesRead != 1) throw invalid_argument("Failed to read digraph bit");
 
-	size_t sfieldLen;
-	bytesRead = read(fd, &sfieldLen, sizeof(size_t));
-	if (bytesRead != sizeof(size_t)) throw invalid_argument("Failed to read max str len");
-	char* strBuf = new char[sfieldLen + 1];
+		bool digraph = buf[0];
 
-	size_t numNodes;
-	bytesRead = read(fd, &numNodes, sizeof(size_t));
-	if (bytesRead != sizeof(size_t)) throw invalid_argument("Failed to read number of nodes");
+		size_t sfieldLen;
+		bytesRead = read(fd, &sfieldLen, sizeof(size_t));
+		if (bytesRead != sizeof(size_t)) throw invalid_argument("Failed to read max str len");
+		char* strBuf = new char[sfieldLen + 1];
 
-	size_t numEdges;
-	bytesRead = read(fd, &numEdges, sizeof(size_t));
-	if (bytesRead != sizeof(size_t)) throw invalid_argument("Failed to read number of edges");
+		size_t numNodes;
+		bytesRead = read(fd, &numNodes, sizeof(size_t));
+		if (bytesRead != sizeof(size_t)) throw invalid_argument("Failed to read number of nodes");
 
-	size_t* connectivity = new size_t[numEdges * 2];
-	bytesRead = read(fd, connectivity, sizeof(size_t) * numEdges * 2);
-	if (bytesRead != sizeof(size_t) * numEdges * 2) throw invalid_argument("Failed to read edge endpoints list");
+		size_t numEdges;
+		bytesRead = read(fd, &numEdges, sizeof(size_t));
+		if (bytesRead != sizeof(size_t)) throw invalid_argument("Failed to read number of edges");
 
-	vector<OutNode*> nodes;
-	nodes.reserve(numNodes);
-	for (size_t i = 0; i < numNodes; i++) nodes.push_back(new OutNode(i, readNode(fd, sfieldLen, strBuf)));
+#ifdef BENCHMARK
+		ctx.stop();
+		ctx.start("Read Connectivity");
+#endif
 
-	LinkData* linkData = reinterpret_cast<LinkData*>(malloc(sizeof(LinkData) * numEdges));
-	bytesRead = read(fd, linkData, sizeof(LinkData) * numEdges);
-	if (bytesRead != sizeof(LinkData) * numEdges) throw invalid_argument("Failed to read edge data list");
+		size_t* connectivity = new size_t[numEdges * 2];
+		bytesRead = read(fd, connectivity, sizeof(size_t) * numEdges * 2);
+		if (bytesRead != sizeof(size_t) * numEdges * 2) throw invalid_argument("Failed to read edge endpoints list");
 
-	vector<OutLink*> edges;
-	edges.reserve(numEdges);
-	for (size_t i = 0; i < numEdges; i++) edges.push_back(new OutLink(nodes[connectivity[2 * i]], nodes[connectivity[2 * i + 1]], linkData[i]));
+#ifdef BENCHMARK
+		ctx.stop();
+		ctx.start("Read Node Data");
+#endif
 
-	close(fd);
-	delete[] connectivity;
-	delete[] strBuf;
-	delete[] linkData;
+		vector<OutNode*> nodes;
+		nodes.reserve(numNodes);
+		for (size_t i = 0; i < numNodes; i++) nodes.push_back(new OutNode(i, readNode(fd, sfieldLen, strBuf)));
 
-	return OutGraph(nodes, edges, digraph);
+#ifdef BENCHMARK
+		ctx.stop();
+		ctx.start("Read Edge Data");
+#endif
+
+		LinkData* linkData = reinterpret_cast<LinkData*>(malloc(sizeof(LinkData) * numEdges));
+		bytesRead = read(fd, linkData, sizeof(LinkData) * numEdges);
+		if (bytesRead != sizeof(LinkData) * numEdges) throw invalid_argument("Failed to read edge data list");
+
+		vector<OutLink*> edges;
+		edges.reserve(numEdges);
+		for (size_t i = 0; i < numEdges; i++) edges.push_back(new OutLink(nodes[connectivity[2 * i]], nodes[connectivity[2 * i + 1]], linkData[i]));
+
+#ifdef BENCHMARK
+		ctx.stop();
+#endif
+
+		close(fd);
+		delete[] connectivity;
+		delete[] strBuf;
+		delete[] linkData;
+
+		return OutGraph(nodes, edges, digraph);
+#ifdef BENCHMARK
+	});
+#endif
 }
 
 template <UniqueSerializable NodeData, Serializable LinkData>
@@ -393,56 +451,85 @@ arro::Graph<NodeData, LinkData> arro::Graph<NodeData, LinkData>::readFromBinFile
 	using OutNode = OutGraph::Node;
 	using OutLink = OutGraph::Link;
 
-	int fd = open(path.c_str(), O_RDONLY);
+#ifdef BENCHMARK
+	return bench::benchmark<OutGraph>([path, readEdge](bench::BenchmarkCtx& ctx) {
+#endif
+		int fd = open(path.c_str(), O_RDONLY);
 
-	if (fd == -1) throw invalid_argument("Unable to acquire graph file '" + path + "'");
+		if (fd == -1) throw invalid_argument("Unable to acquire graph file '" + path + "'");
 
-	unsigned char buf[2];
-	int bytesRead = read(fd, buf, 2);
+#ifdef BENCHMARK
+		ctx.start("Read Headers");
+#endif
 
-	if (bytesRead != 2 || buf[0] != 0x09 || buf[1] != 0x0B) throw invalid_argument("Failed to read magic bytes");
+		unsigned char buf[2];
+		int bytesRead = read(fd, buf, 2);
 
-	bytesRead = read(fd, buf, 1);
-	if (bytesRead != 1) throw invalid_argument("Failed to read digraph bit");
+		if (bytesRead != 2 || buf[0] != 0x09 || buf[1] != 0x0B) throw invalid_argument("Failed to read magic bytes");
 
-	bool digraph = buf[0];
+		bytesRead = read(fd, buf, 1);
+		if (bytesRead != 1) throw invalid_argument("Failed to read digraph bit");
 
-	size_t sfieldLen;
-	bytesRead = read(fd, &sfieldLen, sizeof(size_t));
-	if (bytesRead != sizeof(size_t)) throw invalid_argument("Failed to read max str len");
-	char* strBuf = new char[sfieldLen + 1];
+		bool digraph = buf[0];
 
-	size_t numNodes;
-	bytesRead = read(fd, &numNodes, sizeof(size_t));
-	if (bytesRead != sizeof(size_t)) throw invalid_argument("Failed to read number of nodes");
+		size_t sfieldLen;
+		bytesRead = read(fd, &sfieldLen, sizeof(size_t));
+		if (bytesRead != sizeof(size_t)) throw invalid_argument("Failed to read max str len");
+		char* strBuf = new char[sfieldLen + 1];
 
-	size_t numEdges;
-	bytesRead = read(fd, &numEdges, sizeof(size_t));
-	if (bytesRead != sizeof(size_t)) throw invalid_argument("Failed to read number of edges");
+		size_t numNodes;
+		bytesRead = read(fd, &numNodes, sizeof(size_t));
+		if (bytesRead != sizeof(size_t)) throw invalid_argument("Failed to read number of nodes");
 
-	size_t* connectivity = new size_t[numEdges * 2];
-	bytesRead = read(fd, connectivity, sizeof(size_t) * numEdges * 2);
-	if (bytesRead != sizeof(size_t) * numEdges * 2) throw invalid_argument("Failed to read edge endpoints list");
+		size_t numEdges;
+		bytesRead = read(fd, &numEdges, sizeof(size_t));
+		if (bytesRead != sizeof(size_t)) throw invalid_argument("Failed to read number of edges");
 
-	NodeData* nodeData = reinterpret_cast<NodeData*>(malloc(sizeof(NodeData) * numNodes));
-	bytesRead = read(fd, nodeData, sizeof(NodeData) * numNodes);
-	if (bytesRead != sizeof(NodeData) * numNodes) throw invalid_argument("Failed to read edge data list");
+#ifdef BENCHMARK
+		ctx.stop();
+		ctx.start("Read Connectivity");
+#endif
 
-	vector<OutNode*> nodes;
-	nodes.reserve(numNodes);
-	for (size_t i = 0; i < numNodes; i++) nodes.push_back(new OutNode(i, nodeData[i]));
+		size_t* connectivity = new size_t[numEdges * 2];
+		bytesRead = read(fd, connectivity, sizeof(size_t) * numEdges * 2);
+		if (bytesRead != sizeof(size_t) * numEdges * 2) throw invalid_argument("Failed to read edge endpoints list");
 
-	vector<OutLink*> edges;
-	edges.reserve(numEdges);
-	for (size_t i = 0; i < numEdges; i++)
-		edges.push_back(new OutLink(nodes[connectivity[2 * i]], nodes[connectivity[2 * i + 1]], readEdge(fd, sfieldLen, strBuf)));
+#ifdef BENCHMARK
+		ctx.stop();
+		ctx.start("Read Node Data");
+#endif
 
-	close(fd);
-	delete[] connectivity;
-	delete[] strBuf;
-	delete[] nodeData;
+		NodeData* nodeData = reinterpret_cast<NodeData*>(malloc(sizeof(NodeData) * numNodes));
+		bytesRead = read(fd, nodeData, sizeof(NodeData) * numNodes);
+		if (bytesRead != sizeof(NodeData) * numNodes) throw invalid_argument("Failed to read edge data list");
 
-	return OutGraph(nodes, edges, digraph);
+		vector<OutNode*> nodes;
+		nodes.reserve(numNodes);
+		for (size_t i = 0; i < numNodes; i++) nodes.push_back(new OutNode(i, nodeData[i]));
+
+#ifdef BENCHMARK
+		ctx.stop();
+		ctx.start("Read Edge Data");
+#endif
+
+		vector<OutLink*> edges;
+		edges.reserve(numEdges);
+		for (size_t i = 0; i < numEdges; i++)
+			edges.push_back(new OutLink(nodes[connectivity[2 * i]], nodes[connectivity[2 * i + 1]], readEdge(fd, sfieldLen, strBuf)));
+
+#ifdef BENCHMARK
+		ctx.stop();
+#endif
+
+		close(fd);
+		delete[] connectivity;
+		delete[] strBuf;
+		delete[] nodeData;
+
+		return OutGraph(nodes, edges, digraph);
+#ifdef BENCHMARK
+	});
+#endif
 }
 
 template <UniqueSerializable NodeData, Serializable LinkData>
@@ -453,58 +540,87 @@ arro::Graph<NodeData, LinkData> arro::Graph<NodeData, LinkData>::readFromBinFile
 	using OutNode = OutGraph::Node;
 	using OutLink = OutGraph::Link;
 
-	int fd = open(path.c_str(), O_RDONLY);
+#ifdef BENCHMARK
+	return bench::benchmark<OutGraph>([path](bench::BenchmarkCtx& ctx) {
+#endif
+		int fd = open(path.c_str(), O_RDONLY);
 
-	if (fd == -1) throw invalid_argument("Unable to acquire graph file '" + path + "'");
+		if (fd == -1) throw invalid_argument("Unable to acquire graph file '" + path + "'");
 
-	unsigned char buf[2];
-	int bytesRead = read(fd, buf, 2);
+#ifdef BENCHMARK
+		ctx.start("Read Headers");
+#endif
 
-	if (bytesRead != 2 || buf[0] != 0x09 || buf[1] != 0x0B) throw invalid_argument("Failed to read magic bytes");
+		unsigned char buf[2];
+		int bytesRead = read(fd, buf, 2);
 
-	bytesRead = read(fd, buf, 1);
-	if (bytesRead != 1) throw invalid_argument("Failed to read digraph bit");
+		if (bytesRead != 2 || buf[0] != 0x09 || buf[1] != 0x0B) throw invalid_argument("Failed to read magic bytes");
 
-	bool digraph = buf[0];
+		bytesRead = read(fd, buf, 1);
+		if (bytesRead != 1) throw invalid_argument("Failed to read digraph bit");
 
-	size_t sfieldLen;
-	bytesRead = read(fd, &sfieldLen, sizeof(size_t));
-	if (bytesRead != sizeof(size_t)) throw invalid_argument("Failed to read max str len");
-	char* strBuf = new char[sfieldLen + 1];
+		bool digraph = buf[0];
 
-	size_t numNodes;
-	bytesRead = read(fd, &numNodes, sizeof(size_t));
-	if (bytesRead != sizeof(size_t)) throw invalid_argument("Failed to read number of nodes");
+		size_t sfieldLen;
+		bytesRead = read(fd, &sfieldLen, sizeof(size_t));
+		if (bytesRead != sizeof(size_t)) throw invalid_argument("Failed to read max str len");
+		char* strBuf = new char[sfieldLen + 1];
 
-	size_t numEdges;
-	bytesRead = read(fd, &numEdges, sizeof(size_t));
-	if (bytesRead != sizeof(size_t)) throw invalid_argument("Failed to read number of edges");
+		size_t numNodes;
+		bytesRead = read(fd, &numNodes, sizeof(size_t));
+		if (bytesRead != sizeof(size_t)) throw invalid_argument("Failed to read number of nodes");
 
-	size_t* connectivity = new size_t[numEdges * 2];
-	bytesRead = read(fd, connectivity, sizeof(size_t) * numEdges * 2);
-	if (bytesRead != sizeof(size_t) * numEdges * 2) throw invalid_argument("Failed to read edge endpoints list");
+		size_t numEdges;
+		bytesRead = read(fd, &numEdges, sizeof(size_t));
+		if (bytesRead != sizeof(size_t)) throw invalid_argument("Failed to read number of edges");
 
-	NodeData* nodeData = reinterpret_cast<NodeData*>(malloc(sizeof(NodeData) * numNodes));
-	bytesRead = read(fd, nodeData, sizeof(NodeData) * numNodes);
-	if (bytesRead != sizeof(NodeData) * numNodes) throw invalid_argument("Failed to read edge data list");
+#ifdef BENCHMARK
+		ctx.stop();
+		ctx.start("Read Connectivity");
+#endif
 
-	vector<OutNode*> nodes;
-	nodes.reserve(numNodes);
-	for (size_t i = 0; i < numNodes; i++) nodes.push_back(new OutNode(i, nodeData[i]));
+		size_t* connectivity = new size_t[numEdges * 2];
+		bytesRead = read(fd, connectivity, sizeof(size_t) * numEdges * 2);
+		if (bytesRead != sizeof(size_t) * numEdges * 2) throw invalid_argument("Failed to read edge endpoints list");
 
-	LinkData* linkData = reinterpret_cast<LinkData*>(malloc(sizeof(LinkData) * numEdges));
-	bytesRead = read(fd, linkData, sizeof(LinkData) * numEdges);
-	if (bytesRead != sizeof(LinkData) * numEdges) throw invalid_argument("Failed to read edge data list");
+#ifdef BENCHMARK
+		ctx.stop();
+		ctx.start("Read Node Data");
+#endif
 
-	vector<OutLink*> edges;
-	edges.reserve(numEdges);
-	for (size_t i = 0; i < numEdges; i++) edges.push_back(new OutLink(nodes[connectivity[2 * i]], nodes[connectivity[2 * i + 1]], linkData[i]));
+		NodeData* nodeData = reinterpret_cast<NodeData*>(malloc(sizeof(NodeData) * numNodes));
+		bytesRead = read(fd, nodeData, sizeof(NodeData) * numNodes);
+		if (bytesRead != sizeof(NodeData) * numNodes) throw invalid_argument("Failed to read edge data list");
 
-	close(fd);
-	delete[] connectivity;
-	delete[] strBuf;
-	delete[] nodeData;
-	delete[] linkData;
+		vector<OutNode*> nodes;
+		nodes.reserve(numNodes);
+		for (size_t i = 0; i < numNodes; i++) nodes.push_back(new OutNode(i, nodeData[i]));
 
-	return OutGraph(nodes, edges, digraph);
+#ifdef BENCHMARK
+		ctx.stop();
+		ctx.start("Read Edge Data");
+#endif
+
+		LinkData* linkData = reinterpret_cast<LinkData*>(malloc(sizeof(LinkData) * numEdges));
+		bytesRead = read(fd, linkData, sizeof(LinkData) * numEdges);
+		if (bytesRead != sizeof(LinkData) * numEdges) throw invalid_argument("Failed to read edge data list");
+
+		vector<OutLink*> edges;
+		edges.reserve(numEdges);
+		for (size_t i = 0; i < numEdges; i++) edges.push_back(new OutLink(nodes[connectivity[2 * i]], nodes[connectivity[2 * i + 1]], linkData[i]));
+
+#ifdef BENCHMARK
+		ctx.stop();
+#endif
+
+		close(fd);
+		delete[] connectivity;
+		delete[] strBuf;
+		delete[] nodeData;
+		delete[] linkData;
+
+		return OutGraph(nodes, edges, digraph);
+#ifdef BENCHMARK
+	});
+#endif
 }

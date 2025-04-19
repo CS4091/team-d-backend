@@ -63,6 +63,9 @@ target_link_libraries(demo math algo utils)
 add_executable(mapgen analyzer/drivers/mapgen.cpp)
 target_link_libraries(mapgen math algo utils)
 
+add_executable(read-map analyzer/drivers/read-map.cpp)
+target_link_libraries(read-map math algo utils)
+
 add_executable(graph analyzer/drivers/tests/graph.cpp)
 target_link_libraries(graph PRIVATE Catch2::Catch2WithMain math algo utils)
 set_target_properties(graph PROPERTIES CMAKE_RUNTIME_OUTPUT_DIRECTORY bin/tests)

@@ -25,6 +25,9 @@ public:
 	void start(const std::string& name);
 	void stop();
 
+	template <Routine<BenchmarkCtx&> BenchFn>
+	friend void benchmark(BenchFn fn);
+
 	template <typename T, Function<T, BenchmarkCtx&> BenchFn>
 	friend T benchmark(BenchFn fn);
 
@@ -32,6 +35,9 @@ private:
 	std::chrono::high_resolution_clock::time_point _start;
 	std::vector<Epoch> _epochs;
 };
+
+template <Routine<BenchmarkCtx&> BenchFn>
+void benchmark(BenchFn fn);
 
 template <typename T, Function<T, BenchmarkCtx&> BenchFn>
 T benchmark(BenchFn fn);

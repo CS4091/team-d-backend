@@ -100,28 +100,37 @@ Routing arro::algo::findRoute(const vector<data::CityLatLng>& cities, const vect
 		map<string, vector<vector<double>>> masterTables;  // master routing table for routing around empty aircraft
 		for (auto plane : planes) {
 			if (!connGraphs.count(plane.model)) {
-				connGraphs.emplace(plane.model, ConnGraph::readFromBinFile(filesystem::current_path() / "maps" / (plane.model + ".bing"),
-																		   [](int fd, size_t maxStrLen, char* buf) {
-																			   data::AirportLatLng airport;
+				arro::bench::benchmark([&connGraphs, &plane, &masterTables](arro::bench::BenchmarkCtx& ctx) {
+					ctx.start("Read");
 
-																			   memset(buf, '\0', maxStrLen + 1);
-																			   read(fd, buf, maxStrLen);
-																			   airport.id = string(buf);
+					connGraphs.emplace(plane.model, ConnGraph::readFromBinFile(filesystem::current_path() / "maps" / (plane.model + ".bing"),
+																			   [](int fd, size_t maxStrLen, char* buf) {
+																				   data::AirportLatLng airport;
 
-																			   memset(buf, '\0', maxStrLen + 1);
-																			   read(fd, buf, maxStrLen);
-																			   airport.city = string(buf);
+																				   memset(buf, '\0', maxStrLen + 1);
+																				   read(fd, buf, maxStrLen);
+																				   airport.id = string(buf);
 
-																			   read(fd, &airport.lat, sizeof(double));
-																			   read(fd, &airport.lng, sizeof(double));
-																			   read(fd, &airport.fuel, sizeof(double));
+																				   memset(buf, '\0', maxStrLen + 1);
+																				   read(fd, buf, maxStrLen);
+																				   airport.city = string(buf);
 
-																			   return airport;
-																		   }));
+																				   read(fd, &airport.lat, sizeof(double));
+																				   read(fd, &airport.lng, sizeof(double));
+																				   read(fd, &airport.fuel, sizeof(double));
 
-				masterTables.emplace(plane.model, arro::algo::floydWarshall(connGraphs[plane.model], [](const data::ReducedAirwayData& airway) {
-										 return airway.cost(0);
-									 }));  // again, aircraft are empty
+																				   return airport;
+																			   }));
+
+					ctx.stop();
+					ctx.start("Floyd Warshall");
+
+					masterTables.emplace(plane.model, arro::algo::floydWarshall(connGraphs[plane.model], [](const data::ReducedAirwayData& airway) {
+											 return airway.cost(0);
+										 }));  // again, aircraft are empty
+
+					ctx.stop();
+				});
 			}
 		}
 
