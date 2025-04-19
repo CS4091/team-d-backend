@@ -1,4 +1,4 @@
-import { Body, Controller, NotFoundException, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, NotFoundException, Param, Post } from '@nestjs/common';
 import { ApiResponse } from '@nestjs/swagger';
 import type { Plane, User } from '@prisma/client';
 import { Protected } from 'src/auth/protected.decorator';
@@ -22,6 +22,17 @@ export class AssetsController {
 		if (!org || !org.users.some((u) => u.id === user.id)) throw new NotFoundException(`Organization with id '${id}' does not exist.`);
 
 		return this.service.create(data, org);
+	}
+
+	@Get()
+	@Protected()
+	@ApiResponse({ type: PlaneResponse })
+	public async getPlanes(@ReqUser() user: User, @Param() { id }: OrganizationIDDTO): Promise<Plane[]> {
+		const org = await this.organizations.get({ id }, fullOrg);
+
+		if (!org || !org.users.some((u) => u.id === user.id)) throw new NotFoundException(`Organization with id '${id}' does not exist.`);
+
+		return org.planes;
 	}
 }
 
