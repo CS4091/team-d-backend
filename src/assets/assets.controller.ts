@@ -1,4 +1,4 @@
-import { Body, Controller, Get, NotFoundException, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, NotFoundException, Param, Post, Delete, Patch } from '@nestjs/common';
 import { ApiResponse } from '@nestjs/swagger';
 import type { Plane, User } from '@prisma/client';
 import { Protected } from 'src/auth/protected.decorator';
@@ -6,7 +6,7 @@ import { OrganizationIDDTO } from 'src/orgs/orgs.dtos';
 import { fullOrg } from 'src/orgs/orgs.models';
 import { OrgsService } from 'src/orgs/orgs.service';
 import { ReqUser } from 'src/utils/decorators/user.decorator';
-import { CreatePlaneDTO, PlaneResponse } from './assets.dtos';
+import { CreatePlaneDTO, PlaneResponse, UpdatePlaneDTO, PlaneIDDTO } from './assets.dtos';
 import { AssetsService } from './assets.service';
 
 @Controller('/organizations/:id/assets')
@@ -34,5 +34,28 @@ export class AssetsController {
 
 		return org.planes;
 	}
+
+     //returning to this later
+     // @Delete()
+     // @Protected()
+     // @ApiResponse({ type: PlaneResponse })
+     // public async deletePlane(@ReqUser() user: User, @Param() { id }: OrganizationIDDTO, @Body() data:)  {
+     //      const org = await this.organizations.get({ id }, fullOrg);
+
+	// 	if (!org || !org.users.some((u) => u.id === user.id)) throw new NotFoundException(`Organization with id '${id}' does not exist.`);
+
+     //      return;
+     // }
+
+     @Patch('/:idPlane')
+     @Protected()
+     @ApiResponse({ type: PlaneResponse })
+     public async updatePlane(@ReqUser() user: User, @Param() { id }: OrganizationIDDTO, @Param() planeID: PlaneIDDTO, @Body() {manufacturer, model, homeBase}: UpdatePlaneDTO): Promise<Plane>  {
+          const org = await this.organizations.get({ id }, fullOrg);
+
+		if (!org || !org.users.some((u) => u.id === user.id)) throw new NotFoundException(`Organization with id '${id}' does not exist.`);
+
+          return await this.service.update({manufacturer, model, homeBase}, org.planes);
+     }
 }
 

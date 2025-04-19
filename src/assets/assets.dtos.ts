@@ -17,6 +17,20 @@ export class CreatePlaneDTO {
 	homeBase: string = fi();
 }
 
+export class UpdatePlaneDTO {
+	@IsString()
+	@ApiProperty()
+	manufacturer: string = fi();
+
+	@IsString()
+	@ApiProperty()
+	model: string = fi();
+
+	@IsString()
+	@ApiProperty()
+	homeBase: string = fi();
+}
+
 export class PlaneResponse implements Plane {
 	@ApiProperty()
 	id: string = fi();
@@ -33,4 +47,11 @@ export class PlaneResponse implements Plane {
 	@ApiProperty()
 	homeBase: string = fi();
 }
+
+export class PlaneIDDTO {
+     @IsString()
+     @ApiProperty()
+     id: string = fi();
+}
+
 
