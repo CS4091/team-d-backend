@@ -125,6 +125,7 @@ Routing arro::algo::findRoute(const vector<data::CityLatLng>& cities, const vect
 					ctx.stop();
 					ctx.start("Floyd Warshall");
 
+					// TODO: formulate binary format for floyd-warshall tables (x1k more expensive than graph reading at this point)
 					masterTables.emplace(plane.model, arro::algo::floydWarshall(connGraphs[plane.model], [](const data::ReducedAirwayData& airway) {
 											 return airway.cost(0);
 										 }));  // again, aircraft are empty
