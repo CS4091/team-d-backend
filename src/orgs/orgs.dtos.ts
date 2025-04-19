@@ -31,10 +31,20 @@ export class OrganizationIDDTO {
 	id: string = fi();
 }
 
+export class OrganizationPlaneIDDTO {
+	@IsString()
+	@ApiProperty()
+	id: string = fi();
+
+	@IsString()
+	@ApiProperty()
+	planeId: string = fi();
+}
+
 export class NameUpdateDTO {
-  @IsString()
-  @ApiProperty()
-  name: string = fi();
+	@IsString()
+	@ApiProperty()
+	name: string = fi();
 }
 
 export class OrganizationResponse implements Organization {
@@ -75,6 +85,4 @@ export class FullOrganizationResponse implements FullOrganization {
 	@ApiProperty()
 	id: string = fi();
 }
-
-
 
