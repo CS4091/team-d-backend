@@ -73,17 +73,36 @@ int main(int argc, char* argv[]) {
 	for (auto plane : planes) {
 		auto graph = mapFlights(airports, plane);
 
+		size_t maxStrLen = airports[0].id.length();
+		for (auto airport : airports) {
+			if (airport.id.length() > maxStrLen) maxStrLen = airport.id.length();
+			if (airport.city.length() > maxStrLen) maxStrLen = airport.city.length();
+		}
+
 		graph.binDumpToFile(
-			plane.model + ".bing",
-			[](int fd, const arro::algo::data::AirportWithRunways& airport) {
-				write(fd, airport.id.c_str(), airport.id.length() + 1);
-				write(fd, airport.city.c_str(), airport.city.length() + 1);
-				write(fd, airport.type.c_str(), airport.type.length() + 1);
+			plane.model + ".bing", maxStrLen,
+			[maxStrLen](int fd, const arro::algo::data::AirportWithRunways& airport) {
+				char* buf = new char[maxStrLen];
+
+				memset(buf, '\0', maxStrLen);
+				memcpy(buf, airport.id.c_str(), airport.id.length());
+				write(fd, buf, maxStrLen);
+
+				memset(buf, '\0', maxStrLen);
+				memcpy(buf, airport.city.c_str(), airport.city.length());
+				write(fd, buf, maxStrLen);
+
+				delete[] buf;
+
 				write(fd, &airport.lat, sizeof(double));
 				write(fd, &airport.lng, sizeof(double));
 				write(fd, &airport.fuel, sizeof(double));
 			},
-			[](int fd, const arro::algo::data::AirwayData& airway) { write(fd, &airway, sizeof(arro::algo::data::AirwayData)); });
+			[](int fd, const arro::algo::data::AirwayData& airway) {
+				arro::algo::data::ReducedAirwayData data{airway.data.minFuel, airway.fuelPrice, airway.data.time};
+
+				write(fd, &data, sizeof(arro::algo::data::ReducedAirwayData));
+			});
 		flatten(graph).jsonDumpToFile(plane.model + ".graph.json");
 	}
 

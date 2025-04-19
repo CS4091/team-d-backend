@@ -165,7 +165,8 @@ void arro::Graph<NodeData, LinkData>::jsonDumpToFile(const std::string& path) co
 
 template <UniqueSerializable NodeData, Serializable LinkData>
 template <Routine<int, NodeData> NodeSerializer, Routine<int, LinkData> EdgeSerializer>
-void arro::Graph<NodeData, LinkData>::binDumpToFile(const std::string& path, const NodeSerializer& dumpNode, const EdgeSerializer& dumpEdge) const {
+void arro::Graph<NodeData, LinkData>::binDumpToFile(const std::string& path, std::size_t sfieldLen, const NodeSerializer& dumpNode,
+													const EdgeSerializer& dumpEdge) const {
 	using namespace std;
 
 	int fd = open(path.c_str(), O_CREAT | O_RDWR, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
@@ -175,17 +176,17 @@ void arro::Graph<NodeData, LinkData>::binDumpToFile(const std::string& path, con
 
 	write(fd, "\x09\x0B", 2);
 	write(fd, &_digraph, 1);
+	write(fd, &sfieldLen, sizeof(size_t));
 	write(fd, &sz, sizeof(size_t));
-	for (auto node : _nodes) dumpNode(fd, node->data());
-
 	sz = _edges.size();
 	write(fd, &sz, sizeof(size_t));
 	for (auto edge : _edges) {
 		size_t endpoints[2] = {edge->_from->idx, edge->_to->idx};
-
 		write(fd, endpoints, sizeof(size_t) * 2);
-		dumpEdge(fd, edge->data());
 	}
+
+	for (auto node : _nodes) dumpNode(fd, node->data());
+	for (auto edge : _edges) dumpEdge(fd, edge->data());
 
 	close(fd);
 }
@@ -267,7 +268,7 @@ arro::Graph<NodeData, LinkData> arro::Graph<NodeData, LinkData>::readFromFile(co
 }
 
 template <UniqueSerializable NodeData, Serializable LinkData>
-template <Function<NodeData, int> NodeSerializer, Function<LinkData, int> EdgeSerializer>
+template <Function<NodeData, int, std::size_t, char*> NodeSerializer, Function<LinkData, int, std::size_t, char*> EdgeSerializer>
 arro::Graph<NodeData, LinkData> arro::Graph<NodeData, LinkData>::readFromBinFile(const std::string& path, const NodeSerializer& readNode,
 																				 const EdgeSerializer& readEdge) {
 	using namespace std;
@@ -290,30 +291,220 @@ arro::Graph<NodeData, LinkData> arro::Graph<NodeData, LinkData>::readFromBinFile
 
 	bool digraph = buf[0];
 
+	size_t sfieldLen;
+	bytesRead = read(fd, &sfieldLen, sizeof(size_t));
+	if (bytesRead != sizeof(size_t)) throw invalid_argument("Failed to read max str len");
+	char* strBuf = new char[sfieldLen + 1];
+
 	size_t numNodes;
 	bytesRead = read(fd, &numNodes, sizeof(size_t));
 	if (bytesRead != sizeof(size_t)) throw invalid_argument("Failed to read number of nodes");
-
-	vector<OutNode*> nodes;
-	nodes.reserve(numNodes);
-	for (size_t i = 0; i < numNodes; i++) nodes.push_back(new OutNode(i, readNode(fd)));
 
 	size_t numEdges;
 	bytesRead = read(fd, &numEdges, sizeof(size_t));
 	if (bytesRead != sizeof(size_t)) throw invalid_argument("Failed to read number of edges");
 
+	size_t* connectivity = new size_t[numEdges * 2];
+	bytesRead = read(fd, connectivity, sizeof(size_t) * numEdges * 2);
+	if (bytesRead != sizeof(size_t) * numEdges * 2) throw invalid_argument("Failed to read edge endpoints list");
+
+	vector<OutNode*> nodes;
+	nodes.reserve(numNodes);
+	for (size_t i = 0; i < numNodes; i++) nodes.push_back(new OutNode(i, readNode(fd, sfieldLen, strBuf)));
+
 	vector<OutLink*> edges;
 	edges.reserve(numEdges);
-	for (size_t i = 0; i < numEdges; i++) {
-		size_t endpoints[2];
-
-		bytesRead = read(fd, endpoints, sizeof(size_t) * 2);
-		if (bytesRead != sizeof(size_t) * 2) throw invalid_argument("Failed to read edge endpoints");
-
-		edges.push_back(new OutLink(nodes[endpoints[0]], nodes[endpoints[1]], readEdge(fd)));
-	}
+	for (size_t i = 0; i < numEdges; i++)
+		edges.push_back(new OutLink(nodes[connectivity[2 * i]], nodes[connectivity[2 * i + 1]], readEdge(fd, sfieldLen, strBuf)));
 
 	close(fd);
+	delete[] connectivity;
+	delete[] strBuf;
+
+	return OutGraph(nodes, edges, digraph);
+}
+
+template <UniqueSerializable NodeData, Serializable LinkData>
+template <Function<NodeData, int, std::size_t, char*> NodeSerializer>
+arro::Graph<NodeData, LinkData> arro::Graph<NodeData, LinkData>::readFromBinFile(const std::string& path, const NodeSerializer& readNode) {
+	using namespace std;
+
+	using OutGraph = Graph<NodeData, LinkData>;
+	using OutNode = OutGraph::Node;
+	using OutLink = OutGraph::Link;
+
+	int fd = open(path.c_str(), O_RDONLY);
+
+	if (fd == -1) throw invalid_argument("Unable to acquire graph file '" + path + "'");
+
+	unsigned char buf[2];
+	int bytesRead = read(fd, buf, 2);
+
+	if (bytesRead != 2 || buf[0] != 0x09 || buf[1] != 0x0B) throw invalid_argument("Failed to read magic bytes");
+
+	bytesRead = read(fd, buf, 1);
+	if (bytesRead != 1) throw invalid_argument("Failed to read digraph bit");
+
+	bool digraph = buf[0];
+
+	size_t sfieldLen;
+	bytesRead = read(fd, &sfieldLen, sizeof(size_t));
+	if (bytesRead != sizeof(size_t)) throw invalid_argument("Failed to read max str len");
+	char* strBuf = new char[sfieldLen + 1];
+
+	size_t numNodes;
+	bytesRead = read(fd, &numNodes, sizeof(size_t));
+	if (bytesRead != sizeof(size_t)) throw invalid_argument("Failed to read number of nodes");
+
+	size_t numEdges;
+	bytesRead = read(fd, &numEdges, sizeof(size_t));
+	if (bytesRead != sizeof(size_t)) throw invalid_argument("Failed to read number of edges");
+
+	size_t* connectivity = new size_t[numEdges * 2];
+	bytesRead = read(fd, connectivity, sizeof(size_t) * numEdges * 2);
+	if (bytesRead != sizeof(size_t) * numEdges * 2) throw invalid_argument("Failed to read edge endpoints list");
+
+	vector<OutNode*> nodes;
+	nodes.reserve(numNodes);
+	for (size_t i = 0; i < numNodes; i++) nodes.push_back(new OutNode(i, readNode(fd, sfieldLen, strBuf)));
+
+	LinkData* linkData = reinterpret_cast<LinkData*>(malloc(sizeof(LinkData) * numEdges));
+	bytesRead = read(fd, linkData, sizeof(LinkData) * numEdges);
+	if (bytesRead != sizeof(LinkData) * numEdges) throw invalid_argument("Failed to read edge data list");
+
+	vector<OutLink*> edges;
+	edges.reserve(numEdges);
+	for (size_t i = 0; i < numEdges; i++) edges.push_back(new OutLink(nodes[connectivity[2 * i]], nodes[connectivity[2 * i + 1]], linkData[i]));
+
+	close(fd);
+	delete[] connectivity;
+	delete[] strBuf;
+	delete[] linkData;
+
+	return OutGraph(nodes, edges, digraph);
+}
+
+template <UniqueSerializable NodeData, Serializable LinkData>
+template <Function<LinkData, int, std::size_t, char*> EdgeSerializer>
+arro::Graph<NodeData, LinkData> arro::Graph<NodeData, LinkData>::readFromBinFile(const std::string& path, const EdgeSerializer& readEdge) {
+	using namespace std;
+
+	using OutGraph = Graph<NodeData, LinkData>;
+	using OutNode = OutGraph::Node;
+	using OutLink = OutGraph::Link;
+
+	int fd = open(path.c_str(), O_RDONLY);
+
+	if (fd == -1) throw invalid_argument("Unable to acquire graph file '" + path + "'");
+
+	unsigned char buf[2];
+	int bytesRead = read(fd, buf, 2);
+
+	if (bytesRead != 2 || buf[0] != 0x09 || buf[1] != 0x0B) throw invalid_argument("Failed to read magic bytes");
+
+	bytesRead = read(fd, buf, 1);
+	if (bytesRead != 1) throw invalid_argument("Failed to read digraph bit");
+
+	bool digraph = buf[0];
+
+	size_t sfieldLen;
+	bytesRead = read(fd, &sfieldLen, sizeof(size_t));
+	if (bytesRead != sizeof(size_t)) throw invalid_argument("Failed to read max str len");
+	char* strBuf = new char[sfieldLen + 1];
+
+	size_t numNodes;
+	bytesRead = read(fd, &numNodes, sizeof(size_t));
+	if (bytesRead != sizeof(size_t)) throw invalid_argument("Failed to read number of nodes");
+
+	size_t numEdges;
+	bytesRead = read(fd, &numEdges, sizeof(size_t));
+	if (bytesRead != sizeof(size_t)) throw invalid_argument("Failed to read number of edges");
+
+	size_t* connectivity = new size_t[numEdges * 2];
+	bytesRead = read(fd, connectivity, sizeof(size_t) * numEdges * 2);
+	if (bytesRead != sizeof(size_t) * numEdges * 2) throw invalid_argument("Failed to read edge endpoints list");
+
+	NodeData* nodeData = reinterpret_cast<NodeData*>(malloc(sizeof(NodeData) * numNodes));
+	bytesRead = read(fd, nodeData, sizeof(NodeData) * numNodes);
+	if (bytesRead != sizeof(NodeData) * numNodes) throw invalid_argument("Failed to read edge data list");
+
+	vector<OutNode*> nodes;
+	nodes.reserve(numNodes);
+	for (size_t i = 0; i < numNodes; i++) nodes.push_back(new OutNode(i, nodeData[i]));
+
+	vector<OutLink*> edges;
+	edges.reserve(numEdges);
+	for (size_t i = 0; i < numEdges; i++)
+		edges.push_back(new OutLink(nodes[connectivity[2 * i]], nodes[connectivity[2 * i + 1]], readEdge(fd, sfieldLen, strBuf)));
+
+	close(fd);
+	delete[] connectivity;
+	delete[] strBuf;
+	delete[] nodeData;
+
+	return OutGraph(nodes, edges, digraph);
+}
+
+template <UniqueSerializable NodeData, Serializable LinkData>
+arro::Graph<NodeData, LinkData> arro::Graph<NodeData, LinkData>::readFromBinFile(const std::string& path) {
+	using namespace std;
+
+	using OutGraph = Graph<NodeData, LinkData>;
+	using OutNode = OutGraph::Node;
+	using OutLink = OutGraph::Link;
+
+	int fd = open(path.c_str(), O_RDONLY);
+
+	if (fd == -1) throw invalid_argument("Unable to acquire graph file '" + path + "'");
+
+	unsigned char buf[2];
+	int bytesRead = read(fd, buf, 2);
+
+	if (bytesRead != 2 || buf[0] != 0x09 || buf[1] != 0x0B) throw invalid_argument("Failed to read magic bytes");
+
+	bytesRead = read(fd, buf, 1);
+	if (bytesRead != 1) throw invalid_argument("Failed to read digraph bit");
+
+	bool digraph = buf[0];
+
+	size_t sfieldLen;
+	bytesRead = read(fd, &sfieldLen, sizeof(size_t));
+	if (bytesRead != sizeof(size_t)) throw invalid_argument("Failed to read max str len");
+	char* strBuf = new char[sfieldLen + 1];
+
+	size_t numNodes;
+	bytesRead = read(fd, &numNodes, sizeof(size_t));
+	if (bytesRead != sizeof(size_t)) throw invalid_argument("Failed to read number of nodes");
+
+	size_t numEdges;
+	bytesRead = read(fd, &numEdges, sizeof(size_t));
+	if (bytesRead != sizeof(size_t)) throw invalid_argument("Failed to read number of edges");
+
+	size_t* connectivity = new size_t[numEdges * 2];
+	bytesRead = read(fd, connectivity, sizeof(size_t) * numEdges * 2);
+	if (bytesRead != sizeof(size_t) * numEdges * 2) throw invalid_argument("Failed to read edge endpoints list");
+
+	NodeData* nodeData = reinterpret_cast<NodeData*>(malloc(sizeof(NodeData) * numNodes));
+	bytesRead = read(fd, nodeData, sizeof(NodeData) * numNodes);
+	if (bytesRead != sizeof(NodeData) * numNodes) throw invalid_argument("Failed to read edge data list");
+
+	vector<OutNode*> nodes;
+	nodes.reserve(numNodes);
+	for (size_t i = 0; i < numNodes; i++) nodes.push_back(new OutNode(i, nodeData[i]));
+
+	LinkData* linkData = reinterpret_cast<LinkData*>(malloc(sizeof(LinkData) * numEdges));
+	bytesRead = read(fd, linkData, sizeof(LinkData) * numEdges);
+	if (bytesRead != sizeof(LinkData) * numEdges) throw invalid_argument("Failed to read edge data list");
+
+	vector<OutLink*> edges;
+	edges.reserve(numEdges);
+	for (size_t i = 0; i < numEdges; i++) edges.push_back(new OutLink(nodes[connectivity[2 * i]], nodes[connectivity[2 * i + 1]], linkData[i]));
+
+	close(fd);
+	delete[] connectivity;
+	delete[] strBuf;
+	delete[] nodeData;
+	delete[] linkData;
 
 	return OutGraph(nodes, edges, digraph);
 }

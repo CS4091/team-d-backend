@@ -4,6 +4,7 @@
 #include <math/aviation.h>
 #include <math/geospatial.h>
 #include <utils/Graph.h>
+#include <utils/bench.h>
 #include <utils/concepts.h>
 
 #include <algorithm>
@@ -77,19 +78,29 @@ struct AirwayData {
 
 	static nlohmann::json stringify(const AirwayData& airway);
 };
+
+struct ReducedAirwayData {
+	double minFuel;
+	double fuelPrice;
+	double time;
+
+	double cost(unsigned int passengers) const;
+
+	static nlohmann::json stringify(const ReducedAirwayData& airway);
+};
 }  // namespace data
 
 namespace __routing {
 struct PlaneLoc {
 	aviation::Plane plane;
-	const typename arro::Graph<data::AirportLatLng, data::AirwayData>::Node* loc;
+	const typename arro::Graph<data::AirportLatLng, data::ReducedAirwayData>::Node* loc;
 	double time;
 };
 
 bool operator>(const PlaneLoc& a, const PlaneLoc& b);
 
 struct RoutePlan {
-	std::map<std::string, std::list<const typename arro::Graph<data::AirportLatLng, data::AirwayData>::Node*>> route;
+	std::map<std::string, std::list<const typename arro::Graph<data::AirportLatLng, data::ReducedAirwayData>::Node*>> route;
 	std::priority_queue<PlaneLoc, std::vector<PlaneLoc>, std::greater<PlaneLoc>> planeOrder;
 	std::vector<data::RouteReq> remaining;
 	double cost;

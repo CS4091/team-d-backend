@@ -1,4 +1,4 @@
 #!/bin/bash
 
-cmake . > /dev/null
+cmake $@ . > /dev/null
 cmake --build .

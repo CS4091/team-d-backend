@@ -91,15 +91,49 @@ public:
 
 	// [devalue](https://github.com/Rich-Harris/devalue)-inspired graph-to-json serialization
 	void jsonDumpToFile(const std::string& path) const;
+
+	// Format:
+	// Magic bytes [\x09\x0B]
+	// Digraph bit [(u)i8]
+	// Max string field length [ui32]
+	// Number of nodes [ui32]
+	// Nodes [number of nodes * size determined by serializer]
+	// Number of edges [ui32]
+	// Edges [number of edges * size determined by serializer]
 	template <Routine<int, NodeData> NodeSerializer, Routine<int, LinkData> EdgeSerializer>
-	void binDumpToFile(const std::string& path, const NodeSerializer& dumpNode, const EdgeSerializer& dumpEdge) const;
+	void binDumpToFile(const std::string& path, std::size_t sfieldLen, const NodeSerializer& dumpNode, const EdgeSerializer& dumpEdge) const;
 
 	~Graph();
 
 	static Graph<NodeData, LinkData> readFrom(std::istream& in);
 	static Graph<NodeData, LinkData> readFromFile(const std::string& path);
-	template <Function<NodeData, int> NodeSerializer, Function<LinkData, int> EdgeSerializer>
+
+	// read a graph from binary-formatted file
+	// provide revival operators readNode & readEdge, of the form:
+	// ```cpp
+	// XXXXData readXXXX(int fd, std::size_t maxStrLen, char* strBuf)
+	// ```
+	// where:
+	// 		`fd` is the file descriptor to read from
+	// 		`maxStrLen` is the length of the largest string in any data field of the graph
+	// 		`strBuf` is a shared character buffer for the purpose of reading strings
+	//
+	// ---
+	//
+	// `strBuf` is guaranteed to have enough space for `maxStrLen + 1` characters. This is intended to allow for efficient one-pass reading,
+	// with the last byte being the null byte
+	// recommended to `memset` with null bytes before each use since `readFromBinFile` does not flush the buffer at any point
+	//
+	// ---
+	//
+	// Omit either of the serializers to indicate that that data can be directly read in from the file (direct file-to-ptr read)
+	template <Function<NodeData, int, std::size_t, char*> NodeSerializer, Function<LinkData, int, std::size_t, char*> EdgeSerializer>
 	static Graph<NodeData, LinkData> readFromBinFile(const std::string& path, const NodeSerializer& readNode, const EdgeSerializer& readEdge);
+	template <Function<NodeData, int, std::size_t, char*> NodeSerializer>
+	static Graph<NodeData, LinkData> readFromBinFile(const std::string& path, const NodeSerializer& readNode);
+	template <Function<LinkData, int, std::size_t, char*> EdgeSerializer>
+	static Graph<NodeData, LinkData> readFromBinFile(const std::string& path, const EdgeSerializer& readEdge);
+	static Graph<NodeData, LinkData> readFromBinFile(const std::string& path);
 
 private:
 	bool _digraph;
