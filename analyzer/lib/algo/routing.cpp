@@ -174,7 +174,7 @@ Routing arro::algo::findRoute(const vector<data::CityLatLng>& cities, const vect
 				if (connGraph[baselineReqRoutes[i].from]) {
 					size_t toIdx = connGraph[baselineReqRoutes[i].from]->idx, oldToIdx = connGraph[closestRoute.from]->idx;
 
-					if (masterTable[fromIdx][toIdx] < masterTable[fromIdx][oldToIdx] && connGraph[baselineReqRoutes[i].to]) {
+					if (masterTable(fromIdx, toIdx) < masterTable(fromIdx, oldToIdx) && connGraph[baselineReqRoutes[i].to]) {
 						closestRoute = baselineReqRoutes[i];
 						crIdx = i;
 					}
@@ -308,7 +308,7 @@ Routing arro::algo::findRoute(const vector<data::CityLatLng>& cities, const vect
 							[&route](const data::RouteReq& r) { return !(r.from == route.from && r.to == route.to); });
 
 					RoutePlan newEntry(entry.route, planeOrder, remaining, entry.cost);
-					newEntry.cost += masterTable[lastCity->idx][nextCity->idx];
+					newEntry.cost += masterTable(lastCity->idx, nextCity->idx);
 
 					list<const ConnNode*> path;
 

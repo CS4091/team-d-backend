@@ -15,24 +15,13 @@ std::vector<std::vector<double>> floydWarshall(const Graph<NodeData, LinkData>& 
 
 class BinFWTable {
 public:
-	class Row {
-	public:
-		Row() = delete;
-		Row(const BinFWTable* table, std::size_t idx) : _idx(idx), _table(table) {}
-		Row(const Row& other) : _idx(other._idx), _table(other._table) {}
-
-		const double& operator[](std::size_t idx) const;
-
-	private:
-		std::size_t _idx;
-		const BinFWTable* _table;
-	};
-
 	BinFWTable() = delete;
 	BinFWTable(double* buf, std::size_t sz) : _sz(sz), _buf(buf) {}
 	BinFWTable(BinFWTable&& other);
 
-	Row operator[](std::size_t idx) const;
+	// Use operator() since syntax highlighting for operator[] with multiple arguments doesn't work,
+	// and workarounds incur runtime costs
+	const double& operator()(std::size_t i, std::size_t j) const;
 
 	~BinFWTable();
 

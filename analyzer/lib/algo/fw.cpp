@@ -11,16 +11,11 @@ arro::algo::BinFWTable::~BinFWTable() {
 	if (_buf) delete[] _buf;
 }
 
-arro::algo::BinFWTable::Row arro::algo::BinFWTable::operator[](size_t idx) const {
-	if (idx >= _sz) throw out_of_range("Row index out of FW table bounds");
+const double& arro::algo::BinFWTable::operator()(size_t i, size_t j) const {
+	if (i >= _sz) throw out_of_range("Row index out of FW table bounds");
+	if (j >= _sz) throw out_of_range("Column index out of FW table bounds");
 
-	return Row(this, idx);
-}
-
-const double& arro::algo::BinFWTable::Row::operator[](size_t idx) const {
-	if (idx >= _table->_sz) throw out_of_range("Column index out of FW table bounds");
-
-	return _table->_buf[_idx * _table->_sz + idx];
+	return _buf[i * _sz + j];
 }
 
 void arro::algo::BinFWTable::binDumpToFile(const string& path, const vector<vector<double>>& table) {
