@@ -11,3 +11,11 @@ export const fullOrg = Prisma.validator<Prisma.OrganizationDefaultArgs>()({
 
 export type FullOrganization = Prisma.OrganizationGetPayload<typeof fullOrg>;
 
+export const publicInvite = Prisma.validator<Prisma.InviteDefaultArgs>()({
+	include: {
+		organization: true
+	}
+});
+
+export type PublicInvite = Prisma.InviteGetPayload<typeof publicInvite>;
+

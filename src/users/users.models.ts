@@ -15,7 +15,7 @@ export const meUser = Prisma.validator<Prisma.UserDefaultArgs>()({
 		password: true
 	},
 	include: {
-		activeInvites: true,
+		activeInvites: { include: { organization: { select: { id: true, name: true } } } },
 		organizations: true
 	}
 });

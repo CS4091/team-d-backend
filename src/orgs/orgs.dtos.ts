@@ -5,7 +5,7 @@ import { PlaneResponse } from 'src/assets/assets.dtos';
 import { PublicUserResponse } from 'src/users/users.dtos';
 import { PublicUser } from 'src/users/users.models';
 import { fi } from 'src/utils/utils';
-import { FullOrganization } from './orgs.models';
+import { FullOrganization, PublicInvite } from './orgs.models';
 
 export class CreateOrganizationDTO {
 	@IsString()
@@ -55,7 +55,7 @@ export class OrganizationResponse implements Organization {
 	id: string = fi();
 }
 
-export class InviteResponse implements Invite {
+export class InviteResponse implements PublicInvite {
 	@ApiProperty()
 	userId: string = fi();
 
@@ -67,6 +67,9 @@ export class InviteResponse implements Invite {
 
 	@ApiProperty()
 	createdAt: Date = fi();
+
+	@ApiProperty()
+	organization: OrganizationResponse = fi();
 }
 
 export class FullOrganizationResponse implements FullOrganization {
