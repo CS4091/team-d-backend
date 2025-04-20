@@ -13,10 +13,10 @@ export class AssetsService {
 	}
 
 	public async delete(organization: Organization, id: string) {
-                return this.db.plane.delete({
-                    where: { id_orgId: { id, orgId: organization.id } },
-                });
-    }
+		return this.db.plane.delete({
+			where: { id_orgId: { id, orgId: organization.id } }
+		});
+	}
 
 	public async update(data: UpdatePlaneDTO, organization: Organization, id: string): Promise<Plane> {
 		return this.db.plane.update({
