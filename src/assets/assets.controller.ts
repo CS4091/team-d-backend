@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, NotFoundException, Param, Patch, Post } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, NotFoundException, Param, Patch, Post } from '@nestjs/common';
 import { ApiResponse } from '@nestjs/swagger';
 import type { Plane, User } from '@prisma/client';
 import { Protected } from 'src/auth/protected.decorator';
@@ -8,10 +8,11 @@ import { OrgsService } from 'src/orgs/orgs.service';
 import { ReqUser } from 'src/utils/decorators/user.decorator';
 import { CreatePlaneDTO, PlaneResponse, UpdatePlaneDTO } from './assets.dtos';
 import { AssetsService } from './assets.service';
+import { AviationService } from 'src/aviation/aviation.service';
 
 @Controller('/organizations/:id/assets')
 export class AssetsController {
-	public constructor(private readonly service: AssetsService, private readonly organizations: OrgsService) {}
+	public constructor(public readonly aviationService: AviationService, private readonly service: AssetsService, private readonly organizations: OrgsService) {}
 
 	@Post()
 	@Protected()
@@ -20,6 +21,10 @@ export class AssetsController {
 		const org = await this.organizations.get({ id }, fullOrg);
 
 		if (!org || !org.users.some((u) => u.id === user.id)) throw new NotFoundException(`Organization with id '${id}' does not exist.`);
+
+        const airports = await this.aviationService.airports;
+        if(!airports.some((airport) => airport.id === data.homeBase))
+            throw new BadRequestException('Plane home base must be from the list of available airports.')
 
 		return this.service.create(data, org);
 	}
@@ -53,6 +58,11 @@ export class AssetsController {
 		const org = await this.organizations.get({ id }, fullOrg);
 
 		if (!org || !org.users.some((u) => u.id === user.id)) throw new NotFoundException(`Organization with id '${id}' does not exist.`);
+
+        const airports = await this.aviationService.airports;
+        if(!airports.some((airport) => airport.id === data.homeBase))
+            throw new BadRequestException('Plane home base must be from the list of available cities.')
+
 
 		return await this.service.update(updates, org, planeId);
 	}
