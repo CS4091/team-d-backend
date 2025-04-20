@@ -97,7 +97,7 @@ Routing arro::algo::findRoute(const vector<data::CityLatLng>& cities, const vect
 		ctx.start("Read Graphs");
 #endif
 
-		map<string, vector<vector<double>>> masterTables;  // master routing table for routing around empty aircraft
+		map<string, BinFWTable> masterTables;  // master routing table for routing around empty aircraft
 		for (auto plane : planes) {
 			if (!connGraphs.count(plane.model)) {
 				arro::bench::benchmark([&connGraphs, &plane, &masterTables](arro::bench::BenchmarkCtx& ctx) {
@@ -125,10 +125,8 @@ Routing arro::algo::findRoute(const vector<data::CityLatLng>& cities, const vect
 					ctx.stop();
 					ctx.start("Floyd Warshall");
 
-					// TODO: formulate binary format for floyd-warshall tables (x1k more expensive than graph reading at this point)
-					masterTables.emplace(plane.model, arro::algo::floydWarshall(connGraphs[plane.model], [](const data::ReducedAirwayData& airway) {
-											 return airway.cost(0);
-										 }));  // again, aircraft are empty
+					masterTables.emplace(plane.model, arro::algo::BinFWTable::readFromBinFile(filesystem::current_path() / "maps" /
+																							  (plane.model + ".binmrt")));	// again, aircraft are empty
 
 					ctx.stop();
 				});
@@ -165,7 +163,7 @@ Routing arro::algo::findRoute(const vector<data::CityLatLng>& cities, const vect
 			auto nextPlane = planeOrder.top();
 			planeOrder.pop();
 			const auto& connGraph = connGraphs[nextPlane.plane.model];
-			const auto& masterTable = masterTables[nextPlane.plane.model];
+			const auto& masterTable = masterTables.at(nextPlane.plane.model);
 
 			const ConnNode* planeLoc = nextPlane.loc;
 			size_t fromIdx = planeLoc->idx;
@@ -295,7 +293,7 @@ Routing arro::algo::findRoute(const vector<data::CityLatLng>& cities, const vect
 			planeOrder.pop();
 
 			const auto& connGraph = connGraphs[plane.model];
-			const auto& masterTable = masterTables[plane.model];
+			const auto& masterTable = masterTables.at(plane.model);
 
 			bool hasRoute = false;
 			for (auto route : entry.remaining) {

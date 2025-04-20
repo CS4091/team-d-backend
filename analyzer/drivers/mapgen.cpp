@@ -103,6 +103,9 @@ int main(int argc, char* argv[]) {
 
 				write(fd, &data, sizeof(arro::algo::data::ReducedAirwayData));
 			});
+		// Generate floyd-warshall routing tables (Master Routing Tables) with 0 passengers to route planes between routes
+		arro::algo::BinFWTable::binDumpToFile(plane.model + ".binmrt",
+											  arro::algo::floydWarshall(graph, [](const arro::algo::data::AirwayData& airway) { return airway.cost(0); }));
 		flatten(graph).jsonDumpToFile(plane.model + ".graph.json");
 	}
 

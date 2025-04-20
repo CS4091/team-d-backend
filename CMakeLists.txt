@@ -44,6 +44,7 @@ add_library(
 
 add_library(
 	algo SHARED
+	"${LIB}/algo/fw.cpp"
 	"${LIB}/algo/routing.cpp"
 	"${LIB}/algo/exceptions.cpp"
 )
