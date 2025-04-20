@@ -2,6 +2,10 @@
 
 #include <iostream>
 
+#include "dijkstra.h"
+#include "exceptions.h"
+#include "fw.h"
+
 using namespace std;
 using namespace arro;
 using namespace arro::algo;
@@ -128,6 +132,34 @@ Routing arro::algo::findRoute(const vector<data::CityLatLng>& cities, const vect
 		ctx.stop();
 #endif
 
+		vector<data::RouteError> errors;
+		for (auto req : requestedRoutes) {
+			data::RouteError err(req);
+
+			for (auto plane : planes) {
+				const auto& graph = connGraphs.at(plane.id);
+
+				auto home = graph[plane.homeBase], from = graph[req.from], to = graph[req.to];
+
+				if (!home) err.reasons.push_back(data::PlaneError(plane, "Plane's home base is impossible (too short runways)."));
+				if (!from) err.reasons.push_back(data::PlaneError(plane, "Plane cannot reach start of route."));
+				if (!to) err.reasons.push_back(data::PlaneError(plane, "Plane cannot reach start of route."));
+
+				if (!home || !from || !to) continue;
+
+				try {
+					dijkstra(graph, from, to, [](const CLData& airway) { return airway.cost(0); });
+				} catch (...) {
+					err.reasons.push_back(data::PlaneError(plane, "Plane cannot reach '" + req.to + "' from '" + req.from + "'."));
+					continue;
+				}
+			}
+
+			if (err.reasons.size() == planes.size()) errors.push_back(err);
+		}
+
+		if (errors.size() > 0) throw UnroutableException(errors);
+
 		map<string, list<const ConnNode*>> baselineRoute;
 		double baselineCost = 0;
 		min_pqueue<__routing::PlaneLoc> planeOrder;
@@ -149,7 +181,7 @@ Routing arro::algo::findRoute(const vector<data::CityLatLng>& cities, const vect
 
 		vector<data::RouteReq> baselineReqRoutes = requestedRoutes;
 		while (baselineReqRoutes.size() > 0) {
-			if (planeOrder.empty()) throw UnroutableException(baselineReqRoutes);
+			if (planeOrder.empty()) throw runtime_error("Empty baseline plane order.");
 
 			auto nextPlane = planeOrder.top();
 			planeOrder.pop();
@@ -333,7 +365,7 @@ Routing arro::algo::findRoute(const vector<data::CityLatLng>& cities, const vect
 
 			if (!hasRoute) {
 				if (entry.planeOrder.size() == 1)
-					throw UnroutableException(entry.remaining);
+					throw runtime_error("Undetected unroutability");
 				else {
 					entry.planeOrder.pop();
 					queue.push_back(entry);
@@ -343,7 +375,7 @@ Routing arro::algo::findRoute(const vector<data::CityLatLng>& cities, const vect
 			make_heap(queue.begin(), queue.end(), std::greater{});
 		}
 
-		throw UnroutableException(requestedRoutes);
+		throw runtime_error("Undetected unroutability");
 
 #ifdef BENCHMARK
 	});

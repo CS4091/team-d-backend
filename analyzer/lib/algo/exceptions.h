@@ -1,17 +1,30 @@
 #ifndef EXCEPTIONS_H
 #define EXCEPTIONS_H
 
+#include <math/aviation.h>
 #include <utils/Graph.h>
 #include <utils/concepts.h>
 
 #include <stdexcept>
 #include <string>
+#include <vector>
+
+#include "routing.h"
 
 namespace arro {
 namespace algo {
 namespace data {
 struct RouteReq;
 
+struct PlaneError {
+	aviation::Plane plane;
+	std::string reason;
+};
+
+struct RouteError {
+	RouteReq req;
+	std::vector<PlaneError> reasons;
+};
 }  // namespace data
 
 template <UniqueSerializable NodeData, Serializable LinkData>
@@ -35,9 +48,9 @@ public:
 
 class UnroutableException : public std::out_of_range {
 public:
-	UnroutableException(const std::vector<data::RouteReq>& routes);
+	UnroutableException(const std::vector<data::RouteError>& errors);
 
-	const std::vector<data::RouteReq> routes;
+	const std::vector<data::RouteError> errors;
 };
 }  // namespace algo
 }  // namespace arro

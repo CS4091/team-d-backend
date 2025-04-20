@@ -76,15 +76,21 @@ export class RoutingService {
 		writeFileSync(`processing/${opid}/routes.json`, JSON.stringify(routes.map(([from, to]) => ({ from, to }))));
 		writeFileSync(`processing/${opid}/planes.json`, JSON.stringify(assets.map(({ id, homeBase, specs }) => ({ id, homeBase, ...specs }))));
 
-		return this.process(opid)
-			.then(() => {
+		return this.process(opid).then(() => {
+			try {
 				const plan = JSON.parse(readFileSync(`processing/${opid}/routing.json`).toString());
 
 				rmSync(`processing/${opid}`, { recursive: true });
 
 				return plan;
-			})
-			.catch((err) => console.error(err));
+			} catch {
+				const errs = JSON.parse(readFileSync(`processing/${opid}/errors.json`).toString());
+
+				rmSync(`processing/${opid}`, { recursive: true });
+
+				throw errs;
+			}
+		});
 	}
 
 	public async prep(cities: City[], planes: PlaneModel[]): Promise<void> {
