@@ -39,11 +39,11 @@ export class AssetsController {
 	@Protected()
 	@ApiResponse({ type: PlaneResponse })
 	public async deletePlane(@ReqUser() user: User, @Param() { id, planeId }: OrganizationPlaneIDDTO)  {
-	    const org = await this.organizations.get({ id }, fullOrg);
+	        const org = await this.organizations.get({ id }, fullOrg);
 
 		if (!org || !org.users.some((u) => u.id === user.id)) throw new NotFoundException(`Organization with id '${id}' does not exist.`);
 
-	    return this.service.delete(org, planeId);
+	        return this.service.delete(org, planeId);
 	}
 
 	@Patch('/:planeId')
