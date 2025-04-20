@@ -100,36 +100,27 @@ Routing arro::algo::findRoute(const vector<data::CityLatLng>& cities, const vect
 		map<string, BinFWTable> masterTables;  // master routing table for routing around empty aircraft
 		for (auto plane : planes) {
 			if (!connGraphs.count(plane.model)) {
-				arro::bench::benchmark([&connGraphs, &plane, &masterTables](arro::bench::BenchmarkCtx& ctx) {
-					ctx.start("Read");
+				connGraphs.emplace(plane.model, ConnGraph::readFromBinFile(filesystem::current_path() / "maps" / (plane.model + ".bing"),
+																		   [](int fd, size_t maxStrLen, char* buf) {
+																			   data::AirportLatLng airport;
 
-					connGraphs.emplace(plane.model, ConnGraph::readFromBinFile(filesystem::current_path() / "maps" / (plane.model + ".bing"),
-																			   [](int fd, size_t maxStrLen, char* buf) {
-																				   data::AirportLatLng airport;
+																			   memset(buf, '\0', maxStrLen + 1);
+																			   read(fd, buf, maxStrLen);
+																			   airport.id = string(buf);
 
-																				   memset(buf, '\0', maxStrLen + 1);
-																				   read(fd, buf, maxStrLen);
-																				   airport.id = string(buf);
+																			   memset(buf, '\0', maxStrLen + 1);
+																			   read(fd, buf, maxStrLen);
+																			   airport.city = string(buf);
 
-																				   memset(buf, '\0', maxStrLen + 1);
-																				   read(fd, buf, maxStrLen);
-																				   airport.city = string(buf);
+																			   read(fd, &airport.lat, sizeof(double));
+																			   read(fd, &airport.lng, sizeof(double));
+																			   read(fd, &airport.fuel, sizeof(double));
 
-																				   read(fd, &airport.lat, sizeof(double));
-																				   read(fd, &airport.lng, sizeof(double));
-																				   read(fd, &airport.fuel, sizeof(double));
+																			   return airport;
+																		   }));
 
-																				   return airport;
-																			   }));
-
-					ctx.stop();
-					ctx.start("Floyd Warshall");
-
-					masterTables.emplace(plane.model, arro::algo::BinFWTable::readFromBinFile(filesystem::current_path() / "maps" /
-																							  (plane.model + ".binmrt")));	// again, aircraft are empty
-
-					ctx.stop();
-				});
+				masterTables.emplace(plane.model, arro::algo::BinFWTable::readFromBinFile(filesystem::current_path() / "maps" /
+																						  (plane.model + ".binmrt")));	// again, aircraft are empty
 			}
 		}
 
