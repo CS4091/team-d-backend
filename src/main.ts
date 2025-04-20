@@ -11,6 +11,7 @@ import { AuthGuard } from './auth/auth.guard';
 import { svelte } from './client/template-engine';
 import { ErrorPageFilter } from './utils/filters/error-page.filter';
 import { RedirectFilter } from './utils/filters/redirect.filter';
+import { LoggingInterceptor } from './utils/interceptors/logging.interceptor';
 import { RoutingInterceptor } from './utils/interceptors/routing.interceptor';
 
 async function bootstrap() {
@@ -26,7 +27,7 @@ async function bootstrap() {
 		.useGlobalGuards(new AuthGuard(app.get(Reflector)))
 		.useGlobalPipes(new ValidationPipe({ transform: true, transformOptions: { enableImplicitConversion: true } }))
 		.useGlobalFilters(new ErrorPageFilter(app.get(HttpAdapterHost).httpAdapter), new RedirectFilter())
-		.useGlobalInterceptors(new RoutingInterceptor())
+		.useGlobalInterceptors(new RoutingInterceptor(), new LoggingInterceptor())
 		.enableCors({ origin: true });
 
 	if (process.env.NODE_ENV !== 'development') {
