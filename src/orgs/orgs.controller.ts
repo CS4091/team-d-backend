@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Get, InternalServerErrorException, NotFoundException, Param, Patch, Post, Query } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, InternalServerErrorException, NotFoundException, Param, Patch, Post } from '@nestjs/common';
 import { ApiResponse } from '@nestjs/swagger';
 import type { Invite, Organization, User } from '@prisma/client';
 import { Protected } from 'src/auth/protected.decorator';
@@ -30,7 +30,7 @@ export class OrgsController {
 	@Post('/:id/invite')
 	@Protected()
 	@ApiResponse({ type: InviteResponse })
-	public async inviteUser(@ReqUser() user: User, @Param() orgId: OrganizationIDDTO, @Query() { userId }: CreateInviteDTO): Promise<Invite> {
+	public async inviteUser(@ReqUser() user: User, @Param() orgId: OrganizationIDDTO, @Body() { userId }: CreateInviteDTO): Promise<Invite> {
 		const org = await this.service.get(orgId, fullOrg);
 
 		if (!org || !org.users.some((u) => u.id === user.id)) throw new NotFoundException(`Organization with id '${orgId.id}' does not exist.`);
@@ -53,7 +53,7 @@ export class OrgsController {
 	@Post('/accept-invite')
 	@Protected()
 	@ApiResponse({ type: OrganizationResponse })
-	public async acceptInvite(@ReqUser() user: User, @Query() { token }: AcceptInviteDTO): Promise<Organization> {
+	public async acceptInvite(@ReqUser() user: User, @Body() { token }: AcceptInviteDTO): Promise<Organization> {
 		try {
 			return await this.service.acceptInvite(user, token);
 		} catch (err: unknown) {
