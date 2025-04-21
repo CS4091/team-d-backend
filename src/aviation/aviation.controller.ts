@@ -59,7 +59,7 @@ export class AviationController {
 		const missingPlane = speccedPlanes.find((plane) => !plane.specs);
 		if (missingPlane) throw new BadRequestException(`Unknown plane model '${missingPlane.model}'.`);
 
-		return this.routing.route(cities, demand, speccedPlanes as any);
+		return this.routing.route(cities, await this.service.airports, demand, speccedPlanes as any);
 	}
 
 	@Post('/prep')

@@ -5,7 +5,7 @@ import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 import { existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'fs';
 import { cwd } from 'process';
 import { RouteResult } from './aviation.dtos';
-import { City, PlaneModel } from './aviation.models';
+import { Airport, City, PlaneModel } from './aviation.models';
 
 @Injectable()
 export class RoutingService {
@@ -68,11 +68,12 @@ export class RoutingService {
 		});
 	}
 
-	public async route(cities: City[], routes: [string, string][], assets: (Plane & { specs: PlaneModel })[]): Promise<RouteResult> {
+	public async route(cities: City[], airports: Airport[], routes: [string, string][], assets: (Plane & { specs: PlaneModel })[]): Promise<RouteResult> {
 		const opid = createId();
 		mkdirSync(`processing/${opid}`);
 
 		writeFileSync(`processing/${opid}/cities.json`, JSON.stringify(cities));
+		writeFileSync(`processing/${opid}/airports.json`, JSON.stringify(airports));
 		writeFileSync(`processing/${opid}/routes.json`, JSON.stringify(routes.map(([from, to]) => ({ from, to }))));
 		writeFileSync(`processing/${opid}/planes.json`, JSON.stringify(assets.map(({ id, homeBase, specs }) => ({ id, homeBase, ...specs }))));
 
