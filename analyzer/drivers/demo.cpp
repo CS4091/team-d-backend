@@ -37,6 +37,16 @@ int main(int argc, char* argv[]) {
 	vector<arro::algo::data::CityLatLng> cities = readArray<arro::algo::data::CityLatLng>("cities.json");
 	vector<arro::algo::data::RouteReq> routes = readArray<arro::algo::data::RouteReq>("routes.json");
 	vector<arro::aviation::Plane> planes = readArray<arro::aviation::Plane>("planes.json");
+	vector<arro::algo::data::AirportWithRunways> airports = readArray<arro::algo::data::AirportWithRunways>("airports.json");
+
+	for (auto& req : routes) {
+		auto from = find_if(airports.begin(), airports.end(), [&req](const arro::algo::data::AirportWithRunways& airport) { return airport.id == req.from; }),
+			 to = find_if(airports.begin(), airports.end(), [&req](const arro::algo::data::AirportWithRunways& airport) { return airport.id == req.to; });
+
+		auto fromLoc = arro::geospatial::llToRect(from->lat, from->lng), toLoc = arro::geospatial::llToRect(to->lat, to->lng);
+
+		req.approxCost = ((toLoc - fromLoc).magnitude()) * arro::aviation::FUEL_ECONOMY * from->fuel;
+	}
 
 	arro::algo::Routing routing = arro::algo::findRoute(cities, routes, planes);
 

@@ -1,5 +1,6 @@
 #include <algo/exceptions.h>
 #include <algo/routing.h>
+#include <math/geospatial.h>
 #include <sys/ioctl.h>
 #include <utils/Graph.h>
 
@@ -52,6 +53,26 @@ void processRouting(path id) {
 	vector<arro::algo::data::CityLatLng> cities = readArray<arro::algo::data::CityLatLng>(id / "cities.json");
 	vector<arro::algo::data::RouteReq> routes = readArray<arro::algo::data::RouteReq>(id / "routes.json");
 	vector<arro::aviation::Plane> planes = readArray<arro::aviation::Plane>(id / "planes.json");
+	vector<arro::algo::data::AirportWithRunways> airports = readArray<arro::algo::data::AirportWithRunways>(id / "airports.json");
+
+	for (auto& req : routes) {
+		auto from = find_if(airports.begin(), airports.end(), [&req](const arro::algo::data::AirportWithRunways& airport) { return airport.id == req.from; }),
+			 to = find_if(airports.begin(), airports.end(), [&req](const arro::algo::data::AirportWithRunways& airport) { return airport.id == req.to; });
+
+		if (from == airports.end() || to == airports.end()) {
+			ofstream eOut(id / "errors.json");
+			eOut << json{{"type", "bad req"}, {"reason", "Nonexistent airport in requested routes"}};
+			eOut.close();
+
+			lock_guard lock(streamMutex);
+			cout << string(id) << endl;
+			return;
+		}
+
+		auto fromLoc = arro::geospatial::llToRect(from->lat, from->lng), toLoc = arro::geospatial::llToRect(to->lat, to->lng);
+
+		req.approxCost = ((toLoc - fromLoc).magnitude()) * arro::aviation::FUEL_ECONOMY * from->fuel;
+	}
 
 	try {
 		arro::algo::Routing routing = arro::algo::findRoute(cities, routes, planes);

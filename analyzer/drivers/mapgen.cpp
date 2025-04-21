@@ -99,7 +99,7 @@ int main(int argc, char* argv[]) {
 				write(fd, &airport.fuel, sizeof(double));
 			},
 			[](int fd, const arro::algo::data::AirwayData& airway) {
-				arro::algo::data::ReducedAirwayData data{airway.data.minFuel, airway.fuelPrice, airway.data.time};
+				arro::algo::data::ReducedAirwayData data{airway.data.minFuel, airway.fuelPrice, airway.data.time, airway.data.totalLateral};
 
 				write(fd, &data, sizeof(arro::algo::data::ReducedAirwayData));
 			});

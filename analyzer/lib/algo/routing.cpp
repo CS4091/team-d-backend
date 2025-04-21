@@ -42,7 +42,7 @@ json data::AirwayData::stringify(const AirwayData& airway) {
 }
 
 double data::ReducedAirwayData::cost(unsigned int passengers) const {
-	return (minFuel + aviation::FE_PER_PASSENGER * passengers) * fuelPrice;
+	return (minFuel + aviation::FE_PER_PASSENGER * passengers * lateral) * fuelPrice;
 }
 
 json data::ReducedAirwayData::stringify(const ReducedAirwayData& airway) {
@@ -54,7 +54,7 @@ json __routing::PlannedFlight::stringify(const PlannedFlight& flight) {
 }
 
 bool __routing::operator>(const RoutePlan& a, const RoutePlan& b) {
-	return a.cost > b.cost;
+	return a.cost + a.reqCost > b.cost + b.reqCost;
 }
 
 bool __routing::operator>(const PotentialFlight& a, const PotentialFlight& b) {
@@ -137,7 +137,7 @@ Routing arro::algo::findRoute(const vector<data::CityLatLng>& cities, const vect
 			data::RouteError err(req);
 
 			for (auto plane : planes) {
-				const auto& graph = connGraphs.at(plane.id);
+				const auto& graph = connGraphs.at(plane.model);
 
 				auto home = graph[plane.homeBase], from = graph[req.from], to = graph[req.to];
 
@@ -267,7 +267,10 @@ Routing arro::algo::findRoute(const vector<data::CityLatLng>& cities, const vect
 
 		vector<RoutePlan> queue(1);
 		queue[0].cost = 0;
+		queue[0].reqCost = 0;
 		copy(requestedRoutes.begin(), requestedRoutes.end(), back_inserter(queue[0].remaining));
+
+		for (auto req : requestedRoutes) queue[0].reqCost += req.approxCost;
 		for (auto plane : planes) {
 			list<const ConnNode*> path;
 
@@ -332,11 +335,10 @@ Routing arro::algo::findRoute(const vector<data::CityLatLng>& cities, const vect
 					hasRoute = true;
 
 					double endTime = nextPlane.time;
-					vector<data::RouteReq> remaining;
-					copy_if(entry.remaining.begin(), entry.remaining.end(), back_inserter(remaining),
-							[&route](const data::RouteReq& r) { return !(r.from == route.from && r.to == route.to); });
 
-					RoutePlan newEntry(entry.route, planeOrder, remaining, entry.cost);
+					RoutePlan newEntry(entry.route, planeOrder, vector<data::RouteReq>(), entry.cost, entry.reqCost - route.approxCost);
+					copy_if(entry.remaining.begin(), entry.remaining.end(), back_inserter(newEntry.remaining),
+							[&route](const data::RouteReq& r) { return !(r.from == route.from && r.to == route.to); });
 					newEntry.cost += masterTable(lastCity->idx, nextCity->idx);
 
 					list<const ConnNode*> path;
