@@ -5,13 +5,28 @@ import { Protected } from 'src/auth/protected.decorator';
 import { UpdateNameDTO } from 'src/users/users.dtos';
 import { UsersService } from 'src/users/users.service';
 import { ReqUser } from 'src/utils/decorators/user.decorator';
-import { AcceptInviteDTO, CreateInviteDTO, CreateOrganizationDTO, InviteResponse, OrganizationIDDTO, OrganizationResponse } from './orgs.dtos';
-import { fullOrg } from './orgs.models';
+import {
+	AcceptInviteDTO,
+	CreateInviteDTO,
+	CreateOrganizationDTO,
+	FullOrganizationResponse,
+	InviteResponse,
+	OrganizationIDDTO,
+	OrganizationResponse
+} from './orgs.dtos';
+import { fullOrg, FullOrganization } from './orgs.models';
 import { OrgsService } from './orgs.service';
 
 @Controller('/organizations')
 export class OrgsController {
 	public constructor(private readonly service: OrgsService, private readonly users: UsersService) {}
+
+	@Get('/:id')
+	@Protected()
+	@ApiResponse({ type: FullOrganizationResponse })
+	public async getOrg(@ReqUser() user: User, @Param() { id }: OrganizationIDDTO): Promise<FullOrganization> {
+		return this.service.getOrThrow({ id, users: { some: { id: user.id } } }, fullOrg);
+	}
 
 	@Get()
 	@Protected()

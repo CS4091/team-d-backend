@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import type { Invite, Organization, Plane } from '@prisma/client';
+import type { Organization, Plane } from '@prisma/client';
 import { IsString } from 'class-validator';
 import { PlaneResponse } from 'src/assets/assets.dtos';
 import { PublicUserResponse } from 'src/users/users.dtos';
@@ -74,7 +74,7 @@ export class InviteResponse implements PublicInvite {
 
 export class FullOrganizationResponse implements FullOrganization {
 	@ApiProperty({ type: () => InviteResponse, isArray: true })
-	activeInvites: Invite[] = fi();
+	activeInvites: InviteResponse[] = fi();
 
 	@ApiProperty({ type: () => PublicUserResponse, isArray: true })
 	users: PublicUser[] = fi();
