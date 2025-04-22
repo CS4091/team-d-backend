@@ -75,7 +75,7 @@ export class Airport {
 	@ApiProperty()
 	lng: number = fi();
 
-	@ApiProperty({ type: Runway })
+	@ApiProperty({ type: Runway, isArray: true })
 	runways: Runway[] = fi();
 }
 
