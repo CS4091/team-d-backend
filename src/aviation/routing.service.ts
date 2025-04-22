@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { createId } from '@paralleldrive/cuid2';
 import type { Plane } from '@prisma/client';
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
@@ -89,7 +89,7 @@ export class RoutingService {
 
 				rmSync(`processing/${opid}`, { recursive: true });
 
-				throw errs;
+				throw new BadRequestException(errs);
 			}
 		});
 	}
