@@ -3,7 +3,8 @@ import { publicUser } from 'src/users/users.models';
 
 export const publicInvite = Prisma.validator<Prisma.InviteDefaultArgs>()({
 	include: {
-		organization: true
+		organization: true,
+		user: publicUser
 	}
 });
 

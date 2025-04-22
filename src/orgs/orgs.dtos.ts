@@ -70,6 +70,9 @@ export class InviteResponse implements PublicInvite {
 
 	@ApiProperty()
 	organization: OrganizationResponse = fi();
+
+	@ApiProperty()
+	user: PublicUserResponse = fi();
 }
 
 export class FullOrganizationResponse implements FullOrganization {
