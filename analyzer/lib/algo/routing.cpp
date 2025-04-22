@@ -147,12 +147,15 @@ Routing arro::algo::findRoute(const vector<data::CityLatLng>& cities, const vect
 
 				if (!home || !from || !to) continue;
 
-				try {
-					dijkstra(graph, home, from, [](const CLData& airway) { return airway.cost(0); });
-				} catch (...) {
-					err.reasons.push_back(data::PlaneError(plane, "Plane cannot reach '" + req.from + "' from its home base '" + plane.homeBase + "'."));
-					continue;
+				if (home != from) {
+					try {
+						dijkstra(graph, home, from, [](const CLData& airway) { return airway.cost(0); });
+					} catch (...) {
+						err.reasons.push_back(data::PlaneError(plane, "Plane cannot reach '" + req.from + "' from its home base '" + plane.homeBase + "'."));
+						continue;
+					}
 				}
+
 				try {
 					dijkstra(graph, from, to, [](const CLData& airway) { return airway.cost(0); });
 				} catch (...) {
