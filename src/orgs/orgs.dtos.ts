@@ -68,10 +68,10 @@ export class InviteResponse implements PublicInvite {
 	@ApiProperty()
 	createdAt: Date = fi();
 
-	@ApiProperty()
+	@ApiProperty({ type: () => OrganizationResponse })
 	organization: OrganizationResponse = fi();
 
-	@ApiProperty()
+	@ApiProperty({ type: () => PublicUserResponse })
 	user: PublicUserResponse = fi();
 }
 
