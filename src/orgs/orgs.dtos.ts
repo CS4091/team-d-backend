@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import type { Organization, Plane } from '@prisma/client';
 import { IsString } from 'class-validator';
 import { PlaneResponse } from 'src/assets/assets.dtos';
-import { PublicUserResponse } from 'src/users/users.dtos';
+import { PublicUserResponse } from 'src/users/dtos/public.user.dto';
 import { PublicUser } from 'src/users/users.models';
 import { fi } from 'src/utils/utils';
 import { FullOrganization, PublicInvite } from './orgs.models';

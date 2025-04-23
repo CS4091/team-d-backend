@@ -4,7 +4,7 @@ import { IsEmail, IsString } from 'class-validator';
 import { InviteResponse, OrganizationResponse } from 'src/orgs/orgs.dtos';
 import { PublicInvite } from 'src/orgs/orgs.models';
 import { fi } from 'src/utils/utils';
-import { MeUser, PublicUser } from './users.models';
+import { MeUser } from './users.models';
 
 export class RegisterDTO {
 	@IsString()
@@ -36,17 +36,6 @@ export class UpdateNameDTO {
 	@IsString()
 	@ApiProperty()
 	name: string = fi();
-}
-
-export class PublicUserResponse implements PublicUser {
-	@ApiProperty()
-	name: string = fi();
-
-	@ApiProperty()
-	id: string = fi();
-
-	@ApiProperty()
-	email: string = fi();
 }
 
 export class MeUserResponse implements MeUser {

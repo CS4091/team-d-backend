@@ -4,7 +4,8 @@ import type { User } from '@prisma/client';
 import { Protected } from 'src/auth/protected.decorator';
 import { UsersService } from 'src/users/users.service';
 import { ReqUser } from 'src/utils/decorators/user.decorator';
-import { LoginDTO, MeUserResponse, PublicUserResponse, RegisterDTO, UpdateNameDTO } from './users.dtos';
+import { PublicUserResponse } from './dtos/public.user.dto';
+import { LoginDTO, MeUserResponse, RegisterDTO, UpdateNameDTO } from './users.dtos';
 import { meUser, MeUser, publicUser } from './users.models';
 
 @Controller('/users')
