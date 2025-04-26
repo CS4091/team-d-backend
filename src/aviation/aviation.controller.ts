@@ -46,6 +46,7 @@ export class AviationController {
 			!demand.every(
 				({ from, to, passengers }) =>
 					passengers > 0 &&
+					from !== to &&
 					Number.isInteger(passengers) &&
 					airports.some((airport) => airport.id === from) &&
 					airports.some((airport) => airport.id === to)
