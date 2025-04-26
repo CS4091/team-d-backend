@@ -71,7 +71,8 @@ void processRouting(path id) {
 
 		auto fromLoc = arro::geospatial::llToRect(from->lat, from->lng), toLoc = arro::geospatial::llToRect(to->lat, to->lng);
 
-		req.approxCost = ((toLoc - fromLoc).magnitude()) * arro::aviation::FUEL_ECONOMY * from->fuel;
+		req.approxCost =
+			((toLoc - fromLoc).magnitude()) * arro::aviation::FUEL_ECONOMY * from->fuel + req.passengers * arro::aviation::FE_PER_PASSENGER * from->fuel;
 	}
 
 	try {

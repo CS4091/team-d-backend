@@ -44,14 +44,14 @@ export class AviationController {
 			airports = await this.service.airports;
 		if (
 			!demand.every(
-				(pair) =>
-					pair.length === 2 &&
-					pair[0] !== pair[1] &&
-					(cities.some((city) => city.name === pair[0]) || airports.some((airport) => airport.id === pair[0])) &&
-					(cities.some((city) => city.name === pair[1]) || airports.some((airport) => airport.id === pair[1]))
+				({ from, to, passengers }) =>
+					passengers > 0 &&
+					Number.isInteger(passengers) &&
+					airports.some((airport) => airport.id === from) &&
+					airports.some((airport) => airport.id === to)
 			)
 		)
-			throw new BadRequestException('Demand must be an array of [from, to] tuples with from != to, each in the list of available cities.');
+			throw new BadRequestException('Demand must be an array of object requests with req.from != req.to, each in the list of available airports.');
 
 		const planeModels = await this.service.planes;
 		const speccedPlanes = org.planes.map((plane) => ({ ...plane, specs: planeModels.find((p) => p.model === plane.model) }));

@@ -1,19 +1,32 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsString } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsArray, IsInt, IsString, ValidateNested } from 'class-validator';
 import { fi } from 'src/utils/utils';
+
+export class RouteRequest {
+	@IsString()
+	@ApiProperty()
+	from: string = fi();
+
+	@IsString()
+	@ApiProperty()
+	to: string = fi();
+
+	@IsInt()
+	@ApiProperty()
+	passengers: number = fi();
+}
 
 export class RouteScenario {
 	@IsString()
 	@ApiProperty()
 	organizationId: string = fi();
 
-	@IsArray({ each: true })
-	@ApiProperty({
-		type: 'array',
-		items: { type: 'array', maxLength: 2, minLength: 2, example: ['from', 'to'], items: { type: 'string' } },
-		description: 'Array of [from, to] tuples indicating desired routes'
-	})
-	demand: [string, string][] = fi();
+	@IsArray()
+	@Type(() => RouteRequest)
+	@ValidateNested({ each: true })
+	@ApiProperty()
+	demand: RouteRequest[] = fi();
 }
 
 export class RouteStats {

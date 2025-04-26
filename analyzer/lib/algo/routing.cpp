@@ -213,11 +213,18 @@ Routing arro::algo::findRoute(const vector<data::CityLatLng>& cities, const vect
 				}
 			}
 
-			baselineReqRoutes.erase(baselineReqRoutes.begin() + crIdx);
-
 			const ConnNode *from = connGraph[closestRoute.from], *to = connGraph[closestRoute.to];
 
 			if (!from || !to) continue;	 // plane has no available routes to service
+
+			if (closestRoute.passengers <= nextPlane.plane.passengers) {
+				baselineReqRoutes.erase(baselineReqRoutes.begin() + crIdx);
+			} else {
+				baselineReqRoutes[crIdx].passengers -= nextPlane.plane.passengers;
+				baselineReqRoutes[crIdx].approxCost -= nextPlane.plane.passengers * FE_PER_PASSENGER * from->data().fuel;
+			}
+
+			unsigned int passengersTaken = min(closestRoute.passengers, nextPlane.plane.passengers);
 
 			list<const ConnNode*> path;
 			double endTime = nextPlane.time;
@@ -234,7 +241,8 @@ Routing arro::algo::findRoute(const vector<data::CityLatLng>& cities, const vect
 				}
 			}
 
-			path = arro::algo::dijkstra<CNData, CLData>(connGraph, from, to, [](const data::ReducedAirwayData& airway) { return airway.cost(1); });
+			path = arro::algo::dijkstra<CNData, CLData>(connGraph, from, to,
+														[passengersTaken](const data::ReducedAirwayData& airway) { return airway.cost(passengersTaken); });
 
 			for (auto it = next(path.begin()); it != path.end(); it++) {
 				baselineRoute[nextPlane.plane.id].push_back(*it);
@@ -342,7 +350,14 @@ Routing arro::algo::findRoute(const vector<data::CityLatLng>& cities, const vect
 					RoutePlan newEntry(entry.route, planeOrder, vector<data::RouteReq>(), entry.cost, entry.reqCost - route.approxCost);
 					copy_if(entry.remaining.begin(), entry.remaining.end(), back_inserter(newEntry.remaining),
 							[&route](const data::RouteReq& r) { return !(r.from == route.from && r.to == route.to); });
+					if (plane.passengers < route.passengers) {
+						entry.remaining.push_back(route);
+						entry.remaining.back().passengers -= plane.passengers;
+						entry.remaining.back().approxCost -= plane.passengers * FE_PER_PASSENGER * nextCity->data().fuel;
+					}
 					newEntry.cost += masterTable(lastCity->idx, nextCity->idx);
+
+					unsigned int passengersTaken = min(route.passengers, plane.passengers);
 
 					list<const ConnNode*> path;
 
@@ -358,7 +373,8 @@ Routing arro::algo::findRoute(const vector<data::CityLatLng>& cities, const vect
 						}
 					}
 
-					path = dijkstra<CNData, CLData>(connGraph, nextCity, routeEnd, [](const data::ReducedAirwayData& airway) { return airway.cost(1); });
+					path = dijkstra<CNData, CLData>(connGraph, nextCity, routeEnd,
+													[passengersTaken](const data::ReducedAirwayData& airway) { return airway.cost(passengersTaken); });
 
 					for (auto it = next(path.begin()); it != path.end(); it++) {
 						newEntry.route[nextPlane.plane.id].push_back(*it);

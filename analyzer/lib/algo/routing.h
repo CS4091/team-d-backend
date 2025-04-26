@@ -63,10 +63,11 @@ struct CityLatLng {
 struct RouteReq {
 	std::string from;
 	std::string to;
+	unsigned int passengers;
 	double approxCost;
 
 	// approximate cost used for A* routing, default of 0 reverts to Dijkstra's
-	RouteReq(const nlohmann::json& obj) : from(obj["from"]), to(obj["to"]), approxCost(0) {}
+	RouteReq(const nlohmann::json& obj) : from(obj["from"]), to(obj["to"]), passengers(obj["passengers"]), approxCost(0) {}
 };
 
 struct AirwayData {

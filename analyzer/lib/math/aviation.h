@@ -26,6 +26,7 @@ struct Plane {
 	std::string homeBase;
 	std::string model;
 	double range;
+	unsigned int passengers;
 	double takeoffRunway;
 	double landingRunway;
 	double climb5kAirspeed;
@@ -41,6 +42,7 @@ struct Plane {
 		  homeBase(obj.count("homeBase") ? obj["homeBase"] : ""),  // needs to be optional for mapgen
 		  model(obj["model"]),
 		  range(obj["range"]),
+		  passengers(obj["passengers"]),
 		  takeoffRunway(obj["takeoffRunway"]),
 		  landingRunway(obj["landingRunway"]),
 		  climb5kAirspeed(obj["climb5kAirspeed"]),
