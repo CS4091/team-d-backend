@@ -25,7 +25,7 @@ export class RouteScenario {
 	@IsArray()
 	@Type(() => RouteRequest)
 	@ValidateNested({ each: true })
-	@ApiProperty()
+	@ApiProperty({ type: RouteRequest, isArray: true })
 	demand: RouteRequest[] = fi();
 }
 
