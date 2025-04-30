@@ -169,6 +169,7 @@ Routing arro::algo::findRoute(const vector<data::CityLatLng>& cities, const vect
 		if (errors.size() > 0) throw UnroutableException(errors);
 
 		map<string, list<const ConnNode*>> baselineRoute;
+		map<string, double> baselineTimes;
 		double baselineCost = 0;
 		min_pqueue<__routing::PlaneLoc> planeOrder;
 
@@ -219,7 +220,10 @@ Routing arro::algo::findRoute(const vector<data::CityLatLng>& cities, const vect
 
 			const ConnNode *from = connGraph[closestRoute.from], *to = connGraph[closestRoute.to];
 
-			if (!from || !to) continue;	 // plane has no available routes to service
+			if (!from || !to) {
+				baselineTimes.emplace(nextPlane.plane.id, nextPlane.time);
+				continue;  // plane has no available routes to service
+			}
 
 			if (closestRoute.passengers <= nextPlane.plane.passengers) {
 				baselineReqRoutes.erase(baselineReqRoutes.begin() + crIdx);
@@ -257,6 +261,13 @@ Routing arro::algo::findRoute(const vector<data::CityLatLng>& cities, const vect
 			}
 
 			planeOrder.emplace(nextPlane.plane, to, endTime);
+		}
+
+		while (!planeOrder.empty()) {
+			auto nextPlane = planeOrder.top();
+			planeOrder.pop();
+
+			baselineTimes.emplace(nextPlane.plane.id, nextPlane.time);
 		}
 
 #ifdef BENCHMARK
@@ -310,6 +321,7 @@ Routing arro::algo::findRoute(const vector<data::CityLatLng>& cities, const vect
 #endif
 
 				Routing out;
+				out.baselineTimes = baselineTimes;
 				for (auto [id, routing] : baselineRoute) {
 					list<string> route;
 
@@ -318,12 +330,20 @@ Routing arro::algo::findRoute(const vector<data::CityLatLng>& cities, const vect
 					out.baseline.emplace(id, route);
 				}
 
+				out.routeTimes = entry.endTimes;
 				for (auto [id, routing] : entry.route) {
 					list<string> route;
 
 					for (auto airport : routing) route.push_back(airport->data().id);
 
 					out.route.emplace(id, route);
+				}
+
+				while (!entry.planeOrder.empty()) {
+					auto nextPlane = entry.planeOrder.top();
+					entry.planeOrder.pop();
+
+					baselineTimes.emplace(nextPlane.plane.id, nextPlane.time);
 				}
 
 				out.baselineCost = baselineCost;
@@ -351,7 +371,7 @@ Routing arro::algo::findRoute(const vector<data::CityLatLng>& cities, const vect
 
 					double endTime = nextPlane.time;
 
-					RoutePlan newEntry(entry.route, planeOrder, vector<data::RouteReq>(), entry.cost, entry.reqCost - route.approxCost);
+					RoutePlan newEntry(entry.route, entry.endTimes, planeOrder, vector<data::RouteReq>(), entry.cost, entry.reqCost - route.approxCost);
 					copy_if(entry.remaining.begin(), entry.remaining.end(), back_inserter(newEntry.remaining),
 							[&route](const data::RouteReq& r) { return !(r.from == route.from && r.to == route.to); });
 					if (plane.passengers < route.passengers) {
@@ -397,6 +417,7 @@ Routing arro::algo::findRoute(const vector<data::CityLatLng>& cities, const vect
 				if (entry.planeOrder.size() == 1)
 					throw runtime_error("Undetected unroutability");
 				else {
+					entry.endTimes.emplace(nextPlane.plane.id, nextPlane.time);
 					entry.planeOrder.pop();
 					queue.push_back(entry);
 				}

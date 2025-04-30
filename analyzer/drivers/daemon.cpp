@@ -78,15 +78,14 @@ void processRouting(path id) {
 	try {
 		arro::algo::Routing routing = arro::algo::findRoute(cities, routes, planes);
 
-		json baseline = routing.baseline;
-		json optimized = routing.route;
+		json baseline = routing.baseline, optimized = routing.route, routeTimes = routing.routeTimes, baselineTimes = routing.baselineTimes;
 
 		ofstream bOut(id / "baseline.json");
-		bOut << json{{"routing", baseline}, {"stats", {{"fuel", routing.baselineCost}}}};
+		bOut << json{{"routing", baseline}, {"stats", {{"fuel", routing.baselineCost}, {"times", baselineTimes}}}};
 		bOut.close();
 
 		ofstream oOut(id / "routing.json");
-		oOut << json{{"routing", optimized}, {"stats", {{"fuel", routing.routeCost}}}};
+		oOut << json{{"routing", optimized}, {"stats", {{"fuel", routing.routeCost}, {"times", routeTimes}}}};
 		oOut.close();
 	} catch (arro::algo::UnroutableException& err) {
 		json badRoutes = json::array();

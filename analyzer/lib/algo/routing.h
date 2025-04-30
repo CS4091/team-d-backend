@@ -102,6 +102,7 @@ bool operator>(const PlaneLoc& a, const PlaneLoc& b);
 
 struct RoutePlan {
 	std::map<std::string, std::list<const typename arro::Graph<data::AirportLatLng, data::ReducedAirwayData>::Node*>> route;
+	std::map<std::string, double> endTimes;
 	std::priority_queue<PlaneLoc, std::vector<PlaneLoc>, std::greater<PlaneLoc>> planeOrder;
 	std::vector<data::RouteReq> remaining;
 	double cost;
@@ -129,6 +130,8 @@ struct PlannedFlight {
 struct Routing {
 	std::map<std::string, std::list<std::string>> route;
 	std::map<std::string, std::list<std::string>> baseline;
+	std::map<std::string, double> routeTimes;
+	std::map<std::string, double> baselineTimes;
 
 	double baselineCost;
 	double routeCost;
