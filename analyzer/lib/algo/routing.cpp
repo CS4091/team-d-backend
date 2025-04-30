@@ -248,7 +248,7 @@ Routing arro::algo::findRoute(const vector<data::CityLatLng>& cities, const vect
 				baselineRoute[nextPlane.plane.id].push_back(*it);
 
 				auto airway = connGraph[ConnLookup{*prev(it), *it}]->data();
-				baselineCost += airway.cost(1);
+				baselineCost += airway.cost(passengersTaken);
 				endTime += airway.time;
 			}
 
@@ -368,7 +368,6 @@ Routing arro::algo::findRoute(const vector<data::CityLatLng>& cities, const vect
 							newEntry.route[nextPlane.plane.id].push_back(*it);
 
 							auto airway = connGraph[ConnLookup{*prev(it), *it}]->data();
-							newEntry.cost += airway.cost(0);
 							endTime += airway.time;
 						}
 					}
@@ -380,7 +379,7 @@ Routing arro::algo::findRoute(const vector<data::CityLatLng>& cities, const vect
 						newEntry.route[nextPlane.plane.id].push_back(*it);
 
 						auto airway = connGraph[ConnLookup{*prev(it), *it}]->data();
-						newEntry.cost += airway.cost(0);
+						newEntry.cost += airway.cost(passengersTaken);
 						endTime += airway.time;
 					}
 
