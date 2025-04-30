@@ -385,7 +385,7 @@ Routing arro::algo::findRoute(const vector<data::CityLatLng>& cities, const vect
 
 					newEntry.planeOrder.emplace(plane, routeEnd, endTime);
 
-					if (newEntry.cost < baselineCost) queue.push_back(newEntry);
+					if (newEntry.cost <= baselineCost) queue.push_back(newEntry);
 				}
 			}
 
