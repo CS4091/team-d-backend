@@ -367,8 +367,6 @@ Routing arro::algo::findRoute(const vector<data::CityLatLng>& cities, const vect
 				const ConnNode *lastCity = nextPlane.loc, *nextCity = connGraph[route.from], *routeEnd = connGraph[route.to];
 
 				if (nextCity && routeEnd) {
-					hasRoute = true;
-
 					double endTime = nextPlane.time;
 
 					RoutePlan newEntry(entry.route, entry.endTimes, planeOrder, vector<data::RouteReq>(), entry.cost, entry.reqCost - route.approxCost);
@@ -409,7 +407,10 @@ Routing arro::algo::findRoute(const vector<data::CityLatLng>& cities, const vect
 
 					newEntry.planeOrder.emplace(plane, routeEnd, endTime);
 
-					if (newEntry.cost <= baselineCost) queue.push_back(newEntry);
+					if (newEntry.cost <= baselineCost) {
+						hasRoute = true;
+						queue.push_back(newEntry);
+					}
 				}
 			}
 
