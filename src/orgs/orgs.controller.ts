@@ -84,7 +84,7 @@ export class OrgsController {
 	@ApiResponse({ type: FullOrganizationResponse })
 	@HttpCode(HttpStatus.NO_CONTENT)
 	public async cancelInvite(@ReqUser() user: User, @Param() inviteId: OrganizationInviteDTO): Promise<FullOrganization> {
-		const org = await this.service.get(inviteId, fullOrg);
+		const org = await this.service.get({ id: inviteId.id }, fullOrg);
 
 		if (!org || !org.users.some((u) => u.id === user.id)) throw new NotFoundException(`Organization with id '${inviteId.id}' does not exist.`);
 
