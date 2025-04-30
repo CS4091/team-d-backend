@@ -343,7 +343,7 @@ Routing arro::algo::findRoute(const vector<data::CityLatLng>& cities, const vect
 					auto nextPlane = entry.planeOrder.top();
 					entry.planeOrder.pop();
 
-					baselineTimes.emplace(nextPlane.plane.id, nextPlane.time);
+					out.routeTimes.emplace(nextPlane.plane.id, nextPlane.time);
 				}
 
 				out.baselineCost = baselineCost;
