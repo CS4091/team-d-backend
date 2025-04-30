@@ -33,7 +33,7 @@ export class AviationController {
 	}
 
 	@Post('/route')
-	@ApiResponse({ type: RouteResult })
+	@ApiResponse({ type: RouteResponse })
 	@Protected()
 	public async planRoute(@Body() { organizationId, demand }: RouteScenario, @ReqUser() user: User): Promise<RouteResponse> {
 		const org = await this.orgs.get({ id: organizationId }, fullOrg);
