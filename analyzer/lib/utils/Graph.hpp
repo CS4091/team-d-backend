@@ -434,7 +434,7 @@ arro::Graph<NodeData, LinkData> arro::Graph<NodeData, LinkData>::readFromBinFile
 		close(fd);
 		delete[] connectivity;
 		delete[] strBuf;
-		delete[] linkData;
+		free(linkData);
 
 		return OutGraph(nodes, edges, digraph);
 #ifdef BENCHMARK
@@ -524,7 +524,7 @@ arro::Graph<NodeData, LinkData> arro::Graph<NodeData, LinkData>::readFromBinFile
 		close(fd);
 		delete[] connectivity;
 		delete[] strBuf;
-		delete[] nodeData;
+		free(nodeData);
 
 		return OutGraph(nodes, edges, digraph);
 #ifdef BENCHMARK
@@ -616,8 +616,8 @@ arro::Graph<NodeData, LinkData> arro::Graph<NodeData, LinkData>::readFromBinFile
 		close(fd);
 		delete[] connectivity;
 		delete[] strBuf;
-		delete[] nodeData;
-		delete[] linkData;
+		free(nodeData);
+		free(linkData);
 
 		return OutGraph(nodes, edges, digraph);
 #ifdef BENCHMARK

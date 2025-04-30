@@ -50,9 +50,9 @@ arro::algo::BinFWTable arro::algo::BinFWTable::readFromBinFile(const string& pat
 	bytesRead = read(fd, &sz, sizeof(size_t));
 	if (bytesRead != sizeof(size_t)) throw invalid_argument("Failed to read size of table");
 
-	double* table = new double[sz];
-	bytesRead = read(fd, table, sizeof(double) * sz);
-	if (bytesRead != sizeof(double) * sz) throw invalid_argument("Failed to read table memory");
+	double* table = new double[sz * sz];
+	bytesRead = read(fd, table, sizeof(double) * sz * sz);
+	if (bytesRead != sizeof(double) * sz * sz) throw invalid_argument("Failed to read table memory");
 
 	return BinFWTable(table, sz);
 }

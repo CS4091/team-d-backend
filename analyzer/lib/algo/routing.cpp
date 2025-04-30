@@ -123,8 +123,7 @@ Routing arro::algo::findRoute(const vector<data::CityLatLng>& cities, const vect
 																			   return airport;
 																		   }));
 
-				masterTables.emplace(plane.model, arro::algo::BinFWTable::readFromBinFile(filesystem::current_path() / "maps" /
-																						  (plane.model + ".binmrt")));	// again, aircraft are empty
+				masterTables.emplace(plane.model, arro::algo::BinFWTable::readFromBinFile(filesystem::current_path() / "maps" / (plane.model + ".binmrt")));
 			}
 		}
 
@@ -203,12 +202,17 @@ Routing arro::algo::findRoute(const vector<data::CityLatLng>& cities, const vect
 			data::RouteReq closestRoute = baselineReqRoutes[0];
 			size_t crIdx = 0;
 			for (size_t i = 1; i < baselineReqRoutes.size(); i++) {
-				if (connGraph[baselineReqRoutes[i].from]) {
-					size_t toIdx = connGraph[baselineReqRoutes[i].from]->idx, oldToIdx = connGraph[closestRoute.from]->idx;
-
-					if (masterTable(fromIdx, toIdx) < masterTable(fromIdx, oldToIdx) && connGraph[baselineReqRoutes[i].to]) {
+				if (connGraph[baselineReqRoutes[i].from] && connGraph[baselineReqRoutes[i].to]) {
+					if (!connGraph[closestRoute.from]) {
 						closestRoute = baselineReqRoutes[i];
 						crIdx = i;
+					} else {
+						size_t toIdx = connGraph[baselineReqRoutes[i].from]->idx, oldToIdx = connGraph[closestRoute.from]->idx;
+
+						if (masterTable(fromIdx, toIdx) < masterTable(fromIdx, oldToIdx)) {
+							closestRoute = baselineReqRoutes[i];
+							crIdx = i;
+						}
 					}
 				}
 			}
@@ -351,9 +355,9 @@ Routing arro::algo::findRoute(const vector<data::CityLatLng>& cities, const vect
 					copy_if(entry.remaining.begin(), entry.remaining.end(), back_inserter(newEntry.remaining),
 							[&route](const data::RouteReq& r) { return !(r.from == route.from && r.to == route.to); });
 					if (plane.passengers < route.passengers) {
-						entry.remaining.push_back(route);
-						entry.remaining.back().passengers -= plane.passengers;
-						entry.remaining.back().approxCost -= plane.passengers * FE_PER_PASSENGER * nextCity->data().fuel;
+						newEntry.remaining.push_back(route);
+						newEntry.remaining.back().passengers -= plane.passengers;
+						newEntry.remaining.back().approxCost -= plane.passengers * FE_PER_PASSENGER * nextCity->data().fuel;
 					}
 					newEntry.cost += masterTable(lastCity->idx, nextCity->idx);
 

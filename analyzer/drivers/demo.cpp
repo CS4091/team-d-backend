@@ -34,40 +34,49 @@ vector<T> readArray(const string& path) {
 }
 
 int main(int argc, char* argv[]) {
-	vector<arro::algo::data::CityLatLng> cities = readArray<arro::algo::data::CityLatLng>("cities.json");
-	vector<arro::algo::data::RouteReq> routes = readArray<arro::algo::data::RouteReq>("routes.json");
-	vector<arro::aviation::Plane> planes = readArray<arro::aviation::Plane>("planes.json");
-	vector<arro::algo::data::AirportWithRunways> airports = readArray<arro::algo::data::AirportWithRunways>("airports.json");
+	try {
+		vector<arro::algo::data::CityLatLng> cities = readArray<arro::algo::data::CityLatLng>("cities.json");
+		vector<arro::algo::data::RouteReq> routes = readArray<arro::algo::data::RouteReq>("routes.json");
+		vector<arro::aviation::Plane> planes = readArray<arro::aviation::Plane>("planes.json");
+		vector<arro::algo::data::AirportWithRunways> airports = readArray<arro::algo::data::AirportWithRunways>("airports.json");
 
-	for (auto& req : routes) {
-		auto from = find_if(airports.begin(), airports.end(), [&req](const arro::algo::data::AirportWithRunways& airport) { return airport.id == req.from; }),
-			 to = find_if(airports.begin(), airports.end(), [&req](const arro::algo::data::AirportWithRunways& airport) { return airport.id == req.to; });
+		for (auto& req : routes) {
+			auto from = find_if(airports.begin(), airports.end(),
+								[&req](const arro::algo::data::AirportWithRunways& airport) { return airport.id == req.from; }),
+				 to = find_if(airports.begin(), airports.end(), [&req](const arro::algo::data::AirportWithRunways& airport) { return airport.id == req.to; });
 
-		auto fromLoc = arro::geospatial::llToRect(from->lat, from->lng), toLoc = arro::geospatial::llToRect(to->lat, to->lng);
+			auto fromLoc = arro::geospatial::llToRect(from->lat, from->lng), toLoc = arro::geospatial::llToRect(to->lat, to->lng);
 
-		req.approxCost =
-			((toLoc - fromLoc).magnitude()) * arro::aviation::FUEL_ECONOMY * from->fuel + req.passengers * arro::aviation::FE_PER_PASSENGER * from->fuel;
+			req.approxCost =
+				((toLoc - fromLoc).magnitude()) * arro::aviation::FUEL_ECONOMY * from->fuel + req.passengers * arro::aviation::FE_PER_PASSENGER * from->fuel;
+		}
+
+		arro::algo::Routing routing = arro::algo::findRoute(cities, routes, planes);
+
+		cout << "Baseline:\n";
+		for (auto [id, route] : routing.baseline) {
+			cout << "Plane[" << id << "]: " << route.front();
+			for (auto it = next(route.begin()); it != route.end(); it++) cout << " -> " << *it;
+			cout << endl;
+		}
+
+		cout << "cost: $" << put_money(routing.baselineCost) << endl;
+
+		cout << "\nOptimized:\n";
+		for (auto [id, route] : routing.route) {
+			cout << "Plane[" << id << "]: " << route.front();
+			for (auto it = next(route.begin()); it != route.end(); it++) cout << " -> " << *it;
+			cout << endl;
+		}
+
+		cout << "cost: $" << put_money(routing.routeCost) << endl;
+	} catch (arro::algo::UnroutableException& err) {
+		for (auto route : err.errors) {
+			cout << "Route '" << route.req.from << "' -> '" << route.req.to << "':" << endl;
+
+			for (auto e : route.reasons) cout << "\tPlane[" << e.plane.id << "]: " << e.reason << endl;
+		}
 	}
-
-	arro::algo::Routing routing = arro::algo::findRoute(cities, routes, planes);
-
-	cout << "Baseline:\n";
-	for (auto [id, route] : routing.baseline) {
-		cout << "Plane[" << id << "]: " << route.front();
-		for (auto it = next(route.begin()); it != route.end(); it++) cout << " -> " << *it;
-		cout << endl;
-	}
-
-	cout << "cost: $" << put_money(routing.baselineCost) << endl;
-
-	cout << "\nOptimized:\n";
-	for (auto [id, route] : routing.route) {
-		cout << "Plane[" << id << "]: " << route.front();
-		for (auto it = next(route.begin()); it != route.end(); it++) cout << " -> " << *it;
-		cout << endl;
-	}
-
-	cout << "cost: $" << put_money(routing.routeCost) << endl;
 
 	return 0;
 }
