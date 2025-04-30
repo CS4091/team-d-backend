@@ -1,4 +1,17 @@
-import { BadRequestException, Body, Controller, Delete, Get, InternalServerErrorException, NotFoundException, Param, Patch, Post } from '@nestjs/common';
+import {
+	BadRequestException,
+	Body,
+	Controller,
+	Delete,
+	Get,
+	HttpCode,
+	HttpStatus,
+	InternalServerErrorException,
+	NotFoundException,
+	Param,
+	Patch,
+	Post
+} from '@nestjs/common';
 import { ApiResponse } from '@nestjs/swagger';
 import type { Invite, Organization, User } from '@prisma/client';
 import { Protected } from 'src/auth/protected.decorator';
@@ -69,6 +82,7 @@ export class OrgsController {
 	@Delete('/:id/invite/:token')
 	@Protected()
 	@ApiResponse({ type: FullOrganizationResponse })
+	@HttpCode(HttpStatus.NO_CONTENT)
 	public async cancelInvite(@ReqUser() user: User, @Param() inviteId: OrganizationInviteDTO): Promise<FullOrganization> {
 		const org = await this.service.get(inviteId, fullOrg);
 
@@ -96,6 +110,7 @@ export class OrgsController {
 
 	@Post('/decline-invite')
 	@Protected()
+	@HttpCode(HttpStatus.NO_CONTENT)
 	public async declineInvite(@ReqUser() user: User, @Body() { token }: AcceptInviteDTO): Promise<void> {
 		return this.service.declineInvite(user, token);
 	}
