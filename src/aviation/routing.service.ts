@@ -4,7 +4,7 @@ import type { Plane } from '@prisma/client';
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 import { existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'fs';
 import { cwd } from 'process';
-import { RouteRequest, RouteResult } from './aviation.dtos';
+import { RouteRequest, RouteResponse } from './aviation.dtos';
 import { Airport, City, PlaneModel } from './aviation.models';
 
 @Injectable()
@@ -68,7 +68,7 @@ export class RoutingService {
 		});
 	}
 
-	public async route(cities: City[], airports: Airport[], routes: RouteRequest[], assets: (Plane & { specs: PlaneModel })[]): Promise<RouteResult> {
+	public async route(cities: City[], airports: Airport[], routes: RouteRequest[], assets: (Plane & { specs: PlaneModel })[]): Promise<RouteResponse> {
 		const opid = createId();
 		mkdirSync(`processing/${opid}`);
 
@@ -79,11 +79,12 @@ export class RoutingService {
 
 		return this.process(opid).then(() => {
 			try {
-				const plan = JSON.parse(readFileSync(`processing/${opid}/routing.json`).toString());
+				const baseline = JSON.parse(readFileSync(`processing/${opid}/baseline.json`).toString());
+				const optimized = JSON.parse(readFileSync(`processing/${opid}/routing.json`).toString());
 
 				rmSync(`processing/${opid}`, { recursive: true });
 
-				return plan;
+				return { baseline, optimized };
 			} catch {
 				const errs = JSON.parse(readFileSync(`processing/${opid}/errors.json`).toString());
 

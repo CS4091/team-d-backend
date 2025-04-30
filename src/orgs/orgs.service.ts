@@ -63,6 +63,24 @@ export class OrgsService {
 		});
 	}
 
+	public async cancelInvite(organization: FullOrganization, token: string): Promise<FullOrganization> {
+		return this.db.organization.update({
+			where: { id: organization.id },
+			data: {
+				activeInvites: {
+					delete: { token }
+				}
+			},
+			...fullOrg
+		});
+	}
+
+	public async declineInvite(user: User, token: string): Promise<void> {
+		await this.db.invite.delete({
+			where: { userId: user.id, token }
+		});
+	}
+
 	public async updateOrgName(to: FullOrganization, name: string): Promise<FullOrganization> {
 		return this.db.organization.update({
 			where: { id: to.id },

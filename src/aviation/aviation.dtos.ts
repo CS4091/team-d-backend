@@ -45,3 +45,11 @@ export class RouteResult {
 	stats: RouteStats = fi();
 }
 
+export class RouteResponse {
+	@ApiProperty({ type: RouteResult })
+	baseline: RouteResult = fi();
+
+	@ApiProperty({ type: RouteResult })
+	optimized: RouteResult = fi();
+}
+

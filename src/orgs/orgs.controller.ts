@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Get, InternalServerErrorException, NotFoundException, Param, Patch, Post } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, InternalServerErrorException, NotFoundException, Param, Patch, Post } from '@nestjs/common';
 import { ApiResponse } from '@nestjs/swagger';
 import type { Invite, Organization, User } from '@prisma/client';
 import { Protected } from 'src/auth/protected.decorator';
@@ -12,6 +12,7 @@ import {
 	FullOrganizationResponse,
 	InviteResponse,
 	OrganizationIDDTO,
+	OrganizationInviteDTO,
 	OrganizationResponse
 } from './orgs.dtos';
 import { fullOrg, FullOrganization } from './orgs.models';
@@ -65,10 +66,21 @@ export class OrgsController {
 		}
 	}
 
+	@Delete('/:id/invite/:token')
+	@Protected()
+	@ApiResponse({ type: FullOrganizationResponse })
+	public async cancelInvite(@ReqUser() user: User, @Param() inviteId: OrganizationInviteDTO): Promise<FullOrganization> {
+		const org = await this.service.get(inviteId, fullOrg);
+
+		if (!org || !org.users.some((u) => u.id === user.id)) throw new NotFoundException(`Organization with id '${inviteId.id}' does not exist.`);
+
+		return this.service.cancelInvite(org, inviteId.token);
+	}
+
 	@Post('/accept-invite')
 	@Protected()
-	@ApiResponse({ type: OrganizationResponse })
-	public async acceptInvite(@ReqUser() user: User, @Body() { token }: AcceptInviteDTO): Promise<Organization> {
+	@ApiResponse({ type: FullOrganizationResponse })
+	public async acceptInvite(@ReqUser() user: User, @Body() { token }: AcceptInviteDTO): Promise<FullOrganization> {
 		try {
 			return await this.service.acceptInvite(user, token);
 		} catch (err: unknown) {
@@ -80,6 +92,12 @@ export class OrgsController {
 				throw new InternalServerErrorException('An unknown error occured.');
 			}
 		}
+	}
+
+	@Post('/decline-invite')
+	@Protected()
+	public async declineInvite(@ReqUser() user: User, @Body() { token }: AcceptInviteDTO): Promise<void> {
+		return this.service.declineInvite(user, token);
 	}
 
 	@Patch('/:id')

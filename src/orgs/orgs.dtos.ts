@@ -31,6 +31,12 @@ export class OrganizationIDDTO {
 	id: string = fi();
 }
 
+export class OrganizationInviteDTO extends OrganizationIDDTO {
+	@IsString()
+	@ApiProperty()
+	token: string = fi();
+}
+
 export class OrganizationPlaneIDDTO {
 	@IsString()
 	@ApiProperty()

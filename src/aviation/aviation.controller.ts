@@ -5,7 +5,7 @@ import { Protected } from 'src/auth/protected.decorator';
 import { fullOrg } from 'src/orgs/orgs.models';
 import { OrgsService } from 'src/orgs/orgs.service';
 import { ReqUser } from 'src/utils/decorators/user.decorator';
-import { RouteResult, RouteScenario } from './aviation.dtos';
+import { RouteResponse, RouteResult, RouteScenario } from './aviation.dtos';
 import { Airport, City, PlaneModel } from './aviation.models';
 import { AviationService } from './aviation.service';
 import { RoutingService } from './routing.service';
@@ -35,7 +35,7 @@ export class AviationController {
 	@Post('/route')
 	@ApiResponse({ type: RouteResult })
 	@Protected()
-	public async planRoute(@Body() { organizationId, demand }: RouteScenario, @ReqUser() user: User): Promise<RouteResult> {
+	public async planRoute(@Body() { organizationId, demand }: RouteScenario, @ReqUser() user: User): Promise<RouteResponse> {
 		const org = await this.orgs.get({ id: organizationId }, fullOrg);
 
 		if (!org || !org.users.some((u) => user.id === u.id)) throw new BadRequestException('Unknown organization.');
