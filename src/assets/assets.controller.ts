@@ -26,9 +26,15 @@ export class AssetsController {
 
 		if (!org || !org.users.some((u) => u.id === user.id)) throw new NotFoundException(`Organization with id '${id}' does not exist.`);
 
-		const airports = await this.aviationService.airports;
-		if (!airports.some((airport) => airport.id === data.homeBase))
-			throw new BadRequestException('Plane home base must be from the list of available airports.');
+		const airports = await this.aviationService.airports,
+			planes = await this.aviationService.planes;
+
+		const home = airports.find((airport) => airport.id === data.homeBase),
+			model = planes.find((plane) => plane.model === data.model);
+		if (!home) throw new BadRequestException('Plane home base must be from the list of available airports.');
+		if (!model) throw new BadRequestException('Plane model must be from the list of available planes.');
+		if (!home.runways.some(({ length }) => length >= Math.max(model.takeoffRunway, model.landingRunway)))
+			throw new BadRequestException('Plane home base does not have sufficiently long runways for the plane to take off/land.');
 
 		return this.service.create(data, org);
 	}
