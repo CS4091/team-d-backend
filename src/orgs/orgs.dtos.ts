@@ -14,9 +14,9 @@ export class CreateOrganizationDTO {
 }
 
 export class CreateInviteDTO {
-	@IsString()
+	@IsString({ each: true })
 	@ApiProperty()
-	userId: string = fi();
+	userIds: string[] = fi();
 }
 
 export class AcceptInviteDTO {

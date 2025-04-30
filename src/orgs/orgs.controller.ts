@@ -58,25 +58,29 @@ export class OrgsController {
 
 	@Post('/:id/invite')
 	@Protected()
-	@ApiResponse({ type: InviteResponse })
-	public async inviteUser(@ReqUser() user: User, @Param() orgId: OrganizationIDDTO, @Body() { userId }: CreateInviteDTO): Promise<Invite> {
+	@ApiResponse({ type: InviteResponse, isArray: true })
+	public async inviteUser(@ReqUser() user: User, @Param() orgId: OrganizationIDDTO, @Body() { userIds }: CreateInviteDTO): Promise<Invite[]> {
 		const org = await this.service.get(orgId, fullOrg);
 
 		if (!org || !org.users.some((u) => u.id === user.id)) throw new NotFoundException(`Organization with id '${orgId.id}' does not exist.`);
 
-		const other = await this.users.get({ id: userId });
+		return Promise.all(
+			userIds.map(async (userId) => {
+				const other = await this.users.get({ id: userId });
 
-		if (!other) throw new BadRequestException(`User with id '${userId}' does not exist.`);
+				if (!other) throw new BadRequestException(`User with id '${userId}' does not exist.`);
 
-		try {
-			return await this.service.invite(org, other);
-		} catch (err: unknown) {
-			if (err instanceof OrgsService.DuplicateException) {
-				throw new BadRequestException(`User with id '${userId}' is already invited to organization '${org.name}'.`);
-			} else {
-				throw new InternalServerErrorException('An unknown error occured.');
-			}
-		}
+				try {
+					return await this.service.invite(org, other);
+				} catch (err: unknown) {
+					if (err instanceof OrgsService.DuplicateException) {
+						throw new BadRequestException(`User with id '${userId}' is already invited to organization '${org.name}'.`);
+					} else {
+						throw new InternalServerErrorException('An unknown error occured.');
+					}
+				}
+			})
+		);
 	}
 
 	@Delete('/:id/invite/:token')
