@@ -88,7 +88,7 @@ export class RoutingService {
 			} catch {
 				const errs = JSON.parse(readFileSync(`processing/${opid}/errors.json`).toString());
 
-				rmSync(`processing/${opid}`, { recursive: true });
+				console.error(`Routing error on '${opid}'`);
 
 				throw new BadRequestException(errs);
 			}
