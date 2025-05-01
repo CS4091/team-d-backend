@@ -410,7 +410,7 @@ Routing arro::algo::findRoute(const vector<data::CityLatLng>& cities, const vect
 
 					newEntry.planeOrder.emplace(plane, routeEnd, endTime);
 
-					if (newEntry.cost <= baselineCost || newEntry.remaining.size() == 0) {
+					if (newEntry.cost <= baselineCost) {
 						hasRoute = true;
 						queue.push_back(newEntry);
 					}
@@ -418,9 +418,9 @@ Routing arro::algo::findRoute(const vector<data::CityLatLng>& cities, const vect
 			}
 
 			if (!hasRoute) {
-				if (entry.planeOrder.size() == 1)
-					throw runtime_error("Undetected unroutability");
-				else {
+				if (entry.planeOrder.size() == 1) {
+					if (queue.empty()) throw runtime_error("Undetected unroutability");
+				} else {
 					entry.endTimes.emplace(nextPlane.plane.id, nextPlane.time);
 					entry.planeOrder.pop();
 					queue.push_back(entry);
