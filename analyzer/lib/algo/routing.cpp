@@ -140,9 +140,12 @@ Routing arro::algo::findRoute(const vector<data::CityLatLng>& cities, const vect
 
 				auto home = graph[plane.homeBase], from = graph[req.from], to = graph[req.to];
 
-				if (!home) err.reasons.push_back(data::PlaneError(plane, "Plane's home base is impossible (too short runways)."));
-				if (!from) err.reasons.push_back(data::PlaneError(plane, "Plane cannot reach start of route."));
-				if (!to) err.reasons.push_back(data::PlaneError(plane, "Plane cannot reach end of route."));
+				if (!home)
+					err.reasons.push_back(data::PlaneError(plane, "Plane's home base is impossible (too short runways)."));
+				else if (!from)
+					err.reasons.push_back(data::PlaneError(plane, "Plane cannot reach start of route."));
+				else if (!to)
+					err.reasons.push_back(data::PlaneError(plane, "Plane cannot reach end of route."));
 
 				if (!home || !from || !to) continue;
 
