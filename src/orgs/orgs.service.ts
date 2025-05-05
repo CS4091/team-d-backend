@@ -1,8 +1,9 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { createId } from '@paralleldrive/cuid2';
-import type { Invite, Prisma, User } from '@prisma/client';
+import type { Invite, Organization, Prisma, User } from '@prisma/client';
 import { randomBytes } from 'crypto';
 import { DateTime } from 'luxon';
+import { RouteResponse } from 'src/aviation/aviation.dtos';
 import { DBService } from 'src/db/db.service';
 import { wrap } from 'src/utils/utils';
 import { CreateOrganizationDTO } from './orgs.dtos';
@@ -87,6 +88,10 @@ export class OrgsService {
 			data: { name },
 			...fullOrg
 		});
+	}
+
+	public async addRouting(org: Organization, routing: RouteResponse): Promise<RouteResponse> {
+		return this.db.routing.create({ data: { orgId: org.id, id: createId(), data: routing as any } }).then(() => routing);
 	}
 
 	public static readonly NotFoundException = class extends wrap(NotFoundException) {};

@@ -31,6 +31,7 @@ model Organization {
     users         User[]
     activeInvites Invite[]
     planes        Plane[]
+    routings      Routing[]
 }
 
 model Invite {
@@ -51,6 +52,16 @@ model Plane {
     manufacturer String
     model        String
     homeBase     String
+
+    organization Organization @relation(fields: [orgId], references: [id])
+
+    @@id([id, orgId])
+}
+
+model Routing {
+    id    String
+    orgId String
+    data  Json
 
     organization Organization @relation(fields: [orgId], references: [id])
 

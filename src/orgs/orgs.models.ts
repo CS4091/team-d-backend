@@ -14,7 +14,8 @@ export const fullOrg = Prisma.validator<Prisma.OrganizationDefaultArgs>()({
 	include: {
 		activeInvites: publicInvite,
 		users: publicUser,
-		planes: true
+		planes: true,
+		routings: true
 	}
 });
 
