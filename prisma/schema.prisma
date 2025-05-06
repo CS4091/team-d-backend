@@ -59,9 +59,10 @@ model Plane {
 }
 
 model Routing {
-    id    String
-    orgId String
-    data  Json
+    id        String
+    orgId     String
+    data      Json
+    createdAt DateTime @default(now())
 
     organization Organization @relation(fields: [orgId], references: [id])
 

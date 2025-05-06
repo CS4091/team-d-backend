@@ -91,6 +91,9 @@ export class RoutingResponse implements Routing {
 
 	@ApiProperty({ type: () => RouteResponse })
 	data: any = fi();
+
+	@ApiProperty({ type: 'string' })
+	createdAt: Date = fi();
 }
 
 export class FullOrganizationResponse implements FullOrganization {
